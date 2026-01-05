@@ -4,7 +4,7 @@ All concrete implementations must inherit from these.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from ..models import DocumentChunk
+from ..data_models import DocumentChunk
 
 
 class EmbeddingProvider(ABC):

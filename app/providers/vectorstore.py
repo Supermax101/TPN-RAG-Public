@@ -8,7 +8,7 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 from chromadb.errors import NotFoundError
 from .base import VectorStore
-from ..models import DocumentChunk
+from ..data_models import DocumentChunk
 from ..config import settings
 
 

@@ -4,7 +4,7 @@ API route handlers.
 from typing import Dict
 from fastapi import APIRouter, HTTPException, Depends
 
-from ..models import SearchQuery, RAGQuery, SearchResponse, RAGResponse
+from ..data_models import SearchQuery, RAGQuery, SearchResponse, RAGResponse
 from ..services.rag import RAGService
 from .schemas import SearchRequest, RAGRequest, StatsResponse
 from .dependencies import get_rag_service

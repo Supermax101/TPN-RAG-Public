@@ -4,7 +4,7 @@ Prompt templates for RAG question answering.
 from typing import List, Dict, Any, Optional
 from enum import Enum
 from pydantic import BaseModel
-from ..models import SearchResult
+from ..data_models import SearchResult
 
 
 class QuestionType(str, Enum):

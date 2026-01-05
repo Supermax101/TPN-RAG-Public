@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from ..models import DocumentChunk
+from ..data_models import DocumentChunk
 from ..config import settings
 from ..logger import logger
 

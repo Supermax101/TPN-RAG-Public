@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-from ..models import (
+from ..data_models import (
     SearchQuery, SearchResponse, SearchResult, DocumentChunk,
     RAGQuery, RAGResponse
 )

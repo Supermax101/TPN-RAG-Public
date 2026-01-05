@@ -4,7 +4,7 @@ Combines vector search with BM25, cross-encoder reranking, and optional graph se
 """
 
 from typing import List, Dict, Any, Optional
-from ..models import SearchQuery, SearchResult, RAGQuery, RAGResponse, SearchResponse
+from ..data_models import SearchQuery, SearchResult, RAGQuery, RAGResponse, SearchResponse
 from .rag import RAGService
 from .advanced_rag import AdvancedRAG, AdvancedRAGConfig
 
