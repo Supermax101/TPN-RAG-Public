@@ -1,0 +1,107 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+logs/
+*.log
+*.sqlite
+*.sqlite3
+
+# Data directories - keeping structure but ignoring large files
+data/raw_pdfs/
+data/embeddings/vectors/
+data/embeddings/metadata/
+
+# Generated indexes (recreate on VM with scripts/ingest.py)
+data/chroma/
+data/chromadb/
+data/bm25/
+*.png
+
+# Comparison results
+comparison_results/
+
+# Local documentation (keep only README.md in repo)
+CLAUDE.md
+REFACTORING_PLAN.md
+SENIOR_AI_ANALYSIS.md
+TECHNICAL_SPEC.md
+docs/
+
+# Environment variables
+.env.local
+.env.production
+.env.development
+
+# Neo4j
+neo4j/
+.azure/

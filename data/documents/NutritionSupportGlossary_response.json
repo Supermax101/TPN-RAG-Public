@@ -1,0 +1,3293 @@
+{
+  "markdown": "<a id='370b68e6-df41-478c-b452-37690205ae9a'></a>\n\nCAPTION ERROR\n\n<a id='114d1d9b-fd36-44ce-9262-f2fa10a904cb'></a>\n\n## DEFINITIONS\n\n*   Short Bowel Syndrome: Inadequate absorptive capacity for sustenance with normal diet\n*   Intestinal Failure: Inadequate absorptive capacity for sustenance Suicide\n\n<a id='f252a2ae-bdde-4e75-89a2-3bcc8894b91d'></a>\n\nABBREVIATIONS\n\n* %IBW: percent ideal body weigh\n\n* AA: amino acids\n\n* ABG: arterial blood gas\n\n* AdjBW/ABW: adjusted body weight\n\n* ACD: automated compounding device\n\n* ACEI: angiotensin converting enzyme inhibitor\n\n* AG: anion gap\n\n* AKI: acute kidney injury\n\n* ALA: alpha-linolenic acid\n\n* Alb: albumin\n\n* ALP/ Alk Phosph: alkaline phosphatase\n\n* ALT: alanine aminotransferase\n\n* ARB: angiotensin receptor blocker\n\n* ARF: acute renal failure\n\n* ASHP: American Society of Health-System Pharmacists\n\n* ASPEN: American Society for Parenteral and Enteral Nutrition\n\n* AST: aspartate aminotransferase\n\n* ATPase: adenosine triphosphatase\n\n<a id='2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f'></a>\n\nPage 1 of 6\n\n<a id='9f463e1f-8a10-48db-9e84-6d356f3f2cb6'></a>\n\n<table id=\"1-1\">\n<tr><td id=\"1-2\">BG:</td><td id=\"1-3\">blood glucose</td></tr>\n<tr><td id=\"1-4\">Bili, T:</td><td id=\"1-5\">total bilirubin</td></tr>\n<tr><td id=\"1-6\">BMI:</td><td id=\"1-7\">body mass index</td></tr>\n<tr><td id=\"1-8\">BP:</td><td id=\"1-9\">blood pressure</td></tr>\n<tr><td id=\"1-a\">BPM:</td><td id=\"1-b\">beats per minute</td></tr>\n<tr><td id=\"1-c\">BUN:</td><td id=\"1-d\">blood urea nitrogen</td></tr>\n<tr><td id=\"1-e\">Ca:</td><td id=\"1-f\">calcium</td></tr>\n<tr><td id=\"1-g\">CABG:</td><td id=\"1-h\">coronary artery bypass graft</td></tr>\n<tr><td id=\"1-i\">CaGluc:</td><td id=\"1-j\">calcium gluconate</td></tr>\n<tr><td id=\"1-k\">Cal:</td><td id=\"1-l\">calories</td></tr>\n<tr><td id=\"1-m\">CHF:</td><td id=\"1-n\">congestive heart failure</td></tr>\n<tr><td id=\"1-o\">CHG:</td><td id=\"1-p\">chlorhexidine gluconate</td></tr>\n<tr><td id=\"1-q\">CHO:</td><td id=\"1-r\">carbohydrate</td></tr>\n<tr><td id=\"1-s\">CI:</td><td id=\"1-t\">chloride</td></tr>\n<tr><td id=\"1-u\">CKD:</td><td id=\"1-v\">chronic kidney disease</td></tr>\n<tr><td id=\"1-w\">CLABSI:</td><td id=\"1-x\">central line associated bloodstream infection</td></tr>\n<tr><td id=\"1-y\">CNS:</td><td id=\"1-z\">central nervous system</td></tr>\n<tr><td id=\"1-A\">CO2:</td><td id=\"1-B\">carbon dioxide</td></tr>\n<tr><td id=\"1-C\">Cr:</td><td id=\"1-D\">creatinine</td></tr>\n<tr><td id=\"1-E\">CrCl:</td><td id=\"1-F\">creatinine clearance</td></tr>\n<tr><td id=\"1-G\">COPD:</td><td id=\"1-H\">chronic obstructive pulmonary disease</td></tr>\n<tr><td id=\"1-I\">CPOE:</td><td id=\"1-J\">computerized provider order entry</td></tr>\n<tr><td id=\"1-K\">CRBSI:</td><td id=\"1-L\">catheter-related bloodstream infections</td></tr>\n<tr><td id=\"1-M\">CRRT:</td><td id=\"1-N\">continuous renal replacement therapy</td></tr>\n<tr><td id=\"1-O\">CVC:</td><td id=\"1-P\">central venous catheter</td></tr>\n<tr><td id=\"1-Q\">D/C:</td><td id=\"1-R\">discontinue</td></tr>\n<tr><td id=\"1-S\">Dex/Dext:</td><td id=\"1-T\">dextrose</td></tr>\n<tr><td id=\"1-U\">DHA:</td><td id=\"1-V\">docosahexaenoic acid</td></tr>\n<tr><td id=\"1-W\">DOB:</td><td id=\"1-X\">date of birth</td></tr>\n</table>\n\n<a id='c1339120-6287-48ba-99ed-58a94bee2b81'></a>\n\nPage 2 of 6\n\n<a id='25053777-4c56-4b29-923b-dd0f1bc60d17'></a>\n\n<table id=\"2-1\">\n<tr><td id=\"2-2\">DVT:</td><td id=\"2-3\">deep vein thrombosis</td></tr>\n<tr><td id=\"2-4\">ECF:</td><td id=\"2-5\">extracellular fluid</td></tr>\n<tr><td id=\"2-6\">ECG:</td><td id=\"2-7\">electrocardiogram</td></tr>\n<tr><td id=\"2-8\">EHR:</td><td id=\"2-9\">electronic health record</td></tr>\n<tr><td id=\"2-a\">EFA:</td><td id=\"2-b\">essential fatty acids</td></tr>\n<tr><td id=\"2-c\">EFAD:</td><td id=\"2-d\">essential fatty acid deficiency</td></tr>\n<tr><td id=\"2-e\">EGD:</td><td id=\"2-f\">esophagogastroduodenoscopy</td></tr>\n<tr><td id=\"2-g\">EN:</td><td id=\"2-h\">enteral nutrition</td></tr>\n<tr><td id=\"2-i\">EPA:</td><td id=\"2-j\">eicosapentaenoic acid</td></tr>\n<tr><td id=\"2-k\">FDA:</td><td id=\"2-l\">U.S. Food and Drug Administration</td></tr>\n<tr><td id=\"2-m\">FO:</td><td id=\"2-n\">fish oil</td></tr>\n<tr><td id=\"2-o\">FODMAP's:</td><td id=\"2-p\">Fermentable, oligo-, di-, monosaccharides and polyols</td></tr>\n<tr><td id=\"2-q\">GCS:</td><td id=\"2-r\">Glascow coma scale</td></tr>\n<tr><td id=\"2-s\">GE:</td><td id=\"2-t\">gastric emptying</td></tr>\n<tr><td id=\"2-u\">GERD:</td><td id=\"2-v\">gastroesophageal reflux disease</td></tr>\n<tr><td id=\"2-w\">GI:</td><td id=\"2-x\">gastrointestinal</td></tr>\n<tr><td id=\"2-y\">GIR:</td><td id=\"2-z\">glucose infusion rate (mg/kg/min)</td></tr>\n<tr><td id=\"2-A\">Gluc:</td><td id=\"2-B\">glucose</td></tr>\n<tr><td id=\"2-C\">GRV:</td><td id=\"2-D\">gastric residual volume</td></tr>\n<tr><td id=\"2-E\">G-tube:</td><td id=\"2-F\">gastrostomy tube</td></tr>\n<tr><td id=\"2-G\">GUT or GI:</td><td id=\"2-H\">gastrointestinal tract</td></tr>\n<tr><td id=\"2-I\">H2:</td><td id=\"2-J\">histamine-2</td></tr>\n<tr><td id=\"2-K\">H+:</td><td id=\"2-L\">hydrogen ion</td></tr>\n<tr><td id=\"2-M\">HCO3:</td><td id=\"2-N\">bicarbonate</td></tr>\n<tr><td id=\"2-O\">HOB:</td><td id=\"2-P\">head of bed</td></tr>\n<tr><td id=\"2-Q\">HPN:</td><td id=\"2-R\">home parenteral nutrition</td></tr>\n<tr><td id=\"2-S\">HR:</td><td id=\"2-T\">heart rate</td></tr>\n<tr><td id=\"2-U\">Ht:</td><td id=\"2-V\">height</td></tr>\n<tr><td id=\"2-W\">I & O:</td><td id=\"2-X\">input and output</td></tr>\n</table>\n\n<a id='d1712a6e-15b0-4bf4-8ac1-115fe45c464c'></a>\n\nCAPTION ERROR\n\n<a id='ad904d83-aa98-4198-9fec-88fa02f43b67'></a>\n\n<table id=\"3-1\">\n<tr><td id=\"3-2\">IBW:</td><td id=\"3-3\">ideal body weight</td></tr>\n<tr><td id=\"3-4\">ICF:</td><td id=\"3-5\">intracellular fluid</td></tr>\n<tr><td id=\"3-6\">ICU:</td><td id=\"3-7\">intensive care unit</td></tr>\n<tr><td id=\"3-8\">ID:</td><td id=\"3-9\">identification</td></tr>\n<tr><td id=\"3-a\">ILE:</td><td id=\"3-b\">lipid injectable emulsion</td></tr>\n<tr><td id=\"3-c\">IPOC:</td><td id=\"3-d\">interdisciplinary plan of care</td></tr>\n<tr><td id=\"3-e\">ISMP:</td><td id=\"3-f\">Institute for Safe Medication Practices</td></tr>\n<tr><td id=\"3-g\">IV:</td><td id=\"3-h\">intravenous</td></tr>\n<tr><td id=\"3-i\">K:</td><td id=\"3-j\">potassium</td></tr>\n<tr><td id=\"3-k\">KCI:</td><td id=\"3-l\">potassium chloride</td></tr>\n<tr><td id=\"3-m\">KPO4:</td><td id=\"3-n\">potassium phosphate</td></tr>\n<tr><td id=\"3-o\">L:</td><td id=\"3-p\">liter</td></tr>\n<tr><td id=\"3-q\">LA:</td><td id=\"3-r\">linoleic acid</td></tr>\n<tr><td id=\"3-s\">LBM:</td><td id=\"3-t\">lean body mass</td></tr>\n<tr><td id=\"3-u\">Lbs:</td><td id=\"3-v\">pounds</td></tr>\n<tr><td id=\"3-w\">LCT:</td><td id=\"3-x\">long chain triglyceride</td></tr>\n<tr><td id=\"3-y\">MCB-PN:</td><td id=\"3-z\">multi-chamber bag parenteral nutrition</td></tr>\n<tr><td id=\"3-A\">MCT:</td><td id=\"3-B\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-C\">MERP:</td><td id=\"3-D\">Medication Error Reporting Program of ISMP</td></tr>\n<tr><td id=\"3-E\">Mg:</td><td id=\"3-F\">magnesium</td></tr>\n<tr><td id=\"3-G\">MgSO4:</td><td id=\"3-H\">magnesium sulfate</td></tr>\n<tr><td id=\"3-I\">MICU:</td><td id=\"3-J\">medical intensive care unit</td></tr>\n<tr><td id=\"3-K\">MCT:</td><td id=\"3-L\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-M\">MST:</td><td id=\"3-N\">malnutrition screening tool</td></tr>\n<tr><td id=\"3-O\">MTE:</td><td id=\"3-P\">multiple trace element</td></tr>\n<tr><td id=\"3-Q\">Na:</td><td id=\"3-R\">sodium</td></tr>\n<tr><td id=\"3-S\">NA:</td><td id=\"3-T\">not available or not assessed (as in laboratory or d</td></tr>\n<tr><td id=\"3-U\">NaCl:</td><td id=\"3-V\">sodium chloride</td></tr>\n<tr><td id=\"3-W\">NG:</td><td id=\"3-X\">nasogastric</td></tr>\n</table>\nclinical symptom)\n\n<a id='9c14747f-9f18-487a-bb1b-304554536b0e'></a>\n\nCAPTION ERROR\n\n<a id='af44e6d3-f522-4b50-b848-2de63689e4cf'></a>\n\n<table id=\"4-1\">\n<tr><td id=\"4-2\">NGT:</td><td id=\"4-3\">nasogastric tube</td></tr>\n<tr><td id=\"4-4\">NKDA:</td><td id=\"4-5\">no known drug allergies</td></tr>\n<tr><td id=\"4-6\">NPO:</td><td id=\"4-7\">nil per os/nothing by mouth</td></tr>\n<tr><td id=\"4-8\">NS:</td><td id=\"4-9\">normal saline</td></tr>\n<tr><td id=\"4-a\">NS:</td><td id=\"4-b\">nutrition support</td></tr>\n<tr><td id=\"4-c\">NSAID:</td><td id=\"4-d\">non-steroidal anti-inflammatory drug</td></tr>\n<tr><td id=\"4-e\">NSS:</td><td id=\"4-f\">nutrition support service</td></tr>\n<tr><td id=\"4-g\">OG:</td><td id=\"4-h\">orogastric</td></tr>\n<tr><td id=\"4-i\">OR:</td><td id=\"4-j\">operating room</td></tr>\n<tr><td id=\"4-k\">OTC:</td><td id=\"4-l\">over-the-counter</td></tr>\n<tr><td id=\"4-m\">P:</td><td id=\"4-n\">phosphorus</td></tr>\n<tr><td id=\"4-o\">pCO2:</td><td id=\"4-p\">partial pressure of carbon dioxide</td></tr>\n<tr><td id=\"4-q\">PEG:</td><td id=\"4-r\">percutaneous endoscopic gastrostomy</td></tr>\n<tr><td id=\"4-s\">PICC:</td><td id=\"4-t\">peripherally inserted central catheter</td></tr>\n<tr><td id=\"4-u\">PN:</td><td id=\"4-v\">parenteral nutrition</td></tr>\n<tr><td id=\"4-w\">PPN:</td><td id=\"4-x\">peripheral parenteral nutrition</td></tr>\n<tr><td id=\"4-y\">pO₂:</td><td id=\"4-z\">partial pressure of oxygen</td></tr>\n<tr><td id=\"4-A\">PO₄:</td><td id=\"4-B\">phosphate</td></tr>\n<tr><td id=\"4-C\">POD:</td><td id=\"4-D\">post operative day</td></tr>\n<tr><td id=\"4-E\">PUFA:</td><td id=\"4-F\">polyunsaturated fatty acids</td></tr>\n<tr><td id=\"4-G\">QOL:</td><td id=\"4-H\">quality of life</td></tr>\n<tr><td id=\"4-I\">RCT:</td><td id=\"4-J\">randomized controlled trial</td></tr>\n<tr><td id=\"4-K\">RD:</td><td id=\"4-L\">registered dietitian</td></tr>\n<tr><td id=\"4-M\">RDI:</td><td id=\"4-N\">recommended dietary intake</td></tr>\n<tr><td id=\"4-O\">RQ:</td><td id=\"4-P\">respiratory quotient</td></tr>\n<tr><td id=\"4-Q\">RR:</td><td id=\"4-R\">respiratory rate</td></tr>\n<tr><td id=\"4-S\">RRT:</td><td id=\"4-T\">renal replacement therapy</td></tr>\n<tr><td id=\"4-U\">RTU:</td><td id=\"4-V\">ready to use</td></tr>\n<tr><td id=\"4-W\">S/p:</td><td id=\"4-X\">status post</td></tr>\n</table>\n\n<a id='8a10ae9d-f4d3-4d47-bd39-18acbdf6c704'></a>\n\nPage 5 of 6\n\n<a id='85f34d32-b298-4310-98b1-7266c0ea6918'></a>\n\n<table id=\"5-1\">\n<tr><td id=\"5-2\">SAP:</td><td id=\"5-3\">severe acute pancreatitis</td></tr>\n<tr><td id=\"5-4\">SBO:</td><td id=\"5-5\">small bowel obstruction</td></tr>\n<tr><td id=\"5-6\">SBS:</td><td id=\"5-7\">short bowel syndrome</td></tr>\n<tr><td id=\"5-8\">SCAPN:</td><td id=\"5-9\">standardized commercially-available parenteral nutrition</td></tr>\n<tr><td id=\"5-a\">SCCM:</td><td id=\"5-b\">Society of Critical Care Medicine</td></tr>\n<tr><td id=\"5-c\">SIAD:</td><td id=\"5-d\">syndrome of inappropriate antidiuresis</td></tr>\n<tr><td id=\"5-e\">SICU:</td><td id=\"5-f\">surgical intensive care unit</td></tr>\n<tr><td id=\"5-g\">SIRS:</td><td id=\"5-h\">systemic inflammatory response syndrome</td></tr>\n<tr><td id=\"5-i\">sOsm:</td><td id=\"5-j\">serum osmolality</td></tr>\n<tr><td id=\"5-k\">SVC:</td><td id=\"5-l\">superior vena cava</td></tr>\n<tr><td id=\"5-m\">• T. Bili:</td><td id=\"5-n\">total bilirubin</td></tr>\n<tr><td id=\"5-o\">• TBW:</td><td id=\"5-p\">total body water</td></tr>\n<tr><td id=\"5-q\">• TE:</td><td id=\"5-r\">trace element</td></tr>\n<tr><td id=\"5-s\">• Tg:</td><td id=\"5-t\">Triglycerides</td></tr>\n<tr><td id=\"5-u\">• TNA:</td><td id=\"5-v\">total nutrient admixture</td></tr>\n<tr><td id=\"5-w\">TPP:</td><td id=\"5-x\">thiamine pyrophosphate</td></tr>\n<tr><td id=\"5-y\">uCl:</td><td id=\"5-z\">urine chloride</td></tr>\n<tr><td id=\"5-A\">uNa:</td><td id=\"5-B\">urine sodium</td></tr>\n<tr><td id=\"5-C\">uOsm:</td><td id=\"5-D\">urine osmolality</td></tr>\n<tr><td id=\"5-E\">UTI:</td><td id=\"5-F\">urinary tract infection</td></tr>\n<tr><td id=\"5-G\">VAP:</td><td id=\"5-H\">ventilator-associated pneumonia</td></tr>\n<tr><td id=\"5-I\">WBC:</td><td id=\"5-J\">white blood cell</td></tr>\n<tr><td id=\"5-K\">WBC:</td><td id=\"5-L\">white blood count</td></tr>\n<tr><td id=\"5-M\">WNL:</td><td id=\"5-N\">within normal limits</td></tr>\n<tr><td id=\"5-O\">Wt:</td><td id=\"5-P\">weight</td></tr>\n<tr><td id=\"5-Q\">Yo:</td><td id=\"5-R\">year-old</td></tr>\n<tr><td id=\"5-S\">Zn:</td><td id=\"5-T\">zinc</td></tr>\n</table>\n\n<a id='e4e26999-05d5-4ec9-9abf-fdb67abdf77c'></a>\n\nCAPTION ERROR",
+  "chunks": [
+    {
+      "markdown": "<a id='370b68e6-df41-478c-b452-37690205ae9a'></a>\n\nCAPTION ERROR",
+      "type": "logo",
+      "id": "370b68e6-df41-478c-b452-37690205ae9a",
+      "grounding": {
+        "box": {
+          "left": 0.3677225708961487,
+          "top": 0.023228004574775696,
+          "right": 0.7201948761940002,
+          "bottom": 0.18105490505695343
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='114d1d9b-fd36-44ce-9262-f2fa10a904cb'></a>\n\n## DEFINITIONS\n\n*   Short Bowel Syndrome: Inadequate absorptive capacity for sustenance with normal diet\n*   Intestinal Failure: Inadequate absorptive capacity for sustenance Suicide",
+      "type": "text",
+      "id": "114d1d9b-fd36-44ce-9262-f2fa10a904cb",
+      "grounding": {
+        "box": {
+          "left": 0.11045259237289429,
+          "top": 0.23383036255836487,
+          "right": 0.7671257257461548,
+          "bottom": 0.3537096679210663
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='f252a2ae-bdde-4e75-89a2-3bcc8894b91d'></a>\n\nABBREVIATIONS\n\n* %IBW: percent ideal body weigh\n\n* AA: amino acids\n\n* ABG: arterial blood gas\n\n* AdjBW/ABW: adjusted body weight\n\n* ACD: automated compounding device\n\n* ACEI: angiotensin converting enzyme inhibitor\n\n* AG: anion gap\n\n* AKI: acute kidney injury\n\n* ALA: alpha-linolenic acid\n\n* Alb: albumin\n\n* ALP/ Alk Phosph: alkaline phosphatase\n\n* ALT: alanine aminotransferase\n\n* ARB: angiotensin receptor blocker\n\n* ARF: acute renal failure\n\n* ASHP: American Society of Health-System Pharmacists\n\n* ASPEN: American Society for Parenteral and Enteral Nutrition\n\n* AST: aspartate aminotransferase\n\n* ATPase: adenosine triphosphatase",
+      "type": "text",
+      "id": "f252a2ae-bdde-4e75-89a2-3bcc8894b91d",
+      "grounding": {
+        "box": {
+          "left": 0.1134483814239502,
+          "top": 0.35803887248039246,
+          "right": 0.6887167096138,
+          "bottom": 0.9100078344345093
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f'></a>\n\nPage 1 of 6",
+      "type": "marginalia",
+      "id": "2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f",
+      "grounding": {
+        "box": {
+          "left": 0.48488399386405945,
+          "top": 0.9203174114227295,
+          "right": 0.5754841566085815,
+          "bottom": 0.9398561716079712
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='9f463e1f-8a10-48db-9e84-6d356f3f2cb6'></a>\n\n<table id=\"1-1\">\n<tr><td id=\"1-2\">BG:</td><td id=\"1-3\">blood glucose</td></tr>\n<tr><td id=\"1-4\">Bili, T:</td><td id=\"1-5\">total bilirubin</td></tr>\n<tr><td id=\"1-6\">BMI:</td><td id=\"1-7\">body mass index</td></tr>\n<tr><td id=\"1-8\">BP:</td><td id=\"1-9\">blood pressure</td></tr>\n<tr><td id=\"1-a\">BPM:</td><td id=\"1-b\">beats per minute</td></tr>\n<tr><td id=\"1-c\">BUN:</td><td id=\"1-d\">blood urea nitrogen</td></tr>\n<tr><td id=\"1-e\">Ca:</td><td id=\"1-f\">calcium</td></tr>\n<tr><td id=\"1-g\">CABG:</td><td id=\"1-h\">coronary artery bypass graft</td></tr>\n<tr><td id=\"1-i\">CaGluc:</td><td id=\"1-j\">calcium gluconate</td></tr>\n<tr><td id=\"1-k\">Cal:</td><td id=\"1-l\">calories</td></tr>\n<tr><td id=\"1-m\">CHF:</td><td id=\"1-n\">congestive heart failure</td></tr>\n<tr><td id=\"1-o\">CHG:</td><td id=\"1-p\">chlorhexidine gluconate</td></tr>\n<tr><td id=\"1-q\">CHO:</td><td id=\"1-r\">carbohydrate</td></tr>\n<tr><td id=\"1-s\">CI:</td><td id=\"1-t\">chloride</td></tr>\n<tr><td id=\"1-u\">CKD:</td><td id=\"1-v\">chronic kidney disease</td></tr>\n<tr><td id=\"1-w\">CLABSI:</td><td id=\"1-x\">central line associated bloodstream infection</td></tr>\n<tr><td id=\"1-y\">CNS:</td><td id=\"1-z\">central nervous system</td></tr>\n<tr><td id=\"1-A\">CO2:</td><td id=\"1-B\">carbon dioxide</td></tr>\n<tr><td id=\"1-C\">Cr:</td><td id=\"1-D\">creatinine</td></tr>\n<tr><td id=\"1-E\">CrCl:</td><td id=\"1-F\">creatinine clearance</td></tr>\n<tr><td id=\"1-G\">COPD:</td><td id=\"1-H\">chronic obstructive pulmonary disease</td></tr>\n<tr><td id=\"1-I\">CPOE:</td><td id=\"1-J\">computerized provider order entry</td></tr>\n<tr><td id=\"1-K\">CRBSI:</td><td id=\"1-L\">catheter-related bloodstream infections</td></tr>\n<tr><td id=\"1-M\">CRRT:</td><td id=\"1-N\">continuous renal replacement therapy</td></tr>\n<tr><td id=\"1-O\">CVC:</td><td id=\"1-P\">central venous catheter</td></tr>\n<tr><td id=\"1-Q\">D/C:</td><td id=\"1-R\">discontinue</td></tr>\n<tr><td id=\"1-S\">Dex/Dext:</td><td id=\"1-T\">dextrose</td></tr>\n<tr><td id=\"1-U\">DHA:</td><td id=\"1-V\">docosahexaenoic acid</td></tr>\n<tr><td id=\"1-W\">DOB:</td><td id=\"1-X\">date of birth</td></tr>\n</table>",
+      "type": "table",
+      "id": "9f463e1f-8a10-48db-9e84-6d356f3f2cb6",
+      "grounding": {
+        "box": {
+          "left": 0.12873706221580505,
+          "top": 0.08325701951980591,
+          "right": 0.6309871673583984,
+          "bottom": 0.9115039110183716
+        },
+        "page": 1
+      }
+    },
+    {
+      "markdown": "<a id='c1339120-6287-48ba-99ed-58a94bee2b81'></a>\n\nPage 2 of 6",
+      "type": "marginalia",
+      "id": "c1339120-6287-48ba-99ed-58a94bee2b81",
+      "grounding": {
+        "box": {
+          "left": 0.48299020528793335,
+          "top": 0.9197965264320374,
+          "right": 0.5782378315925598,
+          "bottom": 0.9398548007011414
+        },
+        "page": 1
+      }
+    },
+    {
+      "markdown": "<a id='25053777-4c56-4b29-923b-dd0f1bc60d17'></a>\n\n<table id=\"2-1\">\n<tr><td id=\"2-2\">DVT:</td><td id=\"2-3\">deep vein thrombosis</td></tr>\n<tr><td id=\"2-4\">ECF:</td><td id=\"2-5\">extracellular fluid</td></tr>\n<tr><td id=\"2-6\">ECG:</td><td id=\"2-7\">electrocardiogram</td></tr>\n<tr><td id=\"2-8\">EHR:</td><td id=\"2-9\">electronic health record</td></tr>\n<tr><td id=\"2-a\">EFA:</td><td id=\"2-b\">essential fatty acids</td></tr>\n<tr><td id=\"2-c\">EFAD:</td><td id=\"2-d\">essential fatty acid deficiency</td></tr>\n<tr><td id=\"2-e\">EGD:</td><td id=\"2-f\">esophagogastroduodenoscopy</td></tr>\n<tr><td id=\"2-g\">EN:</td><td id=\"2-h\">enteral nutrition</td></tr>\n<tr><td id=\"2-i\">EPA:</td><td id=\"2-j\">eicosapentaenoic acid</td></tr>\n<tr><td id=\"2-k\">FDA:</td><td id=\"2-l\">U.S. Food and Drug Administration</td></tr>\n<tr><td id=\"2-m\">FO:</td><td id=\"2-n\">fish oil</td></tr>\n<tr><td id=\"2-o\">FODMAP's:</td><td id=\"2-p\">Fermentable, oligo-, di-, monosaccharides and polyols</td></tr>\n<tr><td id=\"2-q\">GCS:</td><td id=\"2-r\">Glascow coma scale</td></tr>\n<tr><td id=\"2-s\">GE:</td><td id=\"2-t\">gastric emptying</td></tr>\n<tr><td id=\"2-u\">GERD:</td><td id=\"2-v\">gastroesophageal reflux disease</td></tr>\n<tr><td id=\"2-w\">GI:</td><td id=\"2-x\">gastrointestinal</td></tr>\n<tr><td id=\"2-y\">GIR:</td><td id=\"2-z\">glucose infusion rate (mg/kg/min)</td></tr>\n<tr><td id=\"2-A\">Gluc:</td><td id=\"2-B\">glucose</td></tr>\n<tr><td id=\"2-C\">GRV:</td><td id=\"2-D\">gastric residual volume</td></tr>\n<tr><td id=\"2-E\">G-tube:</td><td id=\"2-F\">gastrostomy tube</td></tr>\n<tr><td id=\"2-G\">GUT or GI:</td><td id=\"2-H\">gastrointestinal tract</td></tr>\n<tr><td id=\"2-I\">H2:</td><td id=\"2-J\">histamine-2</td></tr>\n<tr><td id=\"2-K\">H+:</td><td id=\"2-L\">hydrogen ion</td></tr>\n<tr><td id=\"2-M\">HCO3:</td><td id=\"2-N\">bicarbonate</td></tr>\n<tr><td id=\"2-O\">HOB:</td><td id=\"2-P\">head of bed</td></tr>\n<tr><td id=\"2-Q\">HPN:</td><td id=\"2-R\">home parenteral nutrition</td></tr>\n<tr><td id=\"2-S\">HR:</td><td id=\"2-T\">heart rate</td></tr>\n<tr><td id=\"2-U\">Ht:</td><td id=\"2-V\">height</td></tr>\n<tr><td id=\"2-W\">I & O:</td><td id=\"2-X\">input and output</td></tr>\n</table>",
+      "type": "table",
+      "id": "25053777-4c56-4b29-923b-dd0f1bc60d17",
+      "grounding": {
+        "box": {
+          "left": 0.12957003712654114,
+          "top": 0.08272126317024231,
+          "right": 0.7009265422821045,
+          "bottom": 0.9125890731811523
+        },
+        "page": 2
+      }
+    },
+    {
+      "markdown": "<a id='d1712a6e-15b0-4bf4-8ac1-115fe45c464c'></a>\n\nCAPTION ERROR",
+      "type": "marginalia",
+      "id": "d1712a6e-15b0-4bf4-8ac1-115fe45c464c",
+      "grounding": {
+        "box": {
+          "left": 0.48395127058029175,
+          "top": 0.9199205040931702,
+          "right": 0.576733410358429,
+          "bottom": 0.939913809299469
+        },
+        "page": 2
+      }
+    },
+    {
+      "markdown": "<a id='ad904d83-aa98-4198-9fec-88fa02f43b67'></a>\n\n<table id=\"3-1\">\n<tr><td id=\"3-2\">IBW:</td><td id=\"3-3\">ideal body weight</td></tr>\n<tr><td id=\"3-4\">ICF:</td><td id=\"3-5\">intracellular fluid</td></tr>\n<tr><td id=\"3-6\">ICU:</td><td id=\"3-7\">intensive care unit</td></tr>\n<tr><td id=\"3-8\">ID:</td><td id=\"3-9\">identification</td></tr>\n<tr><td id=\"3-a\">ILE:</td><td id=\"3-b\">lipid injectable emulsion</td></tr>\n<tr><td id=\"3-c\">IPOC:</td><td id=\"3-d\">interdisciplinary plan of care</td></tr>\n<tr><td id=\"3-e\">ISMP:</td><td id=\"3-f\">Institute for Safe Medication Practices</td></tr>\n<tr><td id=\"3-g\">IV:</td><td id=\"3-h\">intravenous</td></tr>\n<tr><td id=\"3-i\">K:</td><td id=\"3-j\">potassium</td></tr>\n<tr><td id=\"3-k\">KCI:</td><td id=\"3-l\">potassium chloride</td></tr>\n<tr><td id=\"3-m\">KPO4:</td><td id=\"3-n\">potassium phosphate</td></tr>\n<tr><td id=\"3-o\">L:</td><td id=\"3-p\">liter</td></tr>\n<tr><td id=\"3-q\">LA:</td><td id=\"3-r\">linoleic acid</td></tr>\n<tr><td id=\"3-s\">LBM:</td><td id=\"3-t\">lean body mass</td></tr>\n<tr><td id=\"3-u\">Lbs:</td><td id=\"3-v\">pounds</td></tr>\n<tr><td id=\"3-w\">LCT:</td><td id=\"3-x\">long chain triglyceride</td></tr>\n<tr><td id=\"3-y\">MCB-PN:</td><td id=\"3-z\">multi-chamber bag parenteral nutrition</td></tr>\n<tr><td id=\"3-A\">MCT:</td><td id=\"3-B\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-C\">MERP:</td><td id=\"3-D\">Medication Error Reporting Program of ISMP</td></tr>\n<tr><td id=\"3-E\">Mg:</td><td id=\"3-F\">magnesium</td></tr>\n<tr><td id=\"3-G\">MgSO4:</td><td id=\"3-H\">magnesium sulfate</td></tr>\n<tr><td id=\"3-I\">MICU:</td><td id=\"3-J\">medical intensive care unit</td></tr>\n<tr><td id=\"3-K\">MCT:</td><td id=\"3-L\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-M\">MST:</td><td id=\"3-N\">malnutrition screening tool</td></tr>\n<tr><td id=\"3-O\">MTE:</td><td id=\"3-P\">multiple trace element</td></tr>\n<tr><td id=\"3-Q\">Na:</td><td id=\"3-R\">sodium</td></tr>\n<tr><td id=\"3-S\">NA:</td><td id=\"3-T\">not available or not assessed (as in laboratory or d</td></tr>\n<tr><td id=\"3-U\">NaCl:</td><td id=\"3-V\">sodium chloride</td></tr>\n<tr><td id=\"3-W\">NG:</td><td id=\"3-X\">nasogastric</td></tr>\n</table>\nclinical symptom)",
+      "type": "table",
+      "id": "ad904d83-aa98-4198-9fec-88fa02f43b67",
+      "grounding": {
+        "box": {
+          "left": 0.1300298273563385,
+          "top": 0.08408507704734802,
+          "right": 0.7914342880249023,
+          "bottom": 0.9111311435699463
+        },
+        "page": 3
+      }
+    },
+    {
+      "markdown": "<a id='9c14747f-9f18-487a-bb1b-304554536b0e'></a>\n\nCAPTION ERROR",
+      "type": "marginalia",
+      "id": "9c14747f-9f18-487a-bb1b-304554536b0e",
+      "grounding": {
+        "box": {
+          "left": 0.4831337332725525,
+          "top": 0.919217050075531,
+          "right": 0.5780732035636902,
+          "bottom": 0.940311849117279
+        },
+        "page": 3
+      }
+    },
+    {
+      "markdown": "<a id='af44e6d3-f522-4b50-b848-2de63689e4cf'></a>\n\n<table id=\"4-1\">\n<tr><td id=\"4-2\">NGT:</td><td id=\"4-3\">nasogastric tube</td></tr>\n<tr><td id=\"4-4\">NKDA:</td><td id=\"4-5\">no known drug allergies</td></tr>\n<tr><td id=\"4-6\">NPO:</td><td id=\"4-7\">nil per os/nothing by mouth</td></tr>\n<tr><td id=\"4-8\">NS:</td><td id=\"4-9\">normal saline</td></tr>\n<tr><td id=\"4-a\">NS:</td><td id=\"4-b\">nutrition support</td></tr>\n<tr><td id=\"4-c\">NSAID:</td><td id=\"4-d\">non-steroidal anti-inflammatory drug</td></tr>\n<tr><td id=\"4-e\">NSS:</td><td id=\"4-f\">nutrition support service</td></tr>\n<tr><td id=\"4-g\">OG:</td><td id=\"4-h\">orogastric</td></tr>\n<tr><td id=\"4-i\">OR:</td><td id=\"4-j\">operating room</td></tr>\n<tr><td id=\"4-k\">OTC:</td><td id=\"4-l\">over-the-counter</td></tr>\n<tr><td id=\"4-m\">P:</td><td id=\"4-n\">phosphorus</td></tr>\n<tr><td id=\"4-o\">pCO2:</td><td id=\"4-p\">partial pressure of carbon dioxide</td></tr>\n<tr><td id=\"4-q\">PEG:</td><td id=\"4-r\">percutaneous endoscopic gastrostomy</td></tr>\n<tr><td id=\"4-s\">PICC:</td><td id=\"4-t\">peripherally inserted central catheter</td></tr>\n<tr><td id=\"4-u\">PN:</td><td id=\"4-v\">parenteral nutrition</td></tr>\n<tr><td id=\"4-w\">PPN:</td><td id=\"4-x\">peripheral parenteral nutrition</td></tr>\n<tr><td id=\"4-y\">pO₂:</td><td id=\"4-z\">partial pressure of oxygen</td></tr>\n<tr><td id=\"4-A\">PO₄:</td><td id=\"4-B\">phosphate</td></tr>\n<tr><td id=\"4-C\">POD:</td><td id=\"4-D\">post operative day</td></tr>\n<tr><td id=\"4-E\">PUFA:</td><td id=\"4-F\">polyunsaturated fatty acids</td></tr>\n<tr><td id=\"4-G\">QOL:</td><td id=\"4-H\">quality of life</td></tr>\n<tr><td id=\"4-I\">RCT:</td><td id=\"4-J\">randomized controlled trial</td></tr>\n<tr><td id=\"4-K\">RD:</td><td id=\"4-L\">registered dietitian</td></tr>\n<tr><td id=\"4-M\">RDI:</td><td id=\"4-N\">recommended dietary intake</td></tr>\n<tr><td id=\"4-O\">RQ:</td><td id=\"4-P\">respiratory quotient</td></tr>\n<tr><td id=\"4-Q\">RR:</td><td id=\"4-R\">respiratory rate</td></tr>\n<tr><td id=\"4-S\">RRT:</td><td id=\"4-T\">renal replacement therapy</td></tr>\n<tr><td id=\"4-U\">RTU:</td><td id=\"4-V\">ready to use</td></tr>\n<tr><td id=\"4-W\">S/p:</td><td id=\"4-X\">status post</td></tr>\n</table>",
+      "type": "table",
+      "id": "af44e6d3-f522-4b50-b848-2de63689e4cf",
+      "grounding": {
+        "box": {
+          "left": 0.13019505143165588,
+          "top": 0.08448749780654907,
+          "right": 0.5884206295013428,
+          "bottom": 0.9119141697883606
+        },
+        "page": 4
+      }
+    },
+    {
+      "markdown": "<a id='8a10ae9d-f4d3-4d47-bd39-18acbdf6c704'></a>\n\nPage 5 of 6",
+      "type": "marginalia",
+      "id": "8a10ae9d-f4d3-4d47-bd39-18acbdf6c704",
+      "grounding": {
+        "box": {
+          "left": 0.4839837849140167,
+          "top": 0.9201931357383728,
+          "right": 0.576890230178833,
+          "bottom": 0.9399397969245911
+        },
+        "page": 4
+      }
+    },
+    {
+      "markdown": "<a id='85f34d32-b298-4310-98b1-7266c0ea6918'></a>\n\n<table id=\"5-1\">\n<tr><td id=\"5-2\">SAP:</td><td id=\"5-3\">severe acute pancreatitis</td></tr>\n<tr><td id=\"5-4\">SBO:</td><td id=\"5-5\">small bowel obstruction</td></tr>\n<tr><td id=\"5-6\">SBS:</td><td id=\"5-7\">short bowel syndrome</td></tr>\n<tr><td id=\"5-8\">SCAPN:</td><td id=\"5-9\">standardized commercially-available parenteral nutrition</td></tr>\n<tr><td id=\"5-a\">SCCM:</td><td id=\"5-b\">Society of Critical Care Medicine</td></tr>\n<tr><td id=\"5-c\">SIAD:</td><td id=\"5-d\">syndrome of inappropriate antidiuresis</td></tr>\n<tr><td id=\"5-e\">SICU:</td><td id=\"5-f\">surgical intensive care unit</td></tr>\n<tr><td id=\"5-g\">SIRS:</td><td id=\"5-h\">systemic inflammatory response syndrome</td></tr>\n<tr><td id=\"5-i\">sOsm:</td><td id=\"5-j\">serum osmolality</td></tr>\n<tr><td id=\"5-k\">SVC:</td><td id=\"5-l\">superior vena cava</td></tr>\n<tr><td id=\"5-m\">• T. Bili:</td><td id=\"5-n\">total bilirubin</td></tr>\n<tr><td id=\"5-o\">• TBW:</td><td id=\"5-p\">total body water</td></tr>\n<tr><td id=\"5-q\">• TE:</td><td id=\"5-r\">trace element</td></tr>\n<tr><td id=\"5-s\">• Tg:</td><td id=\"5-t\">Triglycerides</td></tr>\n<tr><td id=\"5-u\">• TNA:</td><td id=\"5-v\">total nutrient admixture</td></tr>\n<tr><td id=\"5-w\">TPP:</td><td id=\"5-x\">thiamine pyrophosphate</td></tr>\n<tr><td id=\"5-y\">uCl:</td><td id=\"5-z\">urine chloride</td></tr>\n<tr><td id=\"5-A\">uNa:</td><td id=\"5-B\">urine sodium</td></tr>\n<tr><td id=\"5-C\">uOsm:</td><td id=\"5-D\">urine osmolality</td></tr>\n<tr><td id=\"5-E\">UTI:</td><td id=\"5-F\">urinary tract infection</td></tr>\n<tr><td id=\"5-G\">VAP:</td><td id=\"5-H\">ventilator-associated pneumonia</td></tr>\n<tr><td id=\"5-I\">WBC:</td><td id=\"5-J\">white blood cell</td></tr>\n<tr><td id=\"5-K\">WBC:</td><td id=\"5-L\">white blood count</td></tr>\n<tr><td id=\"5-M\">WNL:</td><td id=\"5-N\">within normal limits</td></tr>\n<tr><td id=\"5-O\">Wt:</td><td id=\"5-P\">weight</td></tr>\n<tr><td id=\"5-Q\">Yo:</td><td id=\"5-R\">year-old</td></tr>\n<tr><td id=\"5-S\">Zn:</td><td id=\"5-T\">zinc</td></tr>\n</table>",
+      "type": "table",
+      "id": "85f34d32-b298-4310-98b1-7266c0ea6918",
+      "grounding": {
+        "box": {
+          "left": 0.1293373703956604,
+          "top": 0.08356419205665588,
+          "right": 0.7241581678390503,
+          "bottom": 0.8571904897689819
+        },
+        "page": 5
+      }
+    },
+    {
+      "markdown": "<a id='e4e26999-05d5-4ec9-9abf-fdb67abdf77c'></a>\n\nCAPTION ERROR",
+      "type": "marginalia",
+      "id": "e4e26999-05d5-4ec9-9abf-fdb67abdf77c",
+      "grounding": {
+        "box": {
+          "left": 0.48156580328941345,
+          "top": 0.9183794260025024,
+          "right": 0.5793907642364502,
+          "bottom": 0.9411951303482056
+        },
+        "page": 5
+      }
+    }
+  ],
+  "splits": [
+    {
+      "class": "full",
+      "identifier": "full",
+      "pages": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "markdown": "<a id='370b68e6-df41-478c-b452-37690205ae9a'></a>\n\nCAPTION ERROR\n\n<a id='114d1d9b-fd36-44ce-9262-f2fa10a904cb'></a>\n\n## DEFINITIONS\n\n*   Short Bowel Syndrome: Inadequate absorptive capacity for sustenance with normal diet\n*   Intestinal Failure: Inadequate absorptive capacity for sustenance Suicide\n\n<a id='f252a2ae-bdde-4e75-89a2-3bcc8894b91d'></a>\n\nABBREVIATIONS\n\n* %IBW: percent ideal body weigh\n\n* AA: amino acids\n\n* ABG: arterial blood gas\n\n* AdjBW/ABW: adjusted body weight\n\n* ACD: automated compounding device\n\n* ACEI: angiotensin converting enzyme inhibitor\n\n* AG: anion gap\n\n* AKI: acute kidney injury\n\n* ALA: alpha-linolenic acid\n\n* Alb: albumin\n\n* ALP/ Alk Phosph: alkaline phosphatase\n\n* ALT: alanine aminotransferase\n\n* ARB: angiotensin receptor blocker\n\n* ARF: acute renal failure\n\n* ASHP: American Society of Health-System Pharmacists\n\n* ASPEN: American Society for Parenteral and Enteral Nutrition\n\n* AST: aspartate aminotransferase\n\n* ATPase: adenosine triphosphatase\n\n<a id='2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f'></a>\n\nPage 1 of 6\n\n<a id='9f463e1f-8a10-48db-9e84-6d356f3f2cb6'></a>\n\n<table id=\"1-1\">\n<tr><td id=\"1-2\">BG:</td><td id=\"1-3\">blood glucose</td></tr>\n<tr><td id=\"1-4\">Bili, T:</td><td id=\"1-5\">total bilirubin</td></tr>\n<tr><td id=\"1-6\">BMI:</td><td id=\"1-7\">body mass index</td></tr>\n<tr><td id=\"1-8\">BP:</td><td id=\"1-9\">blood pressure</td></tr>\n<tr><td id=\"1-a\">BPM:</td><td id=\"1-b\">beats per minute</td></tr>\n<tr><td id=\"1-c\">BUN:</td><td id=\"1-d\">blood urea nitrogen</td></tr>\n<tr><td id=\"1-e\">Ca:</td><td id=\"1-f\">calcium</td></tr>\n<tr><td id=\"1-g\">CABG:</td><td id=\"1-h\">coronary artery bypass graft</td></tr>\n<tr><td id=\"1-i\">CaGluc:</td><td id=\"1-j\">calcium gluconate</td></tr>\n<tr><td id=\"1-k\">Cal:</td><td id=\"1-l\">calories</td></tr>\n<tr><td id=\"1-m\">CHF:</td><td id=\"1-n\">congestive heart failure</td></tr>\n<tr><td id=\"1-o\">CHG:</td><td id=\"1-p\">chlorhexidine gluconate</td></tr>\n<tr><td id=\"1-q\">CHO:</td><td id=\"1-r\">carbohydrate</td></tr>\n<tr><td id=\"1-s\">CI:</td><td id=\"1-t\">chloride</td></tr>\n<tr><td id=\"1-u\">CKD:</td><td id=\"1-v\">chronic kidney disease</td></tr>\n<tr><td id=\"1-w\">CLABSI:</td><td id=\"1-x\">central line associated bloodstream infection</td></tr>\n<tr><td id=\"1-y\">CNS:</td><td id=\"1-z\">central nervous system</td></tr>\n<tr><td id=\"1-A\">CO2:</td><td id=\"1-B\">carbon dioxide</td></tr>\n<tr><td id=\"1-C\">Cr:</td><td id=\"1-D\">creatinine</td></tr>\n<tr><td id=\"1-E\">CrCl:</td><td id=\"1-F\">creatinine clearance</td></tr>\n<tr><td id=\"1-G\">COPD:</td><td id=\"1-H\">chronic obstructive pulmonary disease</td></tr>\n<tr><td id=\"1-I\">CPOE:</td><td id=\"1-J\">computerized provider order entry</td></tr>\n<tr><td id=\"1-K\">CRBSI:</td><td id=\"1-L\">catheter-related bloodstream infections</td></tr>\n<tr><td id=\"1-M\">CRRT:</td><td id=\"1-N\">continuous renal replacement therapy</td></tr>\n<tr><td id=\"1-O\">CVC:</td><td id=\"1-P\">central venous catheter</td></tr>\n<tr><td id=\"1-Q\">D/C:</td><td id=\"1-R\">discontinue</td></tr>\n<tr><td id=\"1-S\">Dex/Dext:</td><td id=\"1-T\">dextrose</td></tr>\n<tr><td id=\"1-U\">DHA:</td><td id=\"1-V\">docosahexaenoic acid</td></tr>\n<tr><td id=\"1-W\">DOB:</td><td id=\"1-X\">date of birth</td></tr>\n</table>\n\n<a id='c1339120-6287-48ba-99ed-58a94bee2b81'></a>\n\nPage 2 of 6\n\n<a id='25053777-4c56-4b29-923b-dd0f1bc60d17'></a>\n\n<table id=\"2-1\">\n<tr><td id=\"2-2\">DVT:</td><td id=\"2-3\">deep vein thrombosis</td></tr>\n<tr><td id=\"2-4\">ECF:</td><td id=\"2-5\">extracellular fluid</td></tr>\n<tr><td id=\"2-6\">ECG:</td><td id=\"2-7\">electrocardiogram</td></tr>\n<tr><td id=\"2-8\">EHR:</td><td id=\"2-9\">electronic health record</td></tr>\n<tr><td id=\"2-a\">EFA:</td><td id=\"2-b\">essential fatty acids</td></tr>\n<tr><td id=\"2-c\">EFAD:</td><td id=\"2-d\">essential fatty acid deficiency</td></tr>\n<tr><td id=\"2-e\">EGD:</td><td id=\"2-f\">esophagogastroduodenoscopy</td></tr>\n<tr><td id=\"2-g\">EN:</td><td id=\"2-h\">enteral nutrition</td></tr>\n<tr><td id=\"2-i\">EPA:</td><td id=\"2-j\">eicosapentaenoic acid</td></tr>\n<tr><td id=\"2-k\">FDA:</td><td id=\"2-l\">U.S. Food and Drug Administration</td></tr>\n<tr><td id=\"2-m\">FO:</td><td id=\"2-n\">fish oil</td></tr>\n<tr><td id=\"2-o\">FODMAP's:</td><td id=\"2-p\">Fermentable, oligo-, di-, monosaccharides and polyols</td></tr>\n<tr><td id=\"2-q\">GCS:</td><td id=\"2-r\">Glascow coma scale</td></tr>\n<tr><td id=\"2-s\">GE:</td><td id=\"2-t\">gastric emptying</td></tr>\n<tr><td id=\"2-u\">GERD:</td><td id=\"2-v\">gastroesophageal reflux disease</td></tr>\n<tr><td id=\"2-w\">GI:</td><td id=\"2-x\">gastrointestinal</td></tr>\n<tr><td id=\"2-y\">GIR:</td><td id=\"2-z\">glucose infusion rate (mg/kg/min)</td></tr>\n<tr><td id=\"2-A\">Gluc:</td><td id=\"2-B\">glucose</td></tr>\n<tr><td id=\"2-C\">GRV:</td><td id=\"2-D\">gastric residual volume</td></tr>\n<tr><td id=\"2-E\">G-tube:</td><td id=\"2-F\">gastrostomy tube</td></tr>\n<tr><td id=\"2-G\">GUT or GI:</td><td id=\"2-H\">gastrointestinal tract</td></tr>\n<tr><td id=\"2-I\">H2:</td><td id=\"2-J\">histamine-2</td></tr>\n<tr><td id=\"2-K\">H+:</td><td id=\"2-L\">hydrogen ion</td></tr>\n<tr><td id=\"2-M\">HCO3:</td><td id=\"2-N\">bicarbonate</td></tr>\n<tr><td id=\"2-O\">HOB:</td><td id=\"2-P\">head of bed</td></tr>\n<tr><td id=\"2-Q\">HPN:</td><td id=\"2-R\">home parenteral nutrition</td></tr>\n<tr><td id=\"2-S\">HR:</td><td id=\"2-T\">heart rate</td></tr>\n<tr><td id=\"2-U\">Ht:</td><td id=\"2-V\">height</td></tr>\n<tr><td id=\"2-W\">I & O:</td><td id=\"2-X\">input and output</td></tr>\n</table>\n\n<a id='d1712a6e-15b0-4bf4-8ac1-115fe45c464c'></a>\n\nCAPTION ERROR\n\n<a id='ad904d83-aa98-4198-9fec-88fa02f43b67'></a>\n\n<table id=\"3-1\">\n<tr><td id=\"3-2\">IBW:</td><td id=\"3-3\">ideal body weight</td></tr>\n<tr><td id=\"3-4\">ICF:</td><td id=\"3-5\">intracellular fluid</td></tr>\n<tr><td id=\"3-6\">ICU:</td><td id=\"3-7\">intensive care unit</td></tr>\n<tr><td id=\"3-8\">ID:</td><td id=\"3-9\">identification</td></tr>\n<tr><td id=\"3-a\">ILE:</td><td id=\"3-b\">lipid injectable emulsion</td></tr>\n<tr><td id=\"3-c\">IPOC:</td><td id=\"3-d\">interdisciplinary plan of care</td></tr>\n<tr><td id=\"3-e\">ISMP:</td><td id=\"3-f\">Institute for Safe Medication Practices</td></tr>\n<tr><td id=\"3-g\">IV:</td><td id=\"3-h\">intravenous</td></tr>\n<tr><td id=\"3-i\">K:</td><td id=\"3-j\">potassium</td></tr>\n<tr><td id=\"3-k\">KCI:</td><td id=\"3-l\">potassium chloride</td></tr>\n<tr><td id=\"3-m\">KPO4:</td><td id=\"3-n\">potassium phosphate</td></tr>\n<tr><td id=\"3-o\">L:</td><td id=\"3-p\">liter</td></tr>\n<tr><td id=\"3-q\">LA:</td><td id=\"3-r\">linoleic acid</td></tr>\n<tr><td id=\"3-s\">LBM:</td><td id=\"3-t\">lean body mass</td></tr>\n<tr><td id=\"3-u\">Lbs:</td><td id=\"3-v\">pounds</td></tr>\n<tr><td id=\"3-w\">LCT:</td><td id=\"3-x\">long chain triglyceride</td></tr>\n<tr><td id=\"3-y\">MCB-PN:</td><td id=\"3-z\">multi-chamber bag parenteral nutrition</td></tr>\n<tr><td id=\"3-A\">MCT:</td><td id=\"3-B\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-C\">MERP:</td><td id=\"3-D\">Medication Error Reporting Program of ISMP</td></tr>\n<tr><td id=\"3-E\">Mg:</td><td id=\"3-F\">magnesium</td></tr>\n<tr><td id=\"3-G\">MgSO4:</td><td id=\"3-H\">magnesium sulfate</td></tr>\n<tr><td id=\"3-I\">MICU:</td><td id=\"3-J\">medical intensive care unit</td></tr>\n<tr><td id=\"3-K\">MCT:</td><td id=\"3-L\">medium chain triglycerides</td></tr>\n<tr><td id=\"3-M\">MST:</td><td id=\"3-N\">malnutrition screening tool</td></tr>\n<tr><td id=\"3-O\">MTE:</td><td id=\"3-P\">multiple trace element</td></tr>\n<tr><td id=\"3-Q\">Na:</td><td id=\"3-R\">sodium</td></tr>\n<tr><td id=\"3-S\">NA:</td><td id=\"3-T\">not available or not assessed (as in laboratory or d</td></tr>\n<tr><td id=\"3-U\">NaCl:</td><td id=\"3-V\">sodium chloride</td></tr>\n<tr><td id=\"3-W\">NG:</td><td id=\"3-X\">nasogastric</td></tr>\n</table>\nclinical symptom)\n\n<a id='9c14747f-9f18-487a-bb1b-304554536b0e'></a>\n\nCAPTION ERROR\n\n<a id='af44e6d3-f522-4b50-b848-2de63689e4cf'></a>\n\n<table id=\"4-1\">\n<tr><td id=\"4-2\">NGT:</td><td id=\"4-3\">nasogastric tube</td></tr>\n<tr><td id=\"4-4\">NKDA:</td><td id=\"4-5\">no known drug allergies</td></tr>\n<tr><td id=\"4-6\">NPO:</td><td id=\"4-7\">nil per os/nothing by mouth</td></tr>\n<tr><td id=\"4-8\">NS:</td><td id=\"4-9\">normal saline</td></tr>\n<tr><td id=\"4-a\">NS:</td><td id=\"4-b\">nutrition support</td></tr>\n<tr><td id=\"4-c\">NSAID:</td><td id=\"4-d\">non-steroidal anti-inflammatory drug</td></tr>\n<tr><td id=\"4-e\">NSS:</td><td id=\"4-f\">nutrition support service</td></tr>\n<tr><td id=\"4-g\">OG:</td><td id=\"4-h\">orogastric</td></tr>\n<tr><td id=\"4-i\">OR:</td><td id=\"4-j\">operating room</td></tr>\n<tr><td id=\"4-k\">OTC:</td><td id=\"4-l\">over-the-counter</td></tr>\n<tr><td id=\"4-m\">P:</td><td id=\"4-n\">phosphorus</td></tr>\n<tr><td id=\"4-o\">pCO2:</td><td id=\"4-p\">partial pressure of carbon dioxide</td></tr>\n<tr><td id=\"4-q\">PEG:</td><td id=\"4-r\">percutaneous endoscopic gastrostomy</td></tr>\n<tr><td id=\"4-s\">PICC:</td><td id=\"4-t\">peripherally inserted central catheter</td></tr>\n<tr><td id=\"4-u\">PN:</td><td id=\"4-v\">parenteral nutrition</td></tr>\n<tr><td id=\"4-w\">PPN:</td><td id=\"4-x\">peripheral parenteral nutrition</td></tr>\n<tr><td id=\"4-y\">pO₂:</td><td id=\"4-z\">partial pressure of oxygen</td></tr>\n<tr><td id=\"4-A\">PO₄:</td><td id=\"4-B\">phosphate</td></tr>\n<tr><td id=\"4-C\">POD:</td><td id=\"4-D\">post operative day</td></tr>\n<tr><td id=\"4-E\">PUFA:</td><td id=\"4-F\">polyunsaturated fatty acids</td></tr>\n<tr><td id=\"4-G\">QOL:</td><td id=\"4-H\">quality of life</td></tr>\n<tr><td id=\"4-I\">RCT:</td><td id=\"4-J\">randomized controlled trial</td></tr>\n<tr><td id=\"4-K\">RD:</td><td id=\"4-L\">registered dietitian</td></tr>\n<tr><td id=\"4-M\">RDI:</td><td id=\"4-N\">recommended dietary intake</td></tr>\n<tr><td id=\"4-O\">RQ:</td><td id=\"4-P\">respiratory quotient</td></tr>\n<tr><td id=\"4-Q\">RR:</td><td id=\"4-R\">respiratory rate</td></tr>\n<tr><td id=\"4-S\">RRT:</td><td id=\"4-T\">renal replacement therapy</td></tr>\n<tr><td id=\"4-U\">RTU:</td><td id=\"4-V\">ready to use</td></tr>\n<tr><td id=\"4-W\">S/p:</td><td id=\"4-X\">status post</td></tr>\n</table>\n\n<a id='8a10ae9d-f4d3-4d47-bd39-18acbdf6c704'></a>\n\nPage 5 of 6\n\n<a id='85f34d32-b298-4310-98b1-7266c0ea6918'></a>\n\n<table id=\"5-1\">\n<tr><td id=\"5-2\">SAP:</td><td id=\"5-3\">severe acute pancreatitis</td></tr>\n<tr><td id=\"5-4\">SBO:</td><td id=\"5-5\">small bowel obstruction</td></tr>\n<tr><td id=\"5-6\">SBS:</td><td id=\"5-7\">short bowel syndrome</td></tr>\n<tr><td id=\"5-8\">SCAPN:</td><td id=\"5-9\">standardized commercially-available parenteral nutrition</td></tr>\n<tr><td id=\"5-a\">SCCM:</td><td id=\"5-b\">Society of Critical Care Medicine</td></tr>\n<tr><td id=\"5-c\">SIAD:</td><td id=\"5-d\">syndrome of inappropriate antidiuresis</td></tr>\n<tr><td id=\"5-e\">SICU:</td><td id=\"5-f\">surgical intensive care unit</td></tr>\n<tr><td id=\"5-g\">SIRS:</td><td id=\"5-h\">systemic inflammatory response syndrome</td></tr>\n<tr><td id=\"5-i\">sOsm:</td><td id=\"5-j\">serum osmolality</td></tr>\n<tr><td id=\"5-k\">SVC:</td><td id=\"5-l\">superior vena cava</td></tr>\n<tr><td id=\"5-m\">• T. Bili:</td><td id=\"5-n\">total bilirubin</td></tr>\n<tr><td id=\"5-o\">• TBW:</td><td id=\"5-p\">total body water</td></tr>\n<tr><td id=\"5-q\">• TE:</td><td id=\"5-r\">trace element</td></tr>\n<tr><td id=\"5-s\">• Tg:</td><td id=\"5-t\">Triglycerides</td></tr>\n<tr><td id=\"5-u\">• TNA:</td><td id=\"5-v\">total nutrient admixture</td></tr>\n<tr><td id=\"5-w\">TPP:</td><td id=\"5-x\">thiamine pyrophosphate</td></tr>\n<tr><td id=\"5-y\">uCl:</td><td id=\"5-z\">urine chloride</td></tr>\n<tr><td id=\"5-A\">uNa:</td><td id=\"5-B\">urine sodium</td></tr>\n<tr><td id=\"5-C\">uOsm:</td><td id=\"5-D\">urine osmolality</td></tr>\n<tr><td id=\"5-E\">UTI:</td><td id=\"5-F\">urinary tract infection</td></tr>\n<tr><td id=\"5-G\">VAP:</td><td id=\"5-H\">ventilator-associated pneumonia</td></tr>\n<tr><td id=\"5-I\">WBC:</td><td id=\"5-J\">white blood cell</td></tr>\n<tr><td id=\"5-K\">WBC:</td><td id=\"5-L\">white blood count</td></tr>\n<tr><td id=\"5-M\">WNL:</td><td id=\"5-N\">within normal limits</td></tr>\n<tr><td id=\"5-O\">Wt:</td><td id=\"5-P\">weight</td></tr>\n<tr><td id=\"5-Q\">Yo:</td><td id=\"5-R\">year-old</td></tr>\n<tr><td id=\"5-S\">Zn:</td><td id=\"5-T\">zinc</td></tr>\n</table>\n\n<a id='e4e26999-05d5-4ec9-9abf-fdb67abdf77c'></a>\n\nCAPTION ERROR",
+      "chunks": [
+        "370b68e6-df41-478c-b452-37690205ae9a",
+        "114d1d9b-fd36-44ce-9262-f2fa10a904cb",
+        "f252a2ae-bdde-4e75-89a2-3bcc8894b91d",
+        "2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f",
+        "9f463e1f-8a10-48db-9e84-6d356f3f2cb6",
+        "c1339120-6287-48ba-99ed-58a94bee2b81",
+        "25053777-4c56-4b29-923b-dd0f1bc60d17",
+        "d1712a6e-15b0-4bf4-8ac1-115fe45c464c",
+        "ad904d83-aa98-4198-9fec-88fa02f43b67",
+        "9c14747f-9f18-487a-bb1b-304554536b0e",
+        "af44e6d3-f522-4b50-b848-2de63689e4cf",
+        "8a10ae9d-f4d3-4d47-bd39-18acbdf6c704",
+        "85f34d32-b298-4310-98b1-7266c0ea6918",
+        "e4e26999-05d5-4ec9-9abf-fdb67abdf77c"
+      ]
+    }
+  ],
+  "grounding": {
+    "370b68e6-df41-478c-b452-37690205ae9a": {
+      "box": {
+        "left": 0.3677225708961487,
+        "top": 0.023228004574775696,
+        "right": 0.7201948761940002,
+        "bottom": 0.18105490505695343
+      },
+      "page": 0,
+      "type": "chunkLogo"
+    },
+    "114d1d9b-fd36-44ce-9262-f2fa10a904cb": {
+      "box": {
+        "left": 0.11045259237289429,
+        "top": 0.23383036255836487,
+        "right": 0.7671257257461548,
+        "bottom": 0.3537096679210663
+      },
+      "page": 0,
+      "type": "chunkText"
+    },
+    "f252a2ae-bdde-4e75-89a2-3bcc8894b91d": {
+      "box": {
+        "left": 0.1134483814239502,
+        "top": 0.35803887248039246,
+        "right": 0.6887167096138,
+        "bottom": 0.9100078344345093
+      },
+      "page": 0,
+      "type": "chunkText"
+    },
+    "2a1f7253-1bc6-4cae-8ec1-9c3c9e5e935f": {
+      "box": {
+        "left": 0.48488399386405945,
+        "top": 0.9203174114227295,
+        "right": 0.5754841566085815,
+        "bottom": 0.9398561716079712
+      },
+      "page": 0,
+      "type": "chunkMarginalia"
+    },
+    "9f463e1f-8a10-48db-9e84-6d356f3f2cb6": {
+      "box": {
+        "left": 0.12873706221580505,
+        "top": 0.08325701951980591,
+        "right": 0.6309871673583984,
+        "bottom": 0.9115039110183716
+      },
+      "page": 1,
+      "type": "chunkTable"
+    },
+    "1-1": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.08702156433020311,
+        "right": 0.6280612097366731,
+        "bottom": 0.9068246256345098
+      },
+      "page": 1,
+      "type": "table"
+    },
+    "1-2": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.08702156433020311,
+        "right": 0.25590548387260537,
+        "bottom": 0.1094271794284094
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-3": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.08702156433020311,
+        "right": 0.6283122267785721,
+        "bottom": 0.1094271794284094
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-4": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.1094271794284094,
+        "right": 0.25590548387260537,
+        "bottom": 0.13783048428779976
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-5": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.1094271794284094,
+        "right": 0.6283122267785721,
+        "bottom": 0.13783048428779976
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-6": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.13783048428779976,
+        "right": 0.25590548387260537,
+        "bottom": 0.16645024960118127
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-7": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.13783048428779976,
+        "right": 0.6283122267785721,
+        "bottom": 0.16645024960118127
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-8": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.16645024960118127,
+        "right": 0.25590548387260537,
+        "bottom": 0.19519459962286945
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-9": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.16645024960118127,
+        "right": 0.6283122267785721,
+        "bottom": 0.19519459962286945
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-a": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.19519459962286945,
+        "right": 0.25590548387260537,
+        "bottom": 0.22314937423158288
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-b": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.19519459962286945,
+        "right": 0.6283122267785721,
+        "bottom": 0.22314937423158288
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-c": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.22314937423158288,
+        "right": 0.25590548387260537,
+        "bottom": 0.2514373291647747
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-d": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.22314937423158288,
+        "right": 0.6283122267785721,
+        "bottom": 0.2514373291647747
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-e": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.2514373291647747,
+        "right": 0.25590548387260537,
+        "bottom": 0.2790855077733143
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-f": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.2514373291647747,
+        "right": 0.6283122267785721,
+        "bottom": 0.2790855077733143
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-g": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.2790855077733143,
+        "right": 0.25590548387260537,
+        "bottom": 0.3074861930770716
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-h": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.2790855077733143,
+        "right": 0.6283122267785721,
+        "bottom": 0.3074861930770716
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-i": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.3074861930770716,
+        "right": 0.25590548387260537,
+        "bottom": 0.33573523418736073
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-j": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.3074861930770716,
+        "right": 0.6283122267785721,
+        "bottom": 0.33573523418736073
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-k": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.33573523418736073,
+        "right": 0.25590548387260537,
+        "bottom": 0.3643850148566887
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-l": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.33573523418736073,
+        "right": 0.6283122267785721,
+        "bottom": 0.3643850148566887
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-m": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.3643850148566887,
+        "right": 0.25590548387260537,
+        "bottom": 0.3928098778258651
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-n": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.3643850148566887,
+        "right": 0.6283122267785721,
+        "bottom": 0.3928098778258651
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-o": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.3928098778258651,
+        "right": 0.25590548387260537,
+        "bottom": 0.4205779327305841
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-p": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.3928098778258651,
+        "right": 0.6283122267785721,
+        "bottom": 0.4205779327305841
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-q": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.4205779327305841,
+        "right": 0.25590548387260537,
+        "bottom": 0.44888298111278324
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-r": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.4205779327305841,
+        "right": 0.6283122267785721,
+        "bottom": 0.44888298111278324
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-s": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.44888298111278324,
+        "right": 0.25590548387260537,
+        "bottom": 0.47726570903870247
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-t": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.44888298111278324,
+        "right": 0.6283122267785721,
+        "bottom": 0.47726570903870247
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-u": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.47726570903870247,
+        "right": 0.25590548387260537,
+        "bottom": 0.5064115329589356
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-v": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.47726570903870247,
+        "right": 0.6283122267785721,
+        "bottom": 0.5064115329589356
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-w": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.5064115329589356,
+        "right": 0.25590548387260537,
+        "bottom": 0.5348504903098927
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-x": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.5064115329589356,
+        "right": 0.6283122267785721,
+        "bottom": 0.5348504903098927
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-y": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.5348504903098927,
+        "right": 0.25590548387260537,
+        "bottom": 0.5623823223886184
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-z": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.5348504903098927,
+        "right": 0.6283122267785721,
+        "bottom": 0.5623823223886184
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-A": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.5623823223886184,
+        "right": 0.25590548387260537,
+        "bottom": 0.5903029224411576
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-B": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.5623823223886184,
+        "right": 0.6283122267785721,
+        "bottom": 0.5903029224411576
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-C": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.5903029224411576,
+        "right": 0.25590548387260537,
+        "bottom": 0.6186593869306236
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-D": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.5903029224411576,
+        "right": 0.6283122267785721,
+        "bottom": 0.6186593869306236
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-E": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.6186593869306236,
+        "right": 0.25590548387260537,
+        "bottom": 0.6480424950751278
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-F": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.6186593869306236,
+        "right": 0.6283122267785721,
+        "bottom": 0.6480424950751278
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-G": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.6480424950751278,
+        "right": 0.25590548387260537,
+        "bottom": 0.676325846501836
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-H": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.6480424950751278,
+        "right": 0.6283122267785721,
+        "bottom": 0.676325846501836
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-I": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.676325846501836,
+        "right": 0.25590548387260537,
+        "bottom": 0.7045484760735867
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-J": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.676325846501836,
+        "right": 0.6283122267785721,
+        "bottom": 0.7045484760735867
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-K": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.7045484760735867,
+        "right": 0.25590548387260537,
+        "bottom": 0.7326853545379706
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-L": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.7045484760735867,
+        "right": 0.6283122267785721,
+        "bottom": 0.7326853545379706
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-M": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.7326853545379706,
+        "right": 0.25590548387260537,
+        "bottom": 0.7610623558499263
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-N": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.7326853545379706,
+        "right": 0.6283122267785721,
+        "bottom": 0.7610623558499263
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-O": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.7610623558499263,
+        "right": 0.25590548387260537,
+        "bottom": 0.7898319757899124
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-P": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.7610623558499263,
+        "right": 0.6283122267785721,
+        "bottom": 0.7898319757899124
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-Q": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.7898319757899124,
+        "right": 0.25590548387260537,
+        "bottom": 0.8173739281777976
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-R": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.7898319757899124,
+        "right": 0.6283122267785721,
+        "bottom": 0.8173739281777976
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-S": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.8173739281777976,
+        "right": 0.25590548387260537,
+        "bottom": 0.8457863752554928
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-T": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.8173739281777976,
+        "right": 0.6283122267785721,
+        "bottom": 0.8457863752554928
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-U": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.8457863752554928,
+        "right": 0.25590548387260537,
+        "bottom": 0.8739809147984055
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-V": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.8457863752554928,
+        "right": 0.6283122267785721,
+        "bottom": 0.8739809147984055
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-W": {
+      "box": {
+        "left": 0.13684665459569334,
+        "top": 0.8739809147984055,
+        "right": 0.25590548387260537,
+        "bottom": 0.9068246256345098
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "1-X": {
+      "box": {
+        "left": 0.25590548387260537,
+        "top": 0.8739809147984055,
+        "right": 0.6283122267785721,
+        "bottom": 0.9068246256345098
+      },
+      "page": 1,
+      "type": "tableCell"
+    },
+    "c1339120-6287-48ba-99ed-58a94bee2b81": {
+      "box": {
+        "left": 0.48299020528793335,
+        "top": 0.9197965264320374,
+        "right": 0.5782378315925598,
+        "bottom": 0.9398548007011414
+      },
+      "page": 1,
+      "type": "chunkMarginalia"
+    },
+    "25053777-4c56-4b29-923b-dd0f1bc60d17": {
+      "box": {
+        "left": 0.12957003712654114,
+        "top": 0.08272126317024231,
+        "right": 0.7009265422821045,
+        "bottom": 0.9125890731811523
+      },
+      "page": 2,
+      "type": "chunkTable"
+    },
+    "2-1": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.0867070807922435,
+        "right": 0.696837838768424,
+        "bottom": 0.9075588341391647
+      },
+      "page": 2,
+      "type": "table"
+    },
+    "2-2": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.0867070807922435,
+        "right": 0.26804718152972473,
+        "bottom": 0.10957448288025806
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-3": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.0867070807922435,
+        "right": 0.6964978626966509,
+        "bottom": 0.10957448288025806
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-4": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.10957448288025806,
+        "right": 0.26804718152972473,
+        "bottom": 0.13760493285370412
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-5": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.10957448288025806,
+        "right": 0.6964978626966509,
+        "bottom": 0.13760493285370412
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-6": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.13760493285370412,
+        "right": 0.26804718152972473,
+        "bottom": 0.1663970229470051
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-7": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.13760493285370412,
+        "right": 0.6964978626966509,
+        "bottom": 0.1663970229470051
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-8": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.1663970229470051,
+        "right": 0.26804718152972473,
+        "bottom": 0.19474753576032588
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-9": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.1663970229470051,
+        "right": 0.6964978626966509,
+        "bottom": 0.19474753576032588
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-a": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.19474753576032588,
+        "right": 0.26804718152972473,
+        "bottom": 0.2227756176459197
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-b": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.19474753576032588,
+        "right": 0.6964978626966509,
+        "bottom": 0.2227756176459197
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-c": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.2227756176459197,
+        "right": 0.26804718152972473,
+        "bottom": 0.25139929526684535
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-d": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.2227756176459197,
+        "right": 0.6964978626966509,
+        "bottom": 0.25139929526684535
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-e": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.25139929526684535,
+        "right": 0.26804718152972473,
+        "bottom": 0.2802956554216096
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-f": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.25139929526684535,
+        "right": 0.6964978626966509,
+        "bottom": 0.2802956554216096
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-g": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.2802956554216096,
+        "right": 0.26804718152972473,
+        "bottom": 0.3081675300709126
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-h": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.2802956554216096,
+        "right": 0.6964978626966509,
+        "bottom": 0.3081675300709126
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-i": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.3081675300709126,
+        "right": 0.26804718152972473,
+        "bottom": 0.33644128715943467
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-j": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.3081675300709126,
+        "right": 0.6964978626966509,
+        "bottom": 0.33644128715943467
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-k": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.33644128715943467,
+        "right": 0.26804718152972473,
+        "bottom": 0.36516076413592913
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-l": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.33644128715943467,
+        "right": 0.6964978626966509,
+        "bottom": 0.36516076413592913
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-m": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.36516076413592913,
+        "right": 0.26804718152972473,
+        "bottom": 0.39309458004921094
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-n": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.36516076413592913,
+        "right": 0.6964978626966509,
+        "bottom": 0.39309458004921094
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-o": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.39309458004921094,
+        "right": 0.26804718152972473,
+        "bottom": 0.42219525115695156
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-p": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.39309458004921094,
+        "right": 0.6964978626966509,
+        "bottom": 0.42219525115695156
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-q": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.42219525115695156,
+        "right": 0.26804718152972473,
+        "bottom": 0.44938849242116863
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-r": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.42219525115695156,
+        "right": 0.6964978626966509,
+        "bottom": 0.44938849242116863
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-s": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.44938849242116863,
+        "right": 0.26804718152972473,
+        "bottom": 0.4787203086888798
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-t": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.44938849242116863,
+        "right": 0.6964978626966509,
+        "bottom": 0.4787203086888798
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-u": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.4787203086888798,
+        "right": 0.26804718152972473,
+        "bottom": 0.5067387821971305
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-v": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.4787203086888798,
+        "right": 0.6964978626966509,
+        "bottom": 0.5067387821971305
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-w": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.5067387821971305,
+        "right": 0.26804718152972473,
+        "bottom": 0.5350354411065528
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-x": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.5067387821971305,
+        "right": 0.6964978626966509,
+        "bottom": 0.5350354411065528
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-y": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.5350354411065528,
+        "right": 0.26804718152972473,
+        "bottom": 0.563498051655543
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-z": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.5350354411065528,
+        "right": 0.6964978626966509,
+        "bottom": 0.563498051655543
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-A": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.563498051655543,
+        "right": 0.26804718152972473,
+        "bottom": 0.5916883630165088
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-B": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.563498051655543,
+        "right": 0.6964978626966509,
+        "bottom": 0.5916883630165088
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-C": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.5916883630165088,
+        "right": 0.26804718152972473,
+        "bottom": 0.6203047570669646
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-D": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.5916883630165088,
+        "right": 0.6964978626966509,
+        "bottom": 0.6203047570669646
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-E": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.6203047570669646,
+        "right": 0.26804718152972473,
+        "bottom": 0.6482874681205484
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-F": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.6203047570669646,
+        "right": 0.6964978626966509,
+        "bottom": 0.6482874681205484
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-G": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.6482874681205484,
+        "right": 0.26804718152972473,
+        "bottom": 0.6764166914711218
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-H": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.6482874681205484,
+        "right": 0.6964978626966509,
+        "bottom": 0.6764166914711218
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-I": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.6764166914711218,
+        "right": 0.26804718152972473,
+        "bottom": 0.7048687661932185
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-J": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.6764166914711218,
+        "right": 0.6964978626966509,
+        "bottom": 0.7048687661932185
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-K": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.7048687661932185,
+        "right": 0.26804718152972473,
+        "bottom": 0.7335471386056351
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-L": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.7048687661932185,
+        "right": 0.6964978626966509,
+        "bottom": 0.7335471386056351
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-M": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.7335471386056351,
+        "right": 0.26804718152972473,
+        "bottom": 0.7615591817970024
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-N": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.7335471386056351,
+        "right": 0.6964978626966509,
+        "bottom": 0.7615591817970024
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-O": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.7615591817970024,
+        "right": 0.26804718152972473,
+        "bottom": 0.7898184459405488
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-P": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.7615591817970024,
+        "right": 0.6964978626966509,
+        "bottom": 0.7898184459405488
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-Q": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.7898184459405488,
+        "right": 0.26804718152972473,
+        "bottom": 0.8184055573171971
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-R": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.7898184459405488,
+        "right": 0.6964978626966509,
+        "bottom": 0.8184055573171971
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-S": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.8184055573171971,
+        "right": 0.26804718152972473,
+        "bottom": 0.8463113518880601
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-T": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.8184055573171971,
+        "right": 0.6964978626966509,
+        "bottom": 0.8463113518880601
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-U": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.8463113518880601,
+        "right": 0.26804718152972473,
+        "bottom": 0.8753230620349175
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-V": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.8463113518880601,
+        "right": 0.6964978626966509,
+        "bottom": 0.8753230620349175
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-W": {
+      "box": {
+        "left": 0.13636580234660686,
+        "top": 0.8753230620349175,
+        "right": 0.26804718152972473,
+        "bottom": 0.9075588341391647
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "2-X": {
+      "box": {
+        "left": 0.26804718152972473,
+        "top": 0.8753230620349175,
+        "right": 0.6964978626966509,
+        "bottom": 0.9075588341391647
+      },
+      "page": 2,
+      "type": "tableCell"
+    },
+    "d1712a6e-15b0-4bf4-8ac1-115fe45c464c": {
+      "box": {
+        "left": 0.48395127058029175,
+        "top": 0.9199205040931702,
+        "right": 0.576733410358429,
+        "bottom": 0.939913809299469
+      },
+      "page": 2,
+      "type": "chunkMarginalia"
+    },
+    "ad904d83-aa98-4198-9fec-88fa02f43b67": {
+      "box": {
+        "left": 0.1300298273563385,
+        "top": 0.08408507704734802,
+        "right": 0.7914342880249023,
+        "bottom": 0.9111311435699463
+      },
+      "page": 3,
+      "type": "chunkTable"
+    },
+    "3-1": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.08732092490973792,
+        "right": 0.6558534413034742,
+        "bottom": 0.907953832914135
+      },
+      "page": 3,
+      "type": "table"
+    },
+    "3-2": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.08732092490973792,
+        "right": 0.2506863339022578,
+        "bottom": 0.11039800970120428
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-3": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.08732092490973792,
+        "right": 0.6543016424957759,
+        "bottom": 0.11039800970120428
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-4": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.11039800970120428,
+        "right": 0.2506863339022578,
+        "bottom": 0.1387152905688842
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-5": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.11039800970120428,
+        "right": 0.6543016424957759,
+        "bottom": 0.1387152905688842
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-6": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.1387152905688842,
+        "right": 0.2506863339022578,
+        "bottom": 0.16720209348611115
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-7": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.1387152905688842,
+        "right": 0.6543016424957759,
+        "bottom": 0.16720209348611115
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-8": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.16720209348611115,
+        "right": 0.2506863339022578,
+        "bottom": 0.1953899112931614
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-9": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.16720209348611115,
+        "right": 0.6543016424957759,
+        "bottom": 0.1953899112931614
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-a": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.1953899112931614,
+        "right": 0.2506863339022578,
+        "bottom": 0.22331644294314934
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-b": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.1953899112931614,
+        "right": 0.6543016424957759,
+        "bottom": 0.22331644294314934
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-c": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.22331644294314934,
+        "right": 0.2506863339022578,
+        "bottom": 0.250958155859752
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-d": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.22331644294314934,
+        "right": 0.6543016424957759,
+        "bottom": 0.250958155859752
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-e": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.250958155859752,
+        "right": 0.2506863339022578,
+        "bottom": 0.2793249358595613
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-f": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.250958155859752,
+        "right": 0.6543016424957759,
+        "bottom": 0.2793249358595613
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-g": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.2793249358595613,
+        "right": 0.2506863339022578,
+        "bottom": 0.30836158398507507
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-h": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.2793249358595613,
+        "right": 0.6543016424957759,
+        "bottom": 0.30836158398507507
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-i": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.30836158398507507,
+        "right": 0.2506863339022578,
+        "bottom": 0.3369758658075046
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-j": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.30836158398507507,
+        "right": 0.6543016424957759,
+        "bottom": 0.3369758658075046
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-k": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.3369758658075046,
+        "right": 0.2506863339022578,
+        "bottom": 0.36504054890058235
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-l": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.3369758658075046,
+        "right": 0.6543016424957759,
+        "bottom": 0.36504054890058235
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-m": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.36504054890058235,
+        "right": 0.2506863339022578,
+        "bottom": 0.3934718201137448
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-n": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.36504054890058235,
+        "right": 0.6543016424957759,
+        "bottom": 0.3934718201137448
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-o": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.3934718201137448,
+        "right": 0.2506863339022578,
+        "bottom": 0.42187760540502417
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-p": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.3934718201137448,
+        "right": 0.6543016424957759,
+        "bottom": 0.42187760540502417
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-q": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.42187760540502417,
+        "right": 0.2506863339022578,
+        "bottom": 0.45012699981202076
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-r": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.42187760540502417,
+        "right": 0.6543016424957759,
+        "bottom": 0.45012699981202076
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-s": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.45012699981202076,
+        "right": 0.2506863339022578,
+        "bottom": 0.4785953414570132
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-t": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.45012699981202076,
+        "right": 0.6543016424957759,
+        "bottom": 0.4785953414570132
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-u": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.4785953414570132,
+        "right": 0.2506863339022578,
+        "bottom": 0.5072046690528484
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-v": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.4785953414570132,
+        "right": 0.6543016424957759,
+        "bottom": 0.5072046690528484
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-w": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.5072046690528484,
+        "right": 0.2506863339022578,
+        "bottom": 0.5358956551198624
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-x": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.5072046690528484,
+        "right": 0.6543016424957759,
+        "bottom": 0.5358956551198624
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-y": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.5358956551198624,
+        "right": 0.2506863339022578,
+        "bottom": 0.5638070776111324
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-z": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.5358956551198624,
+        "right": 0.6543016424957759,
+        "bottom": 0.5638070776111324
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-A": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.5638070776111324,
+        "right": 0.2506863339022578,
+        "bottom": 0.5922789932006829
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-B": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.5638070776111324,
+        "right": 0.6543016424957759,
+        "bottom": 0.5922789932006829
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-C": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.5922789932006829,
+        "right": 0.2506863339022578,
+        "bottom": 0.6208626623393805
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-D": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.5922789932006829,
+        "right": 0.6543016424957759,
+        "bottom": 0.6208626623393805
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-E": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.6208626623393805,
+        "right": 0.2506863339022578,
+        "bottom": 0.6495506413633869
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-F": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.6208626623393805,
+        "right": 0.6543016424957759,
+        "bottom": 0.6495506413633869
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-G": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.6495506413633869,
+        "right": 0.2506863339022578,
+        "bottom": 0.6779537893300613
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-H": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.6495506413633869,
+        "right": 0.6543016424957759,
+        "bottom": 0.6779537893300613
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-I": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.6779537893300613,
+        "right": 0.2506863339022578,
+        "bottom": 0.7059206695817153
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-J": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.6779537893300613,
+        "right": 0.6543016424957759,
+        "bottom": 0.7059206695817153
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-K": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.7059206695817153,
+        "right": 0.2506863339022578,
+        "bottom": 0.7344106767250977
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-L": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.7059206695817153,
+        "right": 0.6543016424957759,
+        "bottom": 0.7344106767250977
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-M": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.7344106767250977,
+        "right": 0.2506863339022578,
+        "bottom": 0.7626349795765073
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-N": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.7344106767250977,
+        "right": 0.6543016424957759,
+        "bottom": 0.7626349795765073
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-O": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.7626349795765073,
+        "right": 0.2506863339022578,
+        "bottom": 0.7912639022476782
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-P": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.7626349795765073,
+        "right": 0.6543016424957759,
+        "bottom": 0.7912639022476782
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-Q": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.7912639022476782,
+        "right": 0.2506863339022578,
+        "bottom": 0.8185966414952617
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-R": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.7912639022476782,
+        "right": 0.6543016424957759,
+        "bottom": 0.8185966414952617
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-S": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.8185966414952617,
+        "right": 0.2506863339022578,
+        "bottom": 0.8473912473065663
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-T": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.8185966414952617,
+        "right": 0.6543016424957759,
+        "bottom": 0.8473912473065663
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-U": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.8473912473065663,
+        "right": 0.2506863339022578,
+        "bottom": 0.8757224234242091
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-V": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.8473912473065663,
+        "right": 0.6543016424957759,
+        "bottom": 0.8757224234242091
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-W": {
+      "box": {
+        "left": 0.1360995738399134,
+        "top": 0.8757224234242091,
+        "right": 0.2506863339022578,
+        "bottom": 0.907953832914135
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "3-X": {
+      "box": {
+        "left": 0.2506863339022578,
+        "top": 0.8757224234242091,
+        "right": 0.6543016424957759,
+        "bottom": 0.907953832914135
+      },
+      "page": 3,
+      "type": "tableCell"
+    },
+    "9c14747f-9f18-487a-bb1b-304554536b0e": {
+      "box": {
+        "left": 0.4831337332725525,
+        "top": 0.919217050075531,
+        "right": 0.5780732035636902,
+        "bottom": 0.940311849117279
+      },
+      "page": 3,
+      "type": "chunkMarginalia"
+    },
+    "af44e6d3-f522-4b50-b848-2de63689e4cf": {
+      "box": {
+        "left": 0.13019505143165588,
+        "top": 0.08448749780654907,
+        "right": 0.5884206295013428,
+        "bottom": 0.9119141697883606
+      },
+      "page": 4,
+      "type": "chunkTable"
+    },
+    "4-1": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.08811239130572324,
+        "right": 0.5839045286575661,
+        "bottom": 0.9078565910706544
+      },
+      "page": 4,
+      "type": "table"
+    },
+    "4-2": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.08811239130572324,
+        "right": 0.23499371156216364,
+        "bottom": 0.10963962613730782
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-3": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.08811239130572324,
+        "right": 0.5847061741118491,
+        "bottom": 0.10963962613730782
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-4": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.10963962613730782,
+        "right": 0.23499371156216364,
+        "bottom": 0.1386296378836036
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-5": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.10963962613730782,
+        "right": 0.5847061741118491,
+        "bottom": 0.1386296378836036
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-6": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.1386296378836036,
+        "right": 0.23499371156216364,
+        "bottom": 0.16761069524467054
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-7": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.1386296378836036,
+        "right": 0.5847061741118491,
+        "bottom": 0.16761069524467054
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-8": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.16761069524467054,
+        "right": 0.23499371156216364,
+        "bottom": 0.19535454939554242
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-9": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.16761069524467054,
+        "right": 0.5847061741118491,
+        "bottom": 0.19535454939554242
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-a": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.19535454939554242,
+        "right": 0.23499371156216364,
+        "bottom": 0.22395427015963776
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-b": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.19535454939554242,
+        "right": 0.5847061741118491,
+        "bottom": 0.22395427015963776
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-c": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.22395427015963776,
+        "right": 0.23499371156216364,
+        "bottom": 0.2527588228711437
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-d": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.22395427015963776,
+        "right": 0.5847061741118491,
+        "bottom": 0.2527588228711437
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-e": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.2527588228711437,
+        "right": 0.23499371156216364,
+        "bottom": 0.2800547481570632
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-f": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.2527588228711437,
+        "right": 0.5847061741118491,
+        "bottom": 0.2800547481570632
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-g": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.2800547481570632,
+        "right": 0.23499371156216364,
+        "bottom": 0.3081388319577769
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-h": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.2800547481570632,
+        "right": 0.5847061741118491,
+        "bottom": 0.3081388319577769
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-i": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.3081388319577769,
+        "right": 0.23499371156216364,
+        "bottom": 0.33639091913629215
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-j": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.3081388319577769,
+        "right": 0.5847061741118491,
+        "bottom": 0.33639091913629215
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-k": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.33639091913629215,
+        "right": 0.23499371156216364,
+        "bottom": 0.36503997070286687
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-l": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.33639091913629215,
+        "right": 0.5847061741118491,
+        "bottom": 0.36503997070286687
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-m": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.36503997070286687,
+        "right": 0.23499371156216364,
+        "bottom": 0.3943932654026625
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-n": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.36503997070286687,
+        "right": 0.5847061741118491,
+        "bottom": 0.3943932654026625
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-o": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.3943932654026625,
+        "right": 0.23499371156216364,
+        "bottom": 0.42258890758898815
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-p": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.3943932654026625,
+        "right": 0.5847061741118491,
+        "bottom": 0.42258890758898815
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-q": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.42258890758898815,
+        "right": 0.23499371156216364,
+        "bottom": 0.45050728132088835
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-r": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.42258890758898815,
+        "right": 0.5847061741118491,
+        "bottom": 0.45050728132088835
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-s": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.45050728132088835,
+        "right": 0.23499371156216364,
+        "bottom": 0.4795434089217139
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-t": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.45050728132088835,
+        "right": 0.5847061741118491,
+        "bottom": 0.4795434089217139
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-u": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.4795434089217139,
+        "right": 0.23499371156216364,
+        "bottom": 0.5071156902703109
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-v": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.4795434089217139,
+        "right": 0.5847061741118491,
+        "bottom": 0.5071156902703109
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-w": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.5071156902703109,
+        "right": 0.23499371156216364,
+        "bottom": 0.5361236816823691
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-x": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.5071156902703109,
+        "right": 0.5847061741118491,
+        "bottom": 0.5361236816823691
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-y": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.5361236816823691,
+        "right": 0.23499371156216364,
+        "bottom": 0.5643916494091457
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-z": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.5361236816823691,
+        "right": 0.5847061741118491,
+        "bottom": 0.5643916494091457
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-A": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.5643916494091457,
+        "right": 0.23499371156216364,
+        "bottom": 0.5916864157109529
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-B": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.5643916494091457,
+        "right": 0.5847061741118491,
+        "bottom": 0.5916864157109529
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-C": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.5916864157109529,
+        "right": 0.23499371156216364,
+        "bottom": 0.6206432638666541
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-D": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.5916864157109529,
+        "right": 0.5847061741118491,
+        "bottom": 0.6206432638666541
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-E": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.6206432638666541,
+        "right": 0.23499371156216364,
+        "bottom": 0.6496781338464217
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-F": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.6206432638666541,
+        "right": 0.5847061741118491,
+        "bottom": 0.6496781338464217
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-G": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.6496781338464217,
+        "right": 0.23499371156216364,
+        "bottom": 0.6772887356484318
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-H": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.6496781338464217,
+        "right": 0.5847061741118491,
+        "bottom": 0.6772887356484318
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-I": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.6772887356484318,
+        "right": 0.23499371156216364,
+        "bottom": 0.7055753950764228
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-J": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.6772887356484318,
+        "right": 0.5847061741118491,
+        "bottom": 0.7055753950764228
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-K": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.7055753950764228,
+        "right": 0.23499371156216364,
+        "bottom": 0.7334624269188197
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-L": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.7055753950764228,
+        "right": 0.5847061741118491,
+        "bottom": 0.7334624269188197
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-M": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.7334624269188197,
+        "right": 0.23499371156216364,
+        "bottom": 0.7622106579343182
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-N": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.7334624269188197,
+        "right": 0.5847061741118491,
+        "bottom": 0.7622106579343182
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-O": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.7622106579343182,
+        "right": 0.23499371156216364,
+        "bottom": 0.7910082567411507
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-P": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.7622106579343182,
+        "right": 0.5847061741118491,
+        "bottom": 0.7910082567411507
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-Q": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.7910082567411507,
+        "right": 0.23499371156216364,
+        "bottom": 0.818877040748589
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-R": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.7910082567411507,
+        "right": 0.5847061741118491,
+        "bottom": 0.818877040748589
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-S": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.818877040748589,
+        "right": 0.23499371156216364,
+        "bottom": 0.8475201740984204
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-T": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.818877040748589,
+        "right": 0.5847061741118491,
+        "bottom": 0.8475201740984204
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-U": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.8475201740984204,
+        "right": 0.23499371156216364,
+        "bottom": 0.8756174999090973
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-V": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.8475201740984204,
+        "right": 0.5847061741118491,
+        "bottom": 0.8756174999090973
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-W": {
+      "box": {
+        "left": 0.14021857617454936,
+        "top": 0.8756174999090973,
+        "right": 0.23499371156216364,
+        "bottom": 0.9078565910706544
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "4-X": {
+      "box": {
+        "left": 0.23499371156216364,
+        "top": 0.8756174999090973,
+        "right": 0.5847061741118491,
+        "bottom": 0.9078565910706544
+      },
+      "page": 4,
+      "type": "tableCell"
+    },
+    "8a10ae9d-f4d3-4d47-bd39-18acbdf6c704": {
+      "box": {
+        "left": 0.4839837849140167,
+        "top": 0.9201931357383728,
+        "right": 0.576890230178833,
+        "bottom": 0.9399397969245911
+      },
+      "page": 4,
+      "type": "chunkMarginalia"
+    },
+    "85f34d32-b298-4310-98b1-7266c0ea6918": {
+      "box": {
+        "left": 0.1293373703956604,
+        "top": 0.08356419205665588,
+        "right": 0.7241581678390503,
+        "bottom": 0.8571904897689819
+      },
+      "page": 5,
+      "type": "chunkTable"
+    },
+    "5-1": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.08761456994774378,
+        "right": 0.7182382224408919,
+        "bottom": 0.8521130820949434
+      },
+      "page": 5,
+      "type": "table"
+    },
+    "5-2": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.08761456994774378,
+        "right": 0.23955447773336136,
+        "bottom": 0.10854364604591649
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-3": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.08761456994774378,
+        "right": 0.71818979216442,
+        "bottom": 0.10854364604591649
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-4": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.10854364604591649,
+        "right": 0.23955447773336136,
+        "bottom": 0.1378898223424112
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-5": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.10854364604591649,
+        "right": 0.71818979216442,
+        "bottom": 0.1378898223424112
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-6": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.1378898223424112,
+        "right": 0.23955447773336136,
+        "bottom": 0.16590441030741254
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-7": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.1378898223424112,
+        "right": 0.71818979216442,
+        "bottom": 0.16590441030741254
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-8": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.16590441030741254,
+        "right": 0.23955447773336136,
+        "bottom": 0.1946554197433139
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-9": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.16590441030741254,
+        "right": 0.71818979216442,
+        "bottom": 0.1946554197433139
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-a": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.1946554197433139,
+        "right": 0.23955447773336136,
+        "bottom": 0.22349906186206425
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-b": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.1946554197433139,
+        "right": 0.71818979216442,
+        "bottom": 0.22349906186206425
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-c": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.22349906186206425,
+        "right": 0.23955447773336136,
+        "bottom": 0.25136116989475976
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-d": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.22349906186206425,
+        "right": 0.71818979216442,
+        "bottom": 0.25136116989475976
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-e": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.25136116989475976,
+        "right": 0.23955447773336136,
+        "bottom": 0.2798148682477146
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-f": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.25136116989475976,
+        "right": 0.71818979216442,
+        "bottom": 0.2798148682477146
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-g": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.2798148682477146,
+        "right": 0.23955447773336136,
+        "bottom": 0.3078009245855551
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-h": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.2798148682477146,
+        "right": 0.71818979216442,
+        "bottom": 0.3078009245855551
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-i": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.3078009245855551,
+        "right": 0.23955447773336136,
+        "bottom": 0.33565500917885505
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-j": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.3078009245855551,
+        "right": 0.71818979216442,
+        "bottom": 0.33565500917885505
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-k": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.33565500917885505,
+        "right": 0.23955447773336136,
+        "bottom": 0.36401678381666613
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-l": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.33565500917885505,
+        "right": 0.71818979216442,
+        "bottom": 0.36401678381666613
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-m": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.36401678381666613,
+        "right": 0.23955447773336136,
+        "bottom": 0.3930320076480074
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-n": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.36401678381666613,
+        "right": 0.71818979216442,
+        "bottom": 0.3930320076480074
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-o": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.3930320076480074,
+        "right": 0.23955447773336136,
+        "bottom": 0.4214679529885066
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-p": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.3930320076480074,
+        "right": 0.71818979216442,
+        "bottom": 0.4214679529885066
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-q": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.4214679529885066,
+        "right": 0.23955447773336136,
+        "bottom": 0.4494061684161581
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-r": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.4214679529885066,
+        "right": 0.71818979216442,
+        "bottom": 0.4494061684161581
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-s": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.4494061684161581,
+        "right": 0.23955447773336136,
+        "bottom": 0.47856364690574793
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-t": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.4494061684161581,
+        "right": 0.71818979216442,
+        "bottom": 0.47856364690574793
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-u": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.47856364690574793,
+        "right": 0.23955447773336136,
+        "bottom": 0.5064053043903289
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-v": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.47856364690574793,
+        "right": 0.71818979216442,
+        "bottom": 0.5064053043903289
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-w": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.5064053043903289,
+        "right": 0.23955447773336136,
+        "bottom": 0.5346324097479407
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-x": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.5064053043903289,
+        "right": 0.71818979216442,
+        "bottom": 0.5346324097479407
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-y": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.5346324097479407,
+        "right": 0.23955447773336136,
+        "bottom": 0.563276411172076
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-z": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.5346324097479407,
+        "right": 0.71818979216442,
+        "bottom": 0.563276411172076
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-A": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.563276411172076,
+        "right": 0.23955447773336136,
+        "bottom": 0.5914639065616374
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-B": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.563276411172076,
+        "right": 0.71818979216442,
+        "bottom": 0.5914639065616374
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-C": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.5914639065616374,
+        "right": 0.23955447773336136,
+        "bottom": 0.6200283191559066
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-D": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.5914639065616374,
+        "right": 0.71818979216442,
+        "bottom": 0.6200283191559066
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-E": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.6200283191559066,
+        "right": 0.23955447773336136,
+        "bottom": 0.6486661877211937
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-F": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.6200283191559066,
+        "right": 0.71818979216442,
+        "bottom": 0.6486661877211937
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-G": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.6486661877211937,
+        "right": 0.23955447773336136,
+        "bottom": 0.6768929702967608
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-H": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.6486661877211937,
+        "right": 0.71818979216442,
+        "bottom": 0.6768929702967608
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-I": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.6768929702967608,
+        "right": 0.23955447773336136,
+        "bottom": 0.7053915353539217
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-J": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.6768929702967608,
+        "right": 0.71818979216442,
+        "bottom": 0.7053915353539217
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-K": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.7053915353539217,
+        "right": 0.23955447773336136,
+        "bottom": 0.7334665181450628
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-L": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.7053915353539217,
+        "right": 0.71818979216442,
+        "bottom": 0.7334665181450628
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-M": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.7334665181450628,
+        "right": 0.23955447773336136,
+        "bottom": 0.7620492832041563
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-N": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.7334665181450628,
+        "right": 0.71818979216442,
+        "bottom": 0.7620492832041563
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-O": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.7620492832041563,
+        "right": 0.23955447773336136,
+        "bottom": 0.7908071805783319
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-P": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.7620492832041563,
+        "right": 0.71818979216442,
+        "bottom": 0.7908071805783319
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-Q": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.7908071805783319,
+        "right": 0.23955447773336136,
+        "bottom": 0.8190048205464393
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-R": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.7908071805783319,
+        "right": 0.71818979216442,
+        "bottom": 0.8190048205464393
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-S": {
+      "box": {
+        "left": 0.1386724147637335,
+        "top": 0.8190048205464393,
+        "right": 0.23955447773336136,
+        "bottom": 0.8521130820949434
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "5-T": {
+      "box": {
+        "left": 0.23955447773336136,
+        "top": 0.8190048205464393,
+        "right": 0.71818979216442,
+        "bottom": 0.8521130820949434
+      },
+      "page": 5,
+      "type": "tableCell"
+    },
+    "e4e26999-05d5-4ec9-9abf-fdb67abdf77c": {
+      "box": {
+        "left": 0.48156580328941345,
+        "top": 0.9183794260025024,
+        "right": 0.5793907642364502,
+        "bottom": 0.9411951303482056
+      },
+      "page": 5,
+      "type": "chunkMarginalia"
+    }
+  },
+  "metadata": {
+    "filename": "NutritionSupportGlossary.pdf",
+    "org_id": null,
+    "page_count": 6,
+    "duration_ms": 6688,
+    "credit_usage": 18.0,
+    "job_id": "dgks00qrry0445hqfdz6r398y",
+    "version": "dpt-2-20250919"
+  }
+}

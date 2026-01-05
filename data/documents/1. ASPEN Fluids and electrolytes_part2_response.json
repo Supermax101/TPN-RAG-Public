@@ -1,0 +1,103 @@
+{
+  "markdown": "<a id='9623b6d0-1464-4016-89c4-e9e0d2197ca7'></a>\n\n4. Answer= D; All the above are considerations related to the ordering, compounding and administration of parenteral potassium to prevent untoward adverse effects.\n5. Answer= A; Furosemide and other loop diuretics increase renal potassium elimination. Calcium works to stabilize the myocardium during hyperkalemia and does not have any effect on serum potassium levels. The other agents listed produce a reduction in potassium concentration through intracellular potassium shift (albuterol, insulin).\n6. Answer= B; The patient has hypomagnesemia and renal impairment (serum creatinine 2.2 mg/dL). An accepted magnesium dose for normal renal function for a serum magnesium of 1-1.5 mEq/dL is 8-32 mEq (up to 1 mEq/kg). In patients with renal impairment, it is recommended to decrease the magnesium dose by 50% which would be 4-16 mEq (up to 0.5 mEq/kg).\n\n<a id='b0fabd72-4eca-45d1-a315-bfe49c349481'></a>\n\nReferences\n* Braun MM, Barstow CH, Pyzocha NJ. Diagnosis and management of sodium disorders: hyponatremia and hypernatremia. _Am Fam Physician_. 2015; 91:299-307.\n* Canada TW, Lord LM. Chapter 7 Fluid, Electrolytes, and Acid-Base Disorders. In: Mueller CM, ed. _The A.S.P.E.N. Adult Nutrition Support Core Curriculum_. 3rd ed. Maryland: A.S.P.E.N.; 2017:113-37.\n* Castillo JJ et al. Diagnosis and management of hyponatremia in cancer patients. _The Oncologist_. 2012;17:756-765.\n* Clark CL, Sacks GS, Dickerson RN et al. Treatment of hypophosphatemia in patients receiving specialized nutrition support using a graduated dosing scheme: results from a prospective clinical trial. _Crit Care Med_. 1995; 23:1504-10.\n* da Silva JSV, et al. ASPEN Consensus Recommendations for Refeeding Syndrome. _Nutr Clin Pract_. 2020;35:178-195.\n* Hammill-Ruth RJ, McGory R. Magnesium repletion and its effect on potassium homeostasis in critically ill adults: results of a double-blind, randomized, controlled trial. _Crit Care Med_. 1996; 24:38-45.\n* Hess MW, et al. Systematic review: hypomagnesaemia induced by proton pump inhibition. _Ailment Pharmacol Ther_ 2012;36:405-413.\n* Holliday MA, Segar WE. The maintenance need for water in parenteral fluid therapy. _Pediatrics_. 1957;19:923-32.\n* Kraft MD, Btaiche IF, Sacks GS, Kudsk KA. Treatment of electrolytes disorders in adult patients in the intensive care unit. _Am J Health-Syst Pharm_. 2005; 62:1663-82.\n* Mirtallo J, Canada T, Johnson D et al. Safe practices for parenteral nutrition. _JPEN J Parent Enteral Nutr_. 2004; 28:S39-S70.\n* Moritz ML and Ayus JC. Maintenance intravenous fluids in acutely ill patients. _N Eng J Med_. 2015;373:1350-1360.\n* Spasovski G, et al. Clinical practice guidelines on diagnosis and treatment of hyponatremia. _Nephrol Dial Transplant_. 2014;29 Suppl 2:i1-i39.\n* Verbalis JG, Goldsmith, SR, Greenberg A et al. Diagnosis, evaluation, and treatment of hyponatremia: expert panel recommendations. _Am J Med_. 2013; 126:S1-S42.\n\n<a id='929d47e8-18d0-4c89-a0f0-b59f6c0bc320'></a>\n\nCAPTION ERROR",
+  "chunks": [
+    {
+      "markdown": "<a id='9623b6d0-1464-4016-89c4-e9e0d2197ca7'></a>\n\n4. Answer= D; All the above are considerations related to the ordering, compounding and administration of parenteral potassium to prevent untoward adverse effects.\n5. Answer= A; Furosemide and other loop diuretics increase renal potassium elimination. Calcium works to stabilize the myocardium during hyperkalemia and does not have any effect on serum potassium levels. The other agents listed produce a reduction in potassium concentration through intracellular potassium shift (albuterol, insulin).\n6. Answer= B; The patient has hypomagnesemia and renal impairment (serum creatinine 2.2 mg/dL). An accepted magnesium dose for normal renal function for a serum magnesium of 1-1.5 mEq/dL is 8-32 mEq (up to 1 mEq/kg). In patients with renal impairment, it is recommended to decrease the magnesium dose by 50% which would be 4-16 mEq (up to 0.5 mEq/kg).",
+      "type": "text",
+      "id": "9623b6d0-1464-4016-89c4-e9e0d2197ca7",
+      "grounding": {
+        "box": {
+          "left": 0.13584241271018982,
+          "top": 0.08568895608186722,
+          "right": 0.8796045780181885,
+          "bottom": 0.2955068051815033
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='b0fabd72-4eca-45d1-a315-bfe49c349481'></a>\n\nReferences\n* Braun MM, Barstow CH, Pyzocha NJ. Diagnosis and management of sodium disorders: hyponatremia and hypernatremia. _Am Fam Physician_. 2015; 91:299-307.\n* Canada TW, Lord LM. Chapter 7 Fluid, Electrolytes, and Acid-Base Disorders. In: Mueller CM, ed. _The A.S.P.E.N. Adult Nutrition Support Core Curriculum_. 3rd ed. Maryland: A.S.P.E.N.; 2017:113-37.\n* Castillo JJ et al. Diagnosis and management of hyponatremia in cancer patients. _The Oncologist_. 2012;17:756-765.\n* Clark CL, Sacks GS, Dickerson RN et al. Treatment of hypophosphatemia in patients receiving specialized nutrition support using a graduated dosing scheme: results from a prospective clinical trial. _Crit Care Med_. 1995; 23:1504-10.\n* da Silva JSV, et al. ASPEN Consensus Recommendations for Refeeding Syndrome. _Nutr Clin Pract_. 2020;35:178-195.\n* Hammill-Ruth RJ, McGory R. Magnesium repletion and its effect on potassium homeostasis in critically ill adults: results of a double-blind, randomized, controlled trial. _Crit Care Med_. 1996; 24:38-45.\n* Hess MW, et al. Systematic review: hypomagnesaemia induced by proton pump inhibition. _Ailment Pharmacol Ther_ 2012;36:405-413.\n* Holliday MA, Segar WE. The maintenance need for water in parenteral fluid therapy. _Pediatrics_. 1957;19:923-32.\n* Kraft MD, Btaiche IF, Sacks GS, Kudsk KA. Treatment of electrolytes disorders in adult patients in the intensive care unit. _Am J Health-Syst Pharm_. 2005; 62:1663-82.\n* Mirtallo J, Canada T, Johnson D et al. Safe practices for parenteral nutrition. _JPEN J Parent Enteral Nutr_. 2004; 28:S39-S70.\n* Moritz ML and Ayus JC. Maintenance intravenous fluids in acutely ill patients. _N Eng J Med_. 2015;373:1350-1360.\n* Spasovski G, et al. Clinical practice guidelines on diagnosis and treatment of hyponatremia. _Nephrol Dial Transplant_. 2014;29 Suppl 2:i1-i39.\n* Verbalis JG, Goldsmith, SR, Greenberg A et al. Diagnosis, evaluation, and treatment of hyponatremia: expert panel recommendations. _Am J Med_. 2013; 126:S1-S42.",
+      "type": "text",
+      "id": "b0fabd72-4eca-45d1-a315-bfe49c349481",
+      "grounding": {
+        "box": {
+          "left": 0.10870862007141113,
+          "top": 0.306972473859787,
+          "right": 0.8848261833190918,
+          "bottom": 0.8683798313140869
+        },
+        "page": 0
+      }
+    },
+    {
+      "markdown": "<a id='929d47e8-18d0-4c89-a0f0-b59f6c0bc320'></a>\n\nCAPTION ERROR",
+      "type": "marginalia",
+      "id": "929d47e8-18d0-4c89-a0f0-b59f6c0bc320",
+      "grounding": {
+        "box": {
+          "left": 0.4858752489089966,
+          "top": 0.9499791860580444,
+          "right": 0.5137311816215515,
+          "bottom": 0.9696981906890869
+        },
+        "page": 0
+      }
+    }
+  ],
+  "splits": [
+    {
+      "class": "full",
+      "identifier": "full",
+      "pages": [
+        0
+      ],
+      "markdown": "<a id='9623b6d0-1464-4016-89c4-e9e0d2197ca7'></a>\n\n4. Answer= D; All the above are considerations related to the ordering, compounding and administration of parenteral potassium to prevent untoward adverse effects.\n5. Answer= A; Furosemide and other loop diuretics increase renal potassium elimination. Calcium works to stabilize the myocardium during hyperkalemia and does not have any effect on serum potassium levels. The other agents listed produce a reduction in potassium concentration through intracellular potassium shift (albuterol, insulin).\n6. Answer= B; The patient has hypomagnesemia and renal impairment (serum creatinine 2.2 mg/dL). An accepted magnesium dose for normal renal function for a serum magnesium of 1-1.5 mEq/dL is 8-32 mEq (up to 1 mEq/kg). In patients with renal impairment, it is recommended to decrease the magnesium dose by 50% which would be 4-16 mEq (up to 0.5 mEq/kg).\n\n<a id='b0fabd72-4eca-45d1-a315-bfe49c349481'></a>\n\nReferences\n* Braun MM, Barstow CH, Pyzocha NJ. Diagnosis and management of sodium disorders: hyponatremia and hypernatremia. _Am Fam Physician_. 2015; 91:299-307.\n* Canada TW, Lord LM. Chapter 7 Fluid, Electrolytes, and Acid-Base Disorders. In: Mueller CM, ed. _The A.S.P.E.N. Adult Nutrition Support Core Curriculum_. 3rd ed. Maryland: A.S.P.E.N.; 2017:113-37.\n* Castillo JJ et al. Diagnosis and management of hyponatremia in cancer patients. _The Oncologist_. 2012;17:756-765.\n* Clark CL, Sacks GS, Dickerson RN et al. Treatment of hypophosphatemia in patients receiving specialized nutrition support using a graduated dosing scheme: results from a prospective clinical trial. _Crit Care Med_. 1995; 23:1504-10.\n* da Silva JSV, et al. ASPEN Consensus Recommendations for Refeeding Syndrome. _Nutr Clin Pract_. 2020;35:178-195.\n* Hammill-Ruth RJ, McGory R. Magnesium repletion and its effect on potassium homeostasis in critically ill adults: results of a double-blind, randomized, controlled trial. _Crit Care Med_. 1996; 24:38-45.\n* Hess MW, et al. Systematic review: hypomagnesaemia induced by proton pump inhibition. _Ailment Pharmacol Ther_ 2012;36:405-413.\n* Holliday MA, Segar WE. The maintenance need for water in parenteral fluid therapy. _Pediatrics_. 1957;19:923-32.\n* Kraft MD, Btaiche IF, Sacks GS, Kudsk KA. Treatment of electrolytes disorders in adult patients in the intensive care unit. _Am J Health-Syst Pharm_. 2005; 62:1663-82.\n* Mirtallo J, Canada T, Johnson D et al. Safe practices for parenteral nutrition. _JPEN J Parent Enteral Nutr_. 2004; 28:S39-S70.\n* Moritz ML and Ayus JC. Maintenance intravenous fluids in acutely ill patients. _N Eng J Med_. 2015;373:1350-1360.\n* Spasovski G, et al. Clinical practice guidelines on diagnosis and treatment of hyponatremia. _Nephrol Dial Transplant_. 2014;29 Suppl 2:i1-i39.\n* Verbalis JG, Goldsmith, SR, Greenberg A et al. Diagnosis, evaluation, and treatment of hyponatremia: expert panel recommendations. _Am J Med_. 2013; 126:S1-S42.\n\n<a id='929d47e8-18d0-4c89-a0f0-b59f6c0bc320'></a>\n\nCAPTION ERROR",
+      "chunks": [
+        "9623b6d0-1464-4016-89c4-e9e0d2197ca7",
+        "b0fabd72-4eca-45d1-a315-bfe49c349481",
+        "929d47e8-18d0-4c89-a0f0-b59f6c0bc320"
+      ]
+    }
+  ],
+  "grounding": {
+    "9623b6d0-1464-4016-89c4-e9e0d2197ca7": {
+      "box": {
+        "left": 0.13584241271018982,
+        "top": 0.08568895608186722,
+        "right": 0.8796045780181885,
+        "bottom": 0.2955068051815033
+      },
+      "page": 0,
+      "type": "chunkText"
+    },
+    "b0fabd72-4eca-45d1-a315-bfe49c349481": {
+      "box": {
+        "left": 0.10870862007141113,
+        "top": 0.306972473859787,
+        "right": 0.8848261833190918,
+        "bottom": 0.8683798313140869
+      },
+      "page": 0,
+      "type": "chunkText"
+    },
+    "929d47e8-18d0-4c89-a0f0-b59f6c0bc320": {
+      "box": {
+        "left": 0.4858752489089966,
+        "top": 0.9499791860580444,
+        "right": 0.5137311816215515,
+        "bottom": 0.9696981906890869
+      },
+      "page": 0,
+      "type": "chunkMarginalia"
+    }
+  },
+  "metadata": {
+    "filename": "1. ASPEN Fluids and electrolytes_part2.pdf",
+    "org_id": null,
+    "page_count": 1,
+    "duration_ms": 5981,
+    "credit_usage": 3.0,
+    "job_id": "efgc75f9b5sjw8qrgus4tj72c",
+    "version": "dpt-2-20250919"
+  }
+}
