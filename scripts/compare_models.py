@@ -3,17 +3,17 @@
 Model Comparison CLI - Compare multiple LLMs with and without RAG.
 
 Usage:
-    # Compare Ollama models
-    python scripts/compare_models.py --models ollama:qwen3:8b ollama:llama3.2:3b -n 50
+    # Compare HuggingFace models
+    python scripts/compare_models.py --models hf:Qwen/Qwen2.5-7B-Instruct -n 50
 
     # Include OpenAI baseline
-    python scripts/compare_models.py --models ollama:qwen3:8b openai:gpt-4o-mini -n 100
+    python scripts/compare_models.py --models hf:Qwen/Qwen2.5-7B-Instruct openai:gpt-4o-mini -n 100
 
     # Use persisted retriever
-    python scripts/compare_models.py --persist-dir ./data --models ollama:qwen3:8b -n 50
+    python scripts/compare_models.py --persist-dir ./data --models hf:Qwen/Qwen2.5-7B-Instruct -n 50
 
     # Skip baseline (RAG only)
-    python scripts/compare_models.py --models ollama:qwen3:8b --no-baseline -n 50
+    python scripts/compare_models.py --models hf:Qwen/Qwen2.5-7B-Instruct --no-baseline -n 50
 """
 
 import argparse
@@ -97,7 +97,7 @@ def load_retriever(persist_dir: str | None):
                     path=str(chroma_path),
                     settings=Settings(anonymized_telemetry=False),
                 )
-                vector_collection = client.get_collection("tpn_rag")
+                vector_collection = client.get_collection("tpn_documents")
                 logger.info(f"Loaded ChromaDB with {vector_collection.count()} documents")
             except Exception as e:
                 logger.warning(f"ChromaDB not loaded: {e}")

@@ -155,7 +155,7 @@ def run_retrieval(persist_dir: str, query: str, top_k: int = 5):
                 path=str(chroma_path),
                 settings=Settings(anonymized_telemetry=False),
             )
-            vector_collection = client.get_collection("tpn_rag")
+            vector_collection = client.get_collection("tpn_documents")
             print(f"Loaded ChromaDB with {vector_collection.count()} documents")
         except Exception as e:
             print(f"WARNING: ChromaDB not loaded: {e}")

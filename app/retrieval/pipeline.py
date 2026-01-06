@@ -392,7 +392,7 @@ class RetrievalPipeline:
                     path=str(chroma_path),
                     settings=Settings(anonymized_telemetry=False),
                 )
-                vector_collection = client.get_collection("tpn_rag")
+                vector_collection = client.get_collection("tpn_documents")
                 logger.info(f"Loaded ChromaDB collection with {vector_collection.count()} documents")
             except Exception as e:
                 logger.warning(f"Failed to load ChromaDB: {e}")

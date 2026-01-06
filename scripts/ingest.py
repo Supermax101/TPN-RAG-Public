@@ -5,7 +5,7 @@ Document Ingestion Script for TPN RAG System.
 Processes DPT2 OCR output files through the ingestion pipeline:
 1. Cleans OCR artifacts
 2. Chunks with clinical-aware boundaries
-3. Creates ChromaDB vector store with Ollama embeddings
+3. Creates ChromaDB vector store with HuggingFace embeddings (Qwen3-Embedding-8B)
 4. Creates BM25 keyword index
 
 Usage:
@@ -13,10 +13,10 @@ Usage:
 
 Examples:
     # Basic ingestion with defaults
-    python scripts/ingest.py
+    python scripts/ingest.py --docs-dir data/documents --persist-dir ./data
 
-    # Custom paths
-    python scripts/ingest.py --docs-dir /path/to/docs --persist-dir ./data
+    # Custom embedding model
+    python scripts/ingest.py --docs-dir data/documents --embedding-model Qwen/Qwen3-Embedding-8B
 
     # Skip vector store (just BM25)
     python scripts/ingest.py --no-vector-store
@@ -364,8 +364,8 @@ class IngestionPipeline:
         persist_dir: Optional[str | Path] = None,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
-        embedding_model: str = "qwen3-embedding:0.6b",
-        collection_name: str = "tpn_rag",
+        embedding_model: str = "Qwen/Qwen3-Embedding-8B",
+        collection_name: str = "tpn_documents",
     ):
         self.docs_dir = Path(docs_dir)
         self.persist_dir = Path(persist_dir) if persist_dir else None
@@ -518,33 +518,32 @@ class IngestionPipeline:
         logger.info(f"Created vector store with {len(documents)} chunks")
 
     def _create_embedding_function(self):
-        try:
-            from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
-            return OllamaEmbeddingFunction(
-                model_name=self.embedding_model,
-                url="http://localhost:11434",
-            )
-        except ImportError:
-            import requests
-            from chromadb.utils import embedding_functions
+        """Create HuggingFace embedding function for ChromaDB."""
+        from chromadb.utils import embedding_functions
+        from sentence_transformers import SentenceTransformer
+        import torch
 
-            class CustomOllamaEmbedding(embedding_functions.EmbeddingFunction):
-                def __init__(self, model_name: str, url: str = "http://localhost:11434"):
-                    self.model_name = model_name
-                    self.url = url
+        class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
+            def __init__(self, model_name: str):
+                self.model_name = model_name
+                self._model = None
 
-                def __call__(self, input: List[str]) -> List[List[float]]:
-                    embeddings = []
-                    for text in input:
-                        response = requests.post(
-                            f"{self.url}/api/embeddings",
-                            json={"model": self.model_name, "prompt": text},
-                        )
-                        response.raise_for_status()
-                        embeddings.append(response.json()["embedding"])
-                    return embeddings
+            def _load_model(self):
+                if self._model is None:
+                    logger.info(f"Loading embedding model: {self.model_name}")
+                    self._model = SentenceTransformer(
+                        self.model_name,
+                        trust_remote_code=True,
+                        model_kwargs={"torch_dtype": torch.bfloat16}
+                    )
+                return self._model
 
-            return CustomOllamaEmbedding(model_name=self.embedding_model)
+            def __call__(self, input: List[str]) -> List[List[float]]:
+                model = self._load_model()
+                embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
+                return embeddings.tolist()
+
+        return HuggingFaceEmbedding(model_name=self.embedding_model)
 
     def _create_bm25_index(self, chunks: List[Chunk]) -> None:
         try:
@@ -602,7 +601,7 @@ def main():
     )
     parser.add_argument(
         "--persist-dir",
-        default="./data/tpn_rag",
+        default="./data",
         help="Path to persist vector store and index (default: %(default)s)",
     )
     parser.add_argument(
@@ -619,12 +618,12 @@ def main():
     )
     parser.add_argument(
         "--embedding-model",
-        default="qwen3-embedding:0.6b",
-        help="Ollama embedding model (default: %(default)s)",
+        default="Qwen/Qwen3-Embedding-8B",
+        help="HuggingFace embedding model (default: %(default)s)",
     )
     parser.add_argument(
         "--collection-name",
-        default="tpn_rag",
+        default="tpn_documents",
         help="ChromaDB collection name (default: %(default)s)",
     )
     parser.add_argument(

@@ -109,8 +109,8 @@ class IngestionPipeline:
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
         min_chunk_size: int = 100,
-        embedding_model: str = "qwen3-embedding:0.6b",
-        collection_name: str = "tpn_rag",
+        embedding_model: str = "Qwen/Qwen3-Embedding-8B",
+        collection_name: str = "tpn_documents",
     ):
         """
         Initialize the ingestion pipeline.
@@ -122,7 +122,7 @@ class IngestionPipeline:
             chunk_size: Target chunk size in characters (default 1000)
             chunk_overlap: Overlap between chunks (default 200)
             min_chunk_size: Minimum chunk size (default 100)
-            embedding_model: Ollama embedding model name
+            embedding_model: HuggingFace embedding model name
             collection_name: ChromaDB collection name
         """
         self.docs_dir = Path(docs_dir)
@@ -311,8 +311,8 @@ class IngestionPipeline:
                 Settings(anonymized_telemetry=False)
             )
 
-        # Create embedding function for Ollama
-        self._embedding_function = self._create_ollama_embedding_function()
+        # Create embedding function for HuggingFace
+        self._embedding_function = self._create_embedding_function()
 
         # Delete existing collection if it exists
         try:
@@ -354,35 +354,33 @@ class IngestionPipeline:
 
         logger.info(f"Created vector store with {len(documents)} chunks")
 
-    def _create_ollama_embedding_function(self):
-        """Create Ollama embedding function for ChromaDB."""
-        try:
-            from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
-        except ImportError:
-            # Fallback for older chromadb versions
-            from chromadb.utils import embedding_functions
+    def _create_embedding_function(self):
+        """Create HuggingFace embedding function for ChromaDB."""
+        from chromadb.utils import embedding_functions
+        from sentence_transformers import SentenceTransformer
+        import torch
 
-            class OllamaEmbeddingFunction(embedding_functions.EmbeddingFunction):
-                def __init__(self, model_name: str, url: str = "http://localhost:11434"):
-                    self.model_name = model_name
-                    self.url = url
+        class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
+            def __init__(self, model_name: str):
+                self.model_name = model_name
+                self._model = None
 
-                def __call__(self, input: List[str]) -> List[List[float]]:
-                    import requests
-                    embeddings = []
-                    for text in input:
-                        response = requests.post(
-                            f"{self.url}/api/embeddings",
-                            json={"model": self.model_name, "prompt": text},
-                        )
-                        response.raise_for_status()
-                        embeddings.append(response.json()["embedding"])
-                    return embeddings
+            def _load_model(self):
+                if self._model is None:
+                    logger.info(f"Loading embedding model: {self.model_name}")
+                    self._model = SentenceTransformer(
+                        self.model_name,
+                        trust_remote_code=True,
+                        model_kwargs={"torch_dtype": torch.bfloat16}
+                    )
+                return self._model
 
-        return OllamaEmbeddingFunction(
-            model_name=self.embedding_model,
-            url="http://localhost:11434",
-        )
+            def __call__(self, input: List[str]) -> List[List[float]]:
+                model = self._load_model()
+                embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
+                return embeddings.tolist()
+
+        return HuggingFaceEmbedding(model_name=self.embedding_model)
 
     def _create_bm25_index(self, chunks: List[Chunk]) -> None:
         """
