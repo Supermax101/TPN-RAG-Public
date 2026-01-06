@@ -48,7 +48,7 @@ class SampleResult:
 def load_all_models():
     """Load all models once at startup."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    from sentence_transformers import SentenceTransformer
+    from sentence_transformers import SentenceTransformer, CrossEncoder
     import chromadb
     import torch
 
@@ -58,7 +58,7 @@ def load_all_models():
 
     # Load LLM
     model_name = "chandramax/tpn-gpt-oss-20b"
-    print(f"\n[1/3] Loading LLM: {model_name}...")
+    print(f"\n[1/4] Loading LLM: {model_name}...")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     llm = AutoModelForCausalLM.from_pretrained(
         model_name,
@@ -70,7 +70,7 @@ def load_all_models():
 
     # Load embedding model
     embed_name = "Qwen/Qwen3-Embedding-8B"
-    print(f"\n[2/3] Loading embedding model: {embed_name}...")
+    print(f"\n[2/4] Loading embedding model: {embed_name}...")
     embed_model = SentenceTransformer(
         embed_name,
         trust_remote_code=True,
@@ -78,8 +78,14 @@ def load_all_models():
     )
     print("      Embedding model loaded successfully")
 
+    # Load reranker for better retrieval precision
+    reranker_name = "BAAI/bge-reranker-v2-m3"
+    print(f"\n[3/4] Loading reranker: {reranker_name}...")
+    reranker = CrossEncoder(reranker_name, max_length=512)
+    print("      Reranker loaded successfully")
+
     # Load ChromaDB
-    print("\n[3/3] Loading ChromaDB...")
+    print("\n[4/4] Loading ChromaDB...")
     chroma_path = project_root / "data" / "chroma"
     client = chromadb.PersistentClient(path=str(chroma_path))
     collection = client.get_collection("tpn_documents")
@@ -93,6 +99,7 @@ def load_all_models():
         'llm': llm,
         'tokenizer': tokenizer,
         'embed_model': embed_model,
+        'reranker': reranker,
         'collection': collection
     }
 
@@ -130,37 +137,58 @@ def load_test_samples(num_samples: int) -> List[Dict]:
     return samples
 
 
-def retrieve_context(question: str, models: Dict, top_k: int = 10) -> Tuple[str, List[str], List[Dict]]:
-    """Retrieve context using pre-loaded models."""
+def retrieve_context(question: str, models: Dict, initial_k: int = 20, final_k: int = 5) -> Tuple[str, List[str], List[Dict]]:
+    """Retrieve context using pre-loaded models with reranking for better precision."""
     embed_model = models['embed_model']
     collection = models['collection']
+    reranker = models['reranker']
 
+    # Step 1: Initial retrieval with more candidates
     query_embedding = embed_model.encode([question], prompt_name="query")[0].tolist()
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=top_k,
+        n_results=initial_k,
         include=["documents", "metadatas", "distances"]
     )
 
-    context_parts = []
-    context_list = []
-    sources = []
-
+    # Step 2: Prepare candidates for reranking
+    candidates = []
     for i in range(len(results['documents'][0])):
         doc = results['documents'][0][i]
         meta = results['metadatas'][0][i] if results['metadatas'] else {}
         distance = results['distances'][0][i] if results['distances'] else 0
+        candidates.append({
+            'content': doc,
+            'metadata': meta,
+            'vector_score': 1 - distance
+        })
 
-        source_name = meta.get('source', 'Unknown')
-        score = 1 - distance
+    # Step 3: Rerank using cross-encoder
+    pairs = [(question, c['content']) for c in candidates]
+    rerank_scores = reranker.predict(pairs)
 
-        context_parts.append(f"[Source: {source_name}]\n{doc}")
-        context_list.append(doc)
+    # Combine candidates with rerank scores and sort
+    for i, c in enumerate(candidates):
+        c['rerank_score'] = float(rerank_scores[i])
+
+    candidates.sort(key=lambda x: x['rerank_score'], reverse=True)
+
+    # Step 4: Take top_k after reranking
+    context_parts = []
+    context_list = []
+    sources = []
+
+    for c in candidates[:final_k]:
+        source_name = c['metadata'].get('source', 'Unknown')
+
+        context_parts.append(f"[Source: {source_name}]\n{c['content']}")
+        context_list.append(c['content'])
         sources.append({
             'source': source_name,
-            'score': score,
-            'content': doc[:200] + "..."
+            'vector_score': c['vector_score'],
+            'rerank_score': c['rerank_score'],
+            'content': c['content'][:200] + "..."
         })
 
     return "\n\n---\n\n".join(context_parts), context_list, sources
