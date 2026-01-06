@@ -130,7 +130,7 @@ def load_test_samples(num_samples: int) -> List[Dict]:
     return samples
 
 
-def retrieve_context(question: str, models: Dict, top_k: int = 5) -> Tuple[str, List[str], List[Dict]]:
+def retrieve_context(question: str, models: Dict, top_k: int = 10) -> Tuple[str, List[str], List[Dict]]:
     """Retrieve context using pre-loaded models."""
     embed_model = models['embed_model']
     collection = models['collection']
@@ -213,7 +213,24 @@ Answer concisely with citations."""
         )
 
     response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-    return response.strip()
+
+    # Extract final answer from reasoning model output
+    # Look for patterns like "assistantfinal" or "Based on my analysis"
+    text = response.strip()
+
+    # If model outputs reasoning trace, extract final answer
+    if 'assistantfinal' in text.lower():
+        # Get everything after the last "assistantfinal"
+        parts = text.lower().split('assistantfinal')
+        final_idx = text.lower().rfind('assistantfinal')
+        text = text[final_idx + len('assistantfinal'):].strip()
+    elif 'therefore,' in text.lower():
+        # Alternative: get from "Therefore" onwards
+        idx = text.lower().rfind('therefore,')
+        if idx > len(text) // 2:  # Only if "therefore" is in second half
+            text = text[idx:]
+
+    return text.strip()
 
 
 def generate_all_answers(samples: List[Dict], models: Dict) -> List[SampleResult]:
