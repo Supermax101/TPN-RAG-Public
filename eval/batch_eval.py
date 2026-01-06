@@ -166,7 +166,7 @@ def retrieve_context(question: str, models: Dict, top_k: int = 5) -> Tuple[str, 
     return "\n\n---\n\n".join(context_parts), context_list, sources
 
 
-def generate_answer(question: str, context: str, models: Dict, max_tokens: int = 1024) -> str:
+def generate_answer(question: str, context: str, models: Dict, max_tokens: int = 4096) -> str:
     """Generate answer using pre-loaded LLM."""
     import torch
 
@@ -174,28 +174,22 @@ def generate_answer(question: str, context: str, models: Dict, max_tokens: int =
     tokenizer = models['tokenizer']
 
     if context:
-        # RAG prompt
-        system_prompt = f"""<role>
-You are a clinical expert specializing in neonatal and pediatric Total Parenteral Nutrition (TPN).
-You have been fine-tuned on evidence-based TPN guidelines and are now augmented with real-time reference documents.
-</role>
+        # RAG prompt - CONCISE answers
+        system_prompt = f"""You are a TPN clinical expert. Answer CONCISELY using the reference documents.
 
-<instructions>
-1. Use BOTH your clinical training AND the reference documents below
-2. Cite specific values from references: [Source Name, p.XX]
-3. Show step-by-step clinical reasoning
-4. Include units for ALL doses (g/kg/day, mEq/kg/day, etc.)
-5. Flag any safety concerns
-</instructions>
+RULES:
+- Be BRIEF and DIRECT (2-4 sentences max for simple questions)
+- Cite sources: [Source, p.XX]
+- Include specific values with units
+- Only elaborate if the question requires detailed explanation
 
-<reference_documents>
+REFERENCES:
 {context}
-</reference_documents>
 
-Answer the clinical question using your expertise and the references above. Cite sources for specific values."""
+Answer concisely with citations."""
     else:
-        # No RAG prompt
-        system_prompt = """You are a clinical expert specializing in neonatal and pediatric Total Parenteral Nutrition (TPN). Provide accurate, evidence-based guidance for TPN management including dosing calculations, monitoring protocols, and complication management. Always show your reasoning step-by-step."""
+        # No RAG prompt - CONCISE
+        system_prompt = """You are a TPN clinical expert. Answer CONCISELY (2-4 sentences for simple questions). Include specific values with units. Only elaborate if the question requires detailed explanation."""
 
     messages = [
         {"role": "developer", "content": system_prompt},
