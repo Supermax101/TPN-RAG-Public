@@ -52,6 +52,10 @@ dependencies = [
     "ragas>=0.2.10",
     "deepeval>=2.0.0",
     "datasets>=3.2.0",
+
+    # Metrics (BLEU, ROUGE)
+    "rouge-score>=0.1.2",
+    "nltk>=3.8.0",
     
     # PDF Processing (for books and clinical documents)
     "pymupdf>=1.24.0",
