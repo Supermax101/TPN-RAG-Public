@@ -365,6 +365,89 @@ def extract_qa_from_sample(sample: dict) -> Tuple[str, str, str]:
 
 
 # ============================================================================
+# MODEL MANAGER - Load models once and reuse
+# ============================================================================
+
+class ModelManager:
+    """Singleton to manage model loading - load once, reuse everywhere."""
+
+    _instance = None
+    _llm_model = None
+    _llm_tokenizer = None
+    _embed_model = None
+    _chroma_collection = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def load_llm(self, model_name: str = "chandramax/tpn-gpt-oss-20b"):
+        """Load LLM model once."""
+        if self._llm_model is None:
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            import torch
+
+            print(f"[ModelManager] Loading LLM: {model_name}...")
+            self._llm_tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+            self._llm_model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16,
+                device_map="auto",
+                trust_remote_code=True
+            )
+            print("[ModelManager] LLM loaded successfully")
+        return self._llm_model, self._llm_tokenizer
+
+    def load_embedding_model(self, model_name: str = "Qwen/Qwen3-Embedding-8B"):
+        """Load embedding model once."""
+        if self._embed_model is None:
+            from sentence_transformers import SentenceTransformer
+            import torch
+
+            print(f"[ModelManager] Loading embedding model: {model_name}...")
+            self._embed_model = SentenceTransformer(
+                model_name,
+                trust_remote_code=True,
+                model_kwargs={"torch_dtype": torch.bfloat16}
+            )
+            print("[ModelManager] Embedding model loaded successfully")
+        return self._embed_model
+
+    def load_chroma_collection(self):
+        """Load ChromaDB collection once."""
+        if self._chroma_collection is None:
+            import chromadb
+
+            chroma_path = project_root / "data" / "chroma"
+            client = chromadb.PersistentClient(path=str(chroma_path))
+            self._chroma_collection = client.get_collection("tpn_documents")
+            print(f"[ModelManager] ChromaDB loaded: {self._chroma_collection.count()} documents")
+        return self._chroma_collection
+
+    def cleanup(self):
+        """Free GPU memory."""
+        import torch
+
+        if self._llm_model is not None:
+            del self._llm_model
+            self._llm_model = None
+        if self._llm_tokenizer is not None:
+            del self._llm_tokenizer
+            self._llm_tokenizer = None
+        if self._embed_model is not None:
+            del self._embed_model
+            self._embed_model = None
+
+        torch.cuda.empty_cache()
+        print("[ModelManager] Cleaned up GPU memory")
+
+
+# Global model manager instance
+model_manager = ModelManager()
+
+
+# ============================================================================
 # RETRIEVAL
 # ============================================================================
 
@@ -373,25 +456,8 @@ def retrieve_context(question: str, top_k: int = 5) -> Tuple[str, List[str], Lis
     Retrieve relevant context from ChromaDB.
     Returns: (formatted_context, list_of_context_strings, sources_metadata)
     """
-    import chromadb
-    from sentence_transformers import SentenceTransformer
-    import torch
-
-    print("  Loading embedding model...")
-    embed_model = SentenceTransformer(
-        "Qwen/Qwen3-Embedding-8B",
-        trust_remote_code=True,
-        model_kwargs={"torch_dtype": torch.bfloat16}
-    )
-
-    chroma_path = project_root / "data" / "chroma"
-    client = chromadb.PersistentClient(path=str(chroma_path))
-
-    try:
-        collection = client.get_collection("tpn_documents")
-    except Exception as e:
-        print(f"  Error: Could not find ChromaDB collection: {e}")
-        return "", [], []
+    embed_model = model_manager.load_embedding_model()
+    collection = model_manager.load_chroma_collection()
 
     query_embedding = embed_model.encode([question], prompt_name="query")[0].tolist()
 
@@ -429,9 +495,6 @@ def retrieve_context(question: str, top_k: int = 5) -> Tuple[str, List[str], Lis
             'content': doc[:200] + "..."
         })
 
-    del embed_model
-    torch.cuda.empty_cache()
-
     return "\n\n---\n\n".join(context_parts), context_list, sources
 
 
@@ -442,20 +505,12 @@ def retrieve_context(question: str, top_k: int = 5) -> Tuple[str, List[str], Lis
 def run_model_inference(
     question: str,
     context: Optional[str] = None,
-    model_name: str = "chandramax/tpn-gpt-oss-20b",
-    max_new_tokens: int = 1024  # INCREASED from 512
+    max_new_tokens: int = 1024
 ) -> str:
-    """Run model inference with or without RAG context."""
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    """Run model inference with or without RAG context. Uses pre-loaded model."""
     import torch
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-        trust_remote_code=True
-    )
+    model, tokenizer = model_manager.load_llm()
 
     if context:
         # Hospital-Grade RAG Prompt
@@ -530,9 +585,6 @@ Provide your clinical guidance using both the reference documents and your train
         )
 
     response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-
-    del model
-    torch.cuda.empty_cache()
 
     return response.strip()
 
