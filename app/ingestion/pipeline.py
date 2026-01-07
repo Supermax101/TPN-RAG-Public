@@ -5,7 +5,7 @@ Orchestrates the full document processing workflow:
 1. Load markdown files from DPT2 output
 2. Clean OCR artifacts
 3. Chunk with clinical-aware boundaries
-4. Generate embeddings with Ollama
+4. Generate embeddings with HuggingFace
 5. Store in ChromaDB vector store
 6. Build BM25 keyword index
 
@@ -290,7 +290,7 @@ class IngestionPipeline:
         """
         Create ChromaDB vector store from chunks.
 
-        Uses Ollama embedding model for generating embeddings.
+        Uses HuggingFace embedding model for generating embeddings.
         """
         try:
             import chromadb

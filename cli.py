@@ -11,7 +11,8 @@ from rich.prompt import Prompt, Confirm
 from typing import Optional
 
 from app.config import settings
-from app.providers import OllamaEmbeddingProvider, ChromaVectorStore, OllamaLLMProvider
+from app.providers import HuggingFaceEmbeddingProvider, ChromaVectorStore
+from app.models import HuggingFaceProvider
 from app.services import RAGService, DocumentLoader, HybridRAGService, AdvancedRAGConfig
 
 cli = typer.Typer(help="TPN RAG System CLI", invoke_without_command=True)
@@ -19,10 +20,10 @@ console = Console()
 
 
 def get_rag_service(llm_model: str = None, advanced: bool = False) -> RAGService:
-    """Creates RAG service instance."""
-    embedding_provider = OllamaEmbeddingProvider()
+    """Creates RAG service instance using HuggingFace models."""
+    embedding_provider = HuggingFaceEmbeddingProvider()
     vector_store = ChromaVectorStore()
-    llm_provider = OllamaLLMProvider(default_model=llm_model)
+    llm_provider = HuggingFaceProvider(model_name=llm_model or settings.hf_llm_model)
     
     if advanced:
         # Config aligned with evaluation script settings

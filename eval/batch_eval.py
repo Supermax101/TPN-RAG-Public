@@ -327,7 +327,7 @@ def compute_metrics(results: List[SampleResult]) -> Dict:
 2. Correctness of clinical protocols
 3. Proper clinical reasoning""",
         evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         threshold=0.7
     )
 

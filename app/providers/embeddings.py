@@ -1,128 +1,142 @@
 """
 Embedding provider implementations.
 Converts text into vector representations for similarity search.
+Uses HuggingFace models via sentence-transformers.
 """
 import asyncio
-import httpx
 from typing import List, Optional
 from .base import EmbeddingProvider
 from ..config import settings
 
 
-class OllamaEmbeddingProvider(EmbeddingProvider):
-    """Generates embeddings using Ollama's local embedding models."""
-    
-    def __init__(self, model: str = None, base_url: str = None, max_concurrent: int = 10):
-        self.base_url = (base_url or settings.ollama_base_url).rstrip('/')
-        self._dimension = None
+class HuggingFaceEmbeddingProvider(EmbeddingProvider):
+    """
+    Generates embeddings using HuggingFace models via sentence-transformers.
+
+    Recommended models for clinical/medical domain:
+    - Qwen/Qwen3-Embedding-8B (best quality, larger)
+    - BAAI/bge-large-en-v1.5 (good balance)
+    - sentence-transformers/all-mpnet-base-v2 (fast, general)
+    """
+
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        device: Optional[str] = None,
+        max_concurrent: int = 10,
+    ):
+        """
+        Initialize HuggingFace embedding provider.
+
+        Args:
+            model_name: HuggingFace model ID (default from settings)
+            device: Device to run on ("cuda", "mps", "cpu", or None for auto)
+            max_concurrent: Max concurrent embedding operations
+        """
+        self._model_name = model_name or settings.hf_embedding_model
+        self._device = device
         self.max_concurrent = max_concurrent
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        
-        # Use provided model, or from settings, or auto-detect from Ollama
-        if model:
-            self.model = model
-            print(f"Ollama Embedding: {model} (specified)")
-        elif settings.ollama_embed_model:
-            self.model = settings.ollama_embed_model
-            print(f"Ollama Embedding: {settings.ollama_embed_model} (from .env)")
-        else:
-            self.model = self._auto_select_embedding_model()
-    
-    async def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            tasks = [self._embed_with_semaphore(client, text, idx, len(texts)) 
-                     for idx, text in enumerate(texts)]
-            embeddings = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            processed = []
-            failed = 0
-            for emb in embeddings:
-                if isinstance(emb, Exception):
-                    failed += 1
-                    processed.append([0.0] * self._dimension if self._dimension else None)
-                else:
-                    processed.append(emb)
-            
-            if self._dimension:
-                processed = [e if e is not None else [0.0] * self._dimension for e in processed]
-            
-            if failed > 0:
-                print(f"Warning: {failed}/{len(texts)} embeddings failed")
-            
-            return processed
-    
-    async def embed_query(self, query: str) -> List[float]:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            return await self._embed_with_retry(client, query, max_retries=3)
-    
-    async def _embed_with_semaphore(self, client: httpx.AsyncClient, text: str, 
-                                     idx: int, total: int) -> List[float]:
-        async with self.semaphore:
-            if (idx + 1) % 50 == 0 or idx == 0:
-                print(f"Embedding {idx+1}/{total}")
-            return await self._embed_with_retry(client, text, max_retries=3)
-    
-    async def _embed_with_retry(self, client: httpx.AsyncClient, text: str, 
-                                 max_retries: int = 3) -> List[float]:
-        last_error = None
-        for attempt in range(max_retries):
+        self._model = None
+        self._dimension = None
+
+    def _load_model(self):
+        """Lazy load the sentence-transformers model."""
+        if self._model is None:
             try:
-                return await self._embed_single(client, text)
-            except httpx.ReadTimeout as e:
-                last_error = e
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(2 ** attempt)
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(1)
-        raise RuntimeError(f"Failed after {max_retries} attempts: {last_error}")
-    
-    async def _embed_single(self, client: httpx.AsyncClient, text: str) -> List[float]:
-        response = await client.post(
-            f"{self.base_url}/api/embeddings",
-            json={"model": self.model, "prompt": text}
-        )
-        response.raise_for_status()
-        result = response.json()
-        embedding = result.get("embedding", [])
-        
-        if self._dimension is None and embedding:
-            self._dimension = len(embedding)
-            
-        return embedding
-    
+                from sentence_transformers import SentenceTransformer
+                import torch
+
+                # Auto-detect device
+                if self._device is None:
+                    if torch.cuda.is_available():
+                        self._device = "cuda"
+                    elif torch.backends.mps.is_available():
+                        self._device = "mps"
+                    else:
+                        self._device = "cpu"
+
+                print(f"Loading embedding model: {self._model_name} on {self._device}")
+
+                self._model = SentenceTransformer(
+                    self._model_name,
+                    trust_remote_code=True,
+                    device=self._device,
+                    model_kwargs={"torch_dtype": torch.bfloat16 if self._device != "cpu" else torch.float32}
+                )
+
+                # Get dimension from a test embedding
+                test_emb = self._model.encode(["test"], show_progress_bar=False)
+                self._dimension = len(test_emb[0])
+                print(f"Embedding dimension: {self._dimension}")
+
+            except ImportError:
+                raise ImportError(
+                    "sentence-transformers not installed. Run: pip install sentence-transformers"
+                )
+        return self._model
+
+    async def embed_texts(self, texts: List[str]) -> List[List[float]]:
+        """
+        Embed multiple texts.
+
+        Args:
+            texts: List of texts to embed
+
+        Returns:
+            List of embedding vectors
+        """
+        model = self._load_model()
+
+        # Use sync encoding since sentence-transformers handles batching well
+        # Run in thread pool to not block event loop
+        loop = asyncio.get_event_loop()
+
+        def _encode():
+            return model.encode(
+                texts,
+                prompt_name="document",  # For Qwen3 instruction-aware embeddings
+                show_progress_bar=len(texts) > 100,
+                batch_size=32,
+            )
+
+        embeddings = await loop.run_in_executor(None, _encode)
+        return embeddings.tolist()
+
+    async def embed_query(self, query: str) -> List[float]:
+        """
+        Embed a single query text.
+
+        Args:
+            query: Query text to embed
+
+        Returns:
+            Embedding vector
+        """
+        model = self._load_model()
+
+        loop = asyncio.get_event_loop()
+
+        def _encode():
+            return model.encode(
+                [query],
+                prompt_name="query",  # For Qwen3 instruction-aware embeddings
+                show_progress_bar=False,
+            )
+
+        embeddings = await loop.run_in_executor(None, _encode)
+        return embeddings[0].tolist()
+
     @property
     def model_name(self) -> str:
-        return self.model
-    
+        return self._model_name
+
     @property
     def dimension(self) -> int:
         if self._dimension is None:
-            raise RuntimeError("Dimension unknown - generate at least one embedding first")
+            self._load_model()  # This will set _dimension
         return self._dimension
-    
-    def _auto_select_embedding_model(self) -> str:
-        """Auto-detect available embedding models from Ollama server."""
-        try:
-            response = httpx.get(f"{self.base_url}/api/tags", timeout=5.0)
-            if response.status_code == 200:
-                all_models = [m["name"] for m in response.json().get("models", [])]
-                
-                # Filter for embedding models
-                embed_models = [m for m in all_models if "embed" in m.lower()]
-                
-                if embed_models:
-                    print(f"\nAvailable Ollama Embedding models ({len(embed_models)}):")
-                    for i, model in enumerate(embed_models, 1):
-                        print(f"  {i}. {model}")
-                    print(f"\nUsing: {embed_models[0]}")
-                    print("(Set OLLAMA_EMBED_MODEL in .env to change default)\n")
-                    return embed_models[0]
-                else:
-                    print("No embedding models found in Ollama.")
-                    print("Run: ollama pull nomic-embed-text (or qwen3-embedding:8b)")
-        except Exception as e:
-            print(f"Could not connect to Ollama: {e}")
-        
-        return settings.ollama_embed_model or "nomic-embed-text"
+
+
+# Alias for backwards compatibility
+EmbeddingProvider = HuggingFaceEmbeddingProvider

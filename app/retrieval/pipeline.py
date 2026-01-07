@@ -153,7 +153,7 @@ class RetrievalPipeline:
         ...     config=config,
         ...     vector_collection=chroma_collection,
         ...     bm25_index=bm25,
-        ...     llm=ollama_client,
+        ...     llm=hf_client,
         ... )
         >>> results = pipeline.retrieve("protein requirements")
 

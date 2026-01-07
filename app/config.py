@@ -9,15 +9,23 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    
-    # Ollama settings
-    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
-    
-    # Embedding model - Qwen3 recommended for clinical/medical domain
-    # Use instruction-aware embeddings with "search_query:" / "search_document:" prefixes
-    ollama_embed_model: Optional[str] = Field(default="qwen3-embedding:0.6b", alias="OLLAMA_EMBED_MODEL")
-    ollama_llm_model: Optional[str] = Field(default="qwen2.5:7b", alias="OLLAMA_LLM_MODEL")
-    
+
+    # HuggingFace settings - Primary provider for embeddings and LLMs
+    hf_token: Optional[str] = Field(default=None, alias="HF_TOKEN")
+    hf_embedding_model: str = Field(default="Qwen/Qwen3-Embedding-8B", alias="HF_EMBEDDING_MODEL")
+    hf_llm_model: str = Field(default="chandramax/tpn-gpt-oss-20b", alias="HF_LLM_MODEL")
+
+    # Available embedding models for comparison
+    # Set HF_EMBEDDING_MODEL to use any of these
+    AVAILABLE_EMBEDDING_MODELS = [
+        ("Qwen/Qwen3-Embedding-8B", "General purpose, instruction-aware"),
+        ("abhinand/MedEmbed-large-v0.1", "Best for medical/clinical IR (Recommended for TPN)"),
+        ("abhinand/MedEmbed-base-v0.1", "Medical domain, smaller/faster"),
+        ("tencent/KaLM-Embedding-Gemma3-12B-2511", "Best overall MMTEB (larger)"),
+        ("KaLM-Embedding/KaLM-embedding-multilingual-mini-instruct-v2.5", "SOTA at its size, compact"),
+        ("BAAI/bge-large-en-v1.5", "Good general purpose"),
+    ]
+
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
     

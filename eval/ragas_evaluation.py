@@ -26,9 +26,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.config import settings
-from app.providers.embeddings import OllamaEmbeddingProvider
+from app.providers.embeddings import HuggingFaceEmbeddingProvider
 from app.providers.vectorstore import ChromaVectorStore
-from app.providers.ollama import OllamaLLMProvider
+from app.models import HuggingFaceProvider
 from app.services.rag import RAGService
 from app.services.hybrid_rag import HybridRAGService
 from app.services.advanced_rag import AdvancedRAGConfig
@@ -256,47 +256,37 @@ async def main():
     
     # Select OpenAI model for RAGAS evaluation
     print("\nOpenAI Model for RAGAS (judge model):")
-    print("  1. gpt-4o-mini (cheapest, fast)")
-    print("  2. gpt-4o (best quality)")
-    print("  3. gpt-3.5-turbo (legacy)")
-    
+    print("  1. gpt-5-mini (recommended)")
+    print("  2. gpt-4o (high quality)")
+    print("  3. gpt-4o-mini (legacy)")
+
     model_choice = input("\nSelect (1-3, default=1): ").strip()
-    model_map = {"1": "gpt-4o-mini", "2": "gpt-4o", "3": "gpt-3.5-turbo"}
-    ragas_model = model_map.get(model_choice, "gpt-4o-mini")
+    model_map = {"1": "gpt-5-mini", "2": "gpt-4o", "3": "gpt-4o-mini"}
+    ragas_model = model_map.get(model_choice, "gpt-5-mini")
     print(f"RAGAS judge model: {ragas_model}")
-    
-    # Select Ollama LLM model for answer generation
-    print("\nFetching available Ollama models...")
-    import httpx
-    ollama_base = settings.ollama_base_url.rstrip('/')
-    try:
-        response = httpx.get(f"{ollama_base}/api/tags", timeout=5.0)
-        models = response.json().get("models", [])
-        llm_models = [m["name"] for m in models if "embed" not in m["name"].lower()]
-        
-        if llm_models:
-            print("\nOllama LLM Model (for answer generation):")
-            for i, model in enumerate(llm_models, 1):
-                print(f"  {i}. {model}")
-            
-            ollama_choice = input(f"\nSelect (1-{len(llm_models)}, default=1): ").strip()
-            if ollama_choice.isdigit() and 1 <= int(ollama_choice) <= len(llm_models):
-                selected_ollama_model = llm_models[int(ollama_choice) - 1]
-            else:
-                selected_ollama_model = llm_models[0]
-            print(f"Using Ollama model: {selected_ollama_model}")
-        else:
-            selected_ollama_model = None
-            print("No Ollama LLM models found!")
-    except Exception as e:
-        print(f"Could not fetch Ollama models: {e}")
-        selected_ollama_model = None
-    
+
+    # Select HuggingFace LLM model for answer generation
+    print("\nHuggingFace LLM Model (for answer generation):")
+    hf_models = [
+        "chandramax/tpn-gpt-oss-20b",
+        "Qwen/Qwen2.5-7B-Instruct",
+        "meta-llama/Llama-3.1-8B-Instruct",
+    ]
+    for i, model in enumerate(hf_models, 1):
+        print(f"  {i}. {model}")
+
+    hf_choice = input(f"\nSelect (1-{len(hf_models)}, default=1): ").strip()
+    if hf_choice.isdigit() and 1 <= int(hf_choice) <= len(hf_models):
+        selected_hf_model = hf_models[int(hf_choice) - 1]
+    else:
+        selected_hf_model = hf_models[0]
+    print(f"Using HuggingFace model: {selected_hf_model}")
+
     # Initialize RAG service
     print("\nInitializing RAG service...")
-    embedding_provider = OllamaEmbeddingProvider()
+    embedding_provider = HuggingFaceEmbeddingProvider()
     vector_store = ChromaVectorStore()
-    llm_provider = OllamaLLMProvider(default_model=selected_ollama_model)
+    llm_provider = HuggingFaceProvider(model_name=selected_hf_model)
     
     if use_advanced:
         config = AdvancedRAGConfig(
@@ -352,7 +342,7 @@ async def main():
         output = {
             "timestamp": timestamp,
             "mode": "advanced" if use_advanced else "simple",
-            "ollama_model": selected_ollama_model,
+            "hf_model": selected_hf_model,
             "ragas_judge_model": ragas_model,
             "total_questions": len(dataset),
             "ragas_metrics": {k: float(v) for k, v in ragas_scores.items() if v is not None},

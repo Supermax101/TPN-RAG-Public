@@ -13,7 +13,7 @@ Example:
     ...     dataset_path="test.jsonl",
     ...     retriever=my_retriever,
     ... )
-    >>> comparison.add_model("ollama", "qwen3:8b")
+    >>> comparison.add_model("huggingface", "Qwen/Qwen2.5-7B-Instruct")
     >>> comparison.add_model("openai", "gpt-4o-mini")
     >>> results = comparison.run(sample_size=100)
     >>> comparison.generate_report()
@@ -179,7 +179,7 @@ class ModelComparison:
 
     Usage:
         >>> comparison = ModelComparison(dataset_path, retriever)
-        >>> comparison.add_model("ollama", "qwen3:8b")
+        >>> comparison.add_model("huggingface", "Qwen/Qwen2.5-7B-Instruct")
         >>> comparison.add_model("openai", "gpt-4o-mini")
         >>> results = comparison.run(sample_size=100)
     """
@@ -216,7 +216,7 @@ class ModelComparison:
         Add a model to the comparison.
 
         Args:
-            provider: Provider name ("ollama", "openai", "anthropic")
+            provider: Provider name ("huggingface", "openai", "anthropic")
             model_name: Model identifier
             **config: Additional model configuration
 
@@ -459,8 +459,8 @@ def demo_comparison():
     )
 
     # Add models
-    comparison.add_model("ollama", "qwen3:8b")
-    comparison.add_model("ollama", "llama3.3:70b")
+    comparison.add_model("huggingface", "Qwen/Qwen2.5-7B-Instruct")
+    comparison.add_model("huggingface", "meta-llama/Llama-3.1-8B-Instruct")
     comparison.add_model("openai", "gpt-4o-mini")
 
     # Run comparison
@@ -473,8 +473,8 @@ def demo_comparison():
     print(results.to_markdown())
 
     # Check RAG lift
-    lift = results.get_rag_lift("qwen3:8b")
-    print(f"RAG lift for qwen3:8b: {lift:+.1%}")
+    lift = results.get_rag_lift("Qwen/Qwen2.5-7B-Instruct")
+    print(f"RAG lift for Qwen2.5-7B: {lift:+.1%}")
     """)
 
 

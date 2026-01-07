@@ -20,11 +20,11 @@ from pydantic import BaseModel, Field
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.providers.ollama import OllamaLLMProvider
 from app.providers.openai import OpenAILLMProvider
 from app.providers.xai import XAILLMProvider
 from app.providers.gemini import GeminiLLMProvider
 from app.providers.kimi import KimiLLMProvider
+from app.models import HuggingFaceProvider
 
 
 @dataclass
@@ -43,7 +43,7 @@ class BaselineResult:
 class BaselineModelEvaluator:
     """Evaluates raw model performance on questions WITHOUT any RAG enhancement."""
     
-    def __init__(self, csv_path: str, selected_model: str = "mistral:7b", provider: str = "ollama"):
+    def __init__(self, csv_path: str, selected_model: str = "Qwen/Qwen2.5-7B-Instruct", provider: str = "huggingface"):
         self.csv_path = csv_path
         self.selected_model = selected_model
         self.provider = provider
@@ -57,7 +57,8 @@ class BaselineModelEvaluator:
         elif provider == "kimi":
             self.llm_provider = KimiLLMProvider(default_model=selected_model)
         else:
-            self.llm_provider = OllamaLLMProvider(default_model=selected_model)
+            # Default to HuggingFace
+            self.llm_provider = HuggingFaceProvider(model_name=selected_model)
         
         self.results: List[BaselineResult] = []
         
@@ -341,16 +342,16 @@ async def get_available_models():
     
     all_models = []
     
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get("http://localhost:11434/api/tags")
-            if response.status_code == 200:
-                data = response.json()
-                models = [m["name"] for m in data.get("models", [])]
-                llm_models = [m for m in models if "embed" not in m.lower()]
-                all_models.extend([("ollama", m) for m in llm_models])
-    except Exception:
-        pass
+    # HuggingFace models (primary provider)
+    if settings.hf_token or True:  # HuggingFace works without token for public models
+        all_models.extend([
+            ("huggingface", "Qwen/Qwen2.5-7B-Instruct"),
+            ("huggingface", "Qwen/Qwen2.5-14B-Instruct"),
+            ("huggingface", "meta-llama/Llama-3.1-8B-Instruct"),
+        ])
+        # Add configured model if different
+        if settings.hf_llm_model and ("huggingface", settings.hf_llm_model) not in all_models:
+            all_models.insert(0, ("huggingface", settings.hf_llm_model))
     
     if settings.openai_api_key:
         all_models.append(("openai", "gpt-4o"))

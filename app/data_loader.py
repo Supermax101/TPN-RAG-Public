@@ -367,55 +367,53 @@ def load_tpn_data() -> List[Document]:
 def rebuild_vectorstore(force: bool = False) -> int:
     """
     Rebuild the vector store from TPN data.
-    
+
     Returns the number of documents indexed.
     """
     from app.config import settings
-    
+
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import OllamaEmbeddings
     except ImportError:
         from langchain_community.vectorstores import Chroma
-        from langchain_community.embeddings import OllamaEmbeddings
-    
+    from langchain_huggingface import HuggingFaceEmbeddings
+
     logger.info("Loading TPN documents...")
     loader = TPNDataLoader()
     documents = loader.load_all()
-    
+
     if not documents:
         logger.error("No documents loaded!")
         return 0
-    
+
     logger.info(f"Loaded {len(documents)} chunks")
-    
-    # Initialize embeddings
-    embed_model = settings.ollama_embed_model or "nomic-embed-text"
-    embeddings = OllamaEmbeddings(
-        model=embed_model,
-        base_url=settings.ollama_base_url
+
+    # Initialize HuggingFace embeddings
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
     )
-    
+
     # Clear existing
     persist_dir = str(settings.chromadb_dir)
-    
+
     if force:
         import shutil
         if settings.chromadb_dir.exists():
             shutil.rmtree(settings.chromadb_dir)
             logger.info("Cleared existing vector store")
-    
+
     # Create vector store
     settings.chromadb_dir.mkdir(parents=True, exist_ok=True)
-    
+
     vectorstore = Chroma.from_documents(
         documents=documents,
         embedding=embeddings,
         collection_name=settings.chroma_collection_name,
         persist_directory=persist_dir,
     )
-    
+
     count = vectorstore._collection.count()
     logger.info(f"Vector store rebuilt with {count} chunks")
-    
+
     return count

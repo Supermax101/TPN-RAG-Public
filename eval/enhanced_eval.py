@@ -215,7 +215,7 @@ def compute_clinical_geval(question: str, expected: str, actual: str) -> Tuple[f
                 "Assess if safety information (contraindications, monitoring) is included",
                 "Assign score: 9-10=exact match, 7-8=minor issues, 5-6=some errors, 3-4=major errors, 0-2=dangerous/wrong"
             ],
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             threshold=0.7
         )
 
@@ -241,7 +241,7 @@ def compute_faithfulness(question: str, actual: str, retrieval_context: List[str
 
         faithfulness_metric = FaithfulnessMetric(
             threshold=0.7,
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             include_reason=True
         )
 
@@ -267,7 +267,7 @@ def compute_answer_relevancy(question: str, actual: str) -> float:
 
         relevancy_metric = AnswerRelevancyMetric(
             threshold=0.7,
-            model="gpt-4o-mini"
+            model="gpt-5-mini"
         )
 
         test_case = LLMTestCase(
@@ -291,7 +291,7 @@ def compute_contextual_recall(question: str, expected: str, retrieval_context: L
 
         recall_metric = ContextualRecallMetric(
             threshold=0.7,
-            model="gpt-4o-mini"
+            model="gpt-5-mini"
         )
 
         test_case = LLMTestCase(
@@ -316,7 +316,7 @@ def compute_contextual_precision(question: str, expected: str, retrieval_context
 
         precision_metric = ContextualPrecisionMetric(
             threshold=0.7,
-            model="gpt-4o-mini"
+            model="gpt-5-mini"
         )
 
         test_case = LLMTestCase(

@@ -29,13 +29,13 @@ from eval.rag_metrics import (
     EvaluationSummary
 )
 
-from app.providers.embeddings import OllamaEmbeddingProvider
+from app.providers.embeddings import HuggingFaceEmbeddingProvider
 from app.providers.vectorstore import ChromaVectorStore
-from app.providers.ollama import OllamaLLMProvider
 from app.providers.openai import OpenAILLMProvider
 from app.providers.xai import XAILLMProvider
 from app.providers.gemini import GeminiLLMProvider
 from app.providers.kimi import KimiLLMProvider
+from app.models import HuggingFaceProvider
 from app.services.rag import RAGService
 from app.services.hybrid_rag import HybridRAGService
 from app.services.advanced_rag import AdvancedRAGConfig
@@ -53,12 +53,12 @@ class MCQAnswer(BaseModel):
 
 class RAGEvaluator:
     """Evaluates RAG system with detailed metrics."""
-    
+
     def __init__(
-        self, 
-        csv_path: str, 
-        selected_model: str = "mistral:7b", 
-        provider: str = "ollama",
+        self,
+        csv_path: str,
+        selected_model: str = "Qwen/Qwen2.5-7B-Instruct",
+        provider: str = "huggingface",
         use_advanced: bool = True
     ):
         self.csv_path = csv_path
@@ -82,12 +82,12 @@ class RAGEvaluator:
     
     async def initialize_rag(self):
         """Initialize RAG service based on mode."""
-        embedding_provider = OllamaEmbeddingProvider()
+        embedding_provider = HuggingFaceEmbeddingProvider()
         vector_store = ChromaVectorStore()
-        
-        # Select LLM provider
-        if self.provider == "ollama":
-            llm_provider = OllamaLLMProvider(default_model=self.selected_model)
+
+        # Select LLM provider - HuggingFace is the default
+        if self.provider == "huggingface" or self.provider == "hf":
+            llm_provider = HuggingFaceProvider(model_name=self.selected_model)
         elif self.provider == "openai":
             llm_provider = OpenAILLMProvider(default_model=self.selected_model)
         elif self.provider == "xai":
@@ -97,7 +97,8 @@ class RAGEvaluator:
         elif self.provider == "kimi":
             llm_provider = KimiLLMProvider(default_model=self.selected_model)
         else:
-            llm_provider = OllamaLLMProvider(default_model=self.selected_model)
+            # Default to HuggingFace
+            llm_provider = HuggingFaceProvider(model_name=self.selected_model)
         
         if self.use_advanced:
             config = AdvancedRAGConfig(
@@ -468,50 +469,36 @@ Your answer:""")
         print(f"\nResults saved: {filename}")
 
 
-async def get_available_ollama_models():
-    """Get list of available Ollama LLM models."""
-    try:
-        import httpx
-        async with httpx.AsyncClient() as client:
-            response = await client.get("http://localhost:11434/api/tags")
-            if response.status_code == 200:
-                data = response.json()
-                all_models = [model["name"] for model in data.get("models", [])]
-                
-                embedding_keywords = ["embed", "embedding", "nomic-embed"]
-                llm_models = [
-                    model for model in all_models 
-                    if not any(keyword in model.lower() for keyword in embedding_keywords)
-                ]
-                
-                return llm_models
-    except Exception:
-        pass
-    return []
-
-
 async def get_all_available_models():
     """Get all available models from all providers."""
     from app.config import settings
-    
+
     all_models = []
-    
-    ollama_models = await get_available_ollama_models()
-    if ollama_models:
-        all_models.extend([("ollama", model) for model in ollama_models])
-    
+
+    # HuggingFace models (primary provider)
+    if settings.hf_token:
+        all_models.extend([
+            ("huggingface", "Qwen/Qwen2.5-7B-Instruct"),
+            ("huggingface", "Qwen/Qwen2.5-14B-Instruct"),
+            ("huggingface", "meta-llama/Llama-3.1-8B-Instruct"),
+            ("huggingface", "mistralai/Mistral-7B-Instruct-v0.3"),
+        ])
+        # Add configured model if different
+        if settings.hf_llm_model and ("huggingface", settings.hf_llm_model) not in all_models:
+            all_models.insert(0, ("huggingface", settings.hf_llm_model))
+
     if settings.openai_api_key:
         all_models.extend([("openai", "gpt-4o")])
-    
+
     if settings.gemini_api_key:
         all_models.extend([("gemini", "gemini-2.5-flash"), ("gemini", "gemini-2.5-pro")])
-    
+
     if settings.xai_api_key:
         all_models.extend([("xai", "grok-4-fast-reasoning")])
-    
+
     if settings.kimi_api_key:
         all_models.extend([("kimi", "kimi-k2-0905-preview")])
-    
+
     return all_models
 
 

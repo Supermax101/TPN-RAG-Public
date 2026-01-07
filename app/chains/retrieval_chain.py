@@ -73,16 +73,14 @@ class RetrievalChain:
         # Import LangChain components
         try:
             from langchain_chroma import Chroma
-            from langchain_ollama import OllamaEmbeddings
         except ImportError:
             from langchain_community.vectorstores import Chroma
-            from langchain_community.embeddings import OllamaEmbeddings
-        
+        from langchain_huggingface import HuggingFaceEmbeddings
+
         # Initialize embeddings
-        embed_model = settings.ollama_embed_model or "nomic-embed-text"
-        embeddings = OllamaEmbeddings(
-            model=embed_model,
-            base_url=settings.ollama_base_url
+        embeddings = HuggingFaceEmbeddings(
+            model_name=settings.hf_embedding_model,
+            model_kwargs={"trust_remote_code": True}
         )
         
         # Initialize or load vector store

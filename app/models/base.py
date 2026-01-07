@@ -142,7 +142,7 @@ class LLMProvider(ABC):
     @property
     @abstractmethod
     def provider_name(self) -> str:
-        """Return the provider name (e.g., 'ollama', 'openai')."""
+        """Return the provider name (e.g., 'huggingface', 'openai')."""
         ...
 
     @abstractmethod

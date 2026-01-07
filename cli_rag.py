@@ -78,26 +78,25 @@ def cmd_stats():
     """Show system statistics."""
     from app.config import settings
     from app.data_loader import TPNDataLoader
-    
+
     show_banner()
-    
+
     # Data stats
     loader = TPNDataLoader()
     data_stats = loader.get_stats()
-    
+
     # Vector store stats
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import OllamaEmbeddings
     except ImportError:
         from langchain_community.vectorstores import Chroma
-        from langchain_community.embeddings import OllamaEmbeddings
-    
-    embeddings = OllamaEmbeddings(
-        model=settings.ollama_embed_model or "nomic-embed-text",
-        base_url=settings.ollama_base_url
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
     )
-    
+
     try:
         vs = Chroma(
             collection_name=settings.chroma_collection_name,
@@ -107,21 +106,21 @@ def cmd_stats():
         vs_count = vs._collection.count()
     except:
         vs_count = 0
-    
+
     table = Table(title="System Status", box=box.ROUNDED)
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="white")
-    
+
     table.add_row("Vector Store Chunks", str(vs_count))
     table.add_row("JSON Documents", str(data_stats['json_files']))
     table.add_row("Markdown Documents", str(data_stats['md_files']))
-    table.add_row("Embedding Model", settings.ollama_embed_model or "nomic-embed-text")
-    table.add_row("LLM Model", settings.ollama_llm_model or "qwen2.5:7b")
+    table.add_row("Embedding Model", settings.hf_embedding_model)
+    table.add_row("LLM Model", settings.hf_llm_model)
     table.add_row("Chunk Size", str(settings.chunk_size))
     table.add_row("ChromaDB Path", str(settings.chromadb_dir))
-    
+
     console.print(table)
-    
+
     if vs_count == 0:
         console.print("\n[yellow]⚠ No documents indexed! Run 'python cli_rag.py init' first.[/yellow]")
 

@@ -218,14 +218,13 @@ async def ingest_documents(path: Path, chunk_size: int = 1000, overlap: int = 20
             
             try:
                 from langchain_chroma import Chroma
-                from langchain_ollama import OllamaEmbeddings
             except ImportError:
                 from langchain_community.vectorstores import Chroma
-                from langchain_community.embeddings import OllamaEmbeddings
-            
-            embeddings = OllamaEmbeddings(
-                model=settings.ollama_embed_model or "nomic-embed-text",
-                base_url=settings.ollama_base_url
+            from langchain_huggingface import HuggingFaceEmbeddings
+
+            embeddings = HuggingFaceEmbeddings(
+                model_name=settings.hf_embedding_model,
+                model_kwargs={"trust_remote_code": True}
             )
             
             vectorstore = Chroma(
@@ -369,7 +368,7 @@ async def eval_interactive():
     
     evaluator = RAGEvaluatorV2(
         csv_path=str(csv_path),
-        model=settings.ollama_llm_model or "qwen2.5:7b",
+        model=settings.hf_llm_model,
     )
     
     await evaluator.run_evaluation(max_questions=max_q)
@@ -383,17 +382,16 @@ async def show_stats():
     """Show system statistics."""
     console.print("\n[bold]📈 System Statistics[/bold]")
     console.print("-" * 50)
-    
+
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import OllamaEmbeddings
     except ImportError:
         from langchain_community.vectorstores import Chroma
-        from langchain_community.embeddings import OllamaEmbeddings
-    
-    embeddings = OllamaEmbeddings(
-        model=settings.ollama_embed_model or "nomic-embed-text",
-        base_url=settings.ollama_base_url
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
     )
     
     vectorstore = Chroma(
@@ -413,8 +411,8 @@ async def show_stats():
     
     table.add_row("Vector Store Chunks", str(count))
     table.add_row("Collection Name", settings.chroma_collection_name)
-    table.add_row("Embedding Model", settings.ollama_embed_model or "nomic-embed-text")
-    table.add_row("LLM Model", settings.ollama_llm_model or "qwen2.5:7b")
+    table.add_row("Embedding Model", settings.hf_embedding_model)
+    table.add_row("LLM Model", settings.hf_llm_model)
     table.add_row("Chunk Size", str(settings.chunk_size))
     table.add_row("Chunk Overlap", str(settings.chunk_overlap))
     table.add_row("ChromaDB Path", str(settings.chromadb_dir))
@@ -451,18 +449,17 @@ def show_settings():
     """Show current settings."""
     console.print("\n[bold]⚙️ Current Settings[/bold]")
     console.print("-" * 50)
-    
+
     table = Table(box=box.SIMPLE)
     table.add_column("Setting", style="cyan")
     table.add_column("Value")
     table.add_column("Source")
-    
-    table.add_row("Ollama URL", settings.ollama_base_url, "OLLAMA_BASE_URL")
-    table.add_row("Embed Model", settings.ollama_embed_model or "default", "OLLAMA_EMBED_MODEL")
-    table.add_row("LLM Model", settings.ollama_llm_model or "default", "OLLAMA_LLM_MODEL")
+
+    table.add_row("Embed Model", settings.hf_embedding_model, "HF_EMBEDDING_MODEL")
+    table.add_row("LLM Model", settings.hf_llm_model, "HF_LLM_MODEL")
     table.add_row("Chunk Size", str(settings.chunk_size), "CHUNK_SIZE")
     table.add_row("Chunk Overlap", str(settings.chunk_overlap), "CHUNK_OVERLAP")
-    
+
     console.print(table)
     console.print("\n[dim]Edit .env file to change settings[/dim]")
 

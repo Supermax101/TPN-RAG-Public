@@ -155,22 +155,22 @@ class ProductionMetrics:
     Uses DeepEval's G-Eval pattern with explicit evaluation steps.
     """
     
-    def __init__(self, judge_model: str = "qwen2.5:7b"):
+    def __init__(self, judge_model: str = "Qwen/Qwen2.5-7B-Instruct"):
         self.judge_model = judge_model
         self.judge_llm = None
-    
+
     async def initialize(self):
         """Initialize the judge LLM."""
-        try:
-            from langchain_ollama import ChatOllama
-        except ImportError:
-            from langchain_community.chat_models import ChatOllama
-        
-        self.judge_llm = ChatOllama(
-            model=self.judge_model,
-            temperature=0.0,
-            base_url=settings.ollama_base_url,
+        from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+
+        # Create HuggingFace endpoint
+        llm = HuggingFaceEndpoint(
+            repo_id=self.judge_model,
+            huggingfacehub_api_token=settings.hf_token,
+            temperature=0.01,  # HuggingFace doesn't support 0.0
+            max_new_tokens=1024,
         )
+        self.judge_llm = ChatHuggingFace(llm=llm)
     
     async def evaluate_faithfulness(
         self,
@@ -332,7 +332,7 @@ class ProductionEvaluator:
         use_agentic: bool = True,
     ):
         self.csv_path = Path(csv_path)
-        self.model = model or settings.ollama_llm_model or "qwen2.5:7b"
+        self.model = model or settings.hf_llm_model or "Qwen/Qwen2.5-7B-Instruct"
         self.use_agentic = use_agentic
         
         self.rag_chain = None

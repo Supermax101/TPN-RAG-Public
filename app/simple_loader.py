@@ -182,52 +182,50 @@ def load_all_documents() -> List[Document]:
 def rebuild_index(force: bool = False) -> int:
     """
     Rebuild the vector store from pre-chunked documents.
-    
+
     Returns the number of documents indexed.
     """
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import OllamaEmbeddings
     except ImportError:
         from langchain_community.vectorstores import Chroma
-        from langchain_community.embeddings import OllamaEmbeddings
-    
+    from langchain_huggingface import HuggingFaceEmbeddings
+
     # Load documents
     documents = load_all_documents()
-    
+
     if not documents:
         logger.error("No documents loaded!")
         return 0
-    
+
     # Clear if force
     if force and settings.chromadb_dir.exists():
         import shutil
         shutil.rmtree(settings.chromadb_dir)
         logger.info("Cleared existing vector store")
-    
+
     # Ensure directory exists
     settings.chromadb_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Create embeddings
-    embed_model = settings.ollama_embed_model or "nomic-embed-text"
-    embeddings = OllamaEmbeddings(
-        model=embed_model,
-        base_url=settings.ollama_base_url
+
+    # Create HuggingFace embeddings
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
     )
-    
+
     # Build vector store
     logger.info(f"Creating vector store with {len(documents)} chunks...")
-    
+
     vectorstore = Chroma.from_documents(
         documents=documents,
         embedding=embeddings,
         collection_name=settings.chroma_collection_name,
         persist_directory=str(settings.chromadb_dir),
     )
-    
+
     count = vectorstore._collection.count()
     logger.info(f"Vector store ready with {count} chunks")
-    
+
     return count
 
 

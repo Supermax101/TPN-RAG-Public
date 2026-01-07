@@ -94,17 +94,15 @@ class MCQChain:
     
     async def initialize(self):
         """Initialize the chain components."""
-        
-        # Initialize LLM
-        try:
-            from langchain_ollama import ChatOllama
-        except ImportError:
-            from langchain_community.chat_models import ChatOllama
-        
-        self.llm = ChatOllama(
-            model=self.config.model,
-            temperature=self.config.temperature,
-            base_url=settings.ollama_base_url,
+
+        # Initialize LLM using HuggingFace
+        from langchain_huggingface import HuggingFaceEndpoint
+
+        model_name = self.config.model if "/" in self.config.model else settings.hf_llm_model
+        self.llm = HuggingFaceEndpoint(
+            repo_id=model_name,
+            temperature=self.config.temperature if self.config.temperature > 0 else 0.01,
+            max_new_tokens=self.config.max_tokens,
         )
         
         # Initialize retrieval chain if not provided

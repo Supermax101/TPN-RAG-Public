@@ -136,7 +136,7 @@ class RAGEvaluatorV2:
     def __init__(
         self,
         csv_path: str,
-        model: str = "qwen2.5:7b",
+        model: str = "Qwen/Qwen2.5-7B-Instruct",
         retrieval_k: int = 5,
         enable_reranking: bool = True,
     ):
@@ -392,42 +392,40 @@ class RAGEvaluatorV2:
 
 async def select_model() -> tuple[str, str]:
     """Interactive model selection."""
-    import httpx
-    
     all_models = []
-    
-    # Get Ollama models
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{settings.ollama_base_url}/api/tags", timeout=5.0)
-            if response.status_code == 200:
-                data = response.json()
-                models = [m["name"] for m in data.get("models", [])]
-                llm_models = [m for m in models if "embed" not in m.lower()]
-                all_models.extend([("ollama", m) for m in llm_models])
-    except Exception:
-        pass
-    
+
+    # Add HuggingFace models (primary provider)
+    if settings.hf_token:
+        all_models.extend([
+            ("huggingface", "Qwen/Qwen2.5-7B-Instruct"),
+            ("huggingface", "Qwen/Qwen2.5-14B-Instruct"),
+            ("huggingface", "meta-llama/Llama-3.1-8B-Instruct"),
+            ("huggingface", "mistralai/Mistral-7B-Instruct-v0.3"),
+        ])
+        # Add configured model if different
+        if settings.hf_llm_model and ("huggingface", settings.hf_llm_model) not in all_models:
+            all_models.insert(0, ("huggingface", settings.hf_llm_model))
+
     # Add cloud providers if configured
     if settings.openai_api_key:
         all_models.append(("openai", "gpt-4o"))
     if settings.gemini_api_key:
         all_models.append(("gemini", "gemini-2.0-flash"))
-    
+
     if not all_models:
-        console.print("[red]No models available![/red]")
+        console.print("[red]No models available! Set HF_TOKEN or other API keys.[/red]")
         return None, None
-    
+
     console.print(f"\n[bold]Available Models ({len(all_models)}):[/bold]")
     for i, (provider, model) in enumerate(all_models, 1):
         console.print(f"  {i}. [{provider.upper()}] {model}")
-    
+
     while True:
         try:
             choice = input(f"\nSelect model (1-{len(all_models)}, default=1): ").strip()
             if not choice:
                 return all_models[0]
-            
+
             choice_num = int(choice)
             if 1 <= choice_num <= len(all_models):
                 return all_models[choice_num - 1]

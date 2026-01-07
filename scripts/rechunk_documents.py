@@ -120,20 +120,18 @@ async def rechunk_and_index(
     
     # Index into ChromaDB
     console.print("\n[cyan]Step 2: Indexing into vector store...[/cyan]")
-    
+
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import OllamaEmbeddings
     except ImportError:
         from langchain_community.vectorstores import Chroma
-        from langchain_community.embeddings import OllamaEmbeddings
-    
-    embed_model = settings.ollama_embed_model or "nomic-embed-text"
-    console.print(f"  Using embeddings: {embed_model}")
-    
-    embeddings = OllamaEmbeddings(
-        model=embed_model,
-        base_url=settings.ollama_base_url
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    console.print(f"  Using embeddings: {settings.hf_embedding_model}")
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
     )
     
     # Create or update vector store

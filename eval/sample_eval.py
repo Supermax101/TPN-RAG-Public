@@ -314,7 +314,7 @@ def run_geval_comparison(question: str, expected: str, phase1_answer: str, phase
             "Check if the clinical reasoning is sound and evidence-based",
             "Assess whether any critical safety information is missing or incorrect"
         ],
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         threshold=0.7
     )
 
@@ -333,7 +333,7 @@ def run_geval_comparison(question: str, expected: str, phase1_answer: str, phase
             "Verify citation format is consistent",
             "Assess if citations appear relevant to the claims made"
         ],
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         threshold=0.5
     )
 

@@ -160,36 +160,33 @@ class AgenticMCQRAG:
     
     async def initialize(self):
         """Initialize the agentic RAG components."""
-        
+
         try:
-            from langchain_ollama import ChatOllama
             from langchain_chroma import Chroma
-            from langchain_ollama import OllamaEmbeddings
         except ImportError:
-            from langchain_community.chat_models import ChatOllama
             from langchain_community.vectorstores import Chroma
-            from langchain_community.embeddings import OllamaEmbeddings
-        
-        # Initialize LLMs
-        self.llm = ChatOllama(
-            model=self.model_name,
-            temperature=0.0,
-            base_url=settings.ollama_base_url,
+        from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
+
+        # Initialize LLMs using HuggingFace
+        model_name = self.model_name if "/" in self.model_name else settings.hf_llm_model
+        self.llm = HuggingFaceEndpoint(
+            repo_id=model_name,
+            temperature=0.01,  # Near-zero for deterministic output
+            max_new_tokens=1024,
         )
-        
-        self.grader_llm = ChatOllama(
-            model=self.model_name,
-            temperature=0.0,
-            base_url=settings.ollama_base_url,
+
+        self.grader_llm = HuggingFaceEndpoint(
+            repo_id=model_name,
+            temperature=0.01,
+            max_new_tokens=256,
         )
-        
-        # Initialize vector store
-        embed_model = settings.ollama_embed_model or "nomic-embed-text"
-        embeddings = OllamaEmbeddings(
-            model=embed_model,
-            base_url=settings.ollama_base_url
+
+        # Initialize vector store with HuggingFace embeddings
+        embeddings = HuggingFaceEmbeddings(
+            model_name=settings.hf_embedding_model,
+            model_kwargs={"trust_remote_code": True}
         )
-        
+
         self.vector_store = Chroma(
             collection_name=settings.chroma_collection_name,
             embedding_function=embeddings,
