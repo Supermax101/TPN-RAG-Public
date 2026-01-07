@@ -70,7 +70,7 @@ dev = [
 ]
 
 [project.scripts]
-rag = "cli:cli"
+rag = "cli:app"
 
 [build-system]
 requires = ["hatchling"]

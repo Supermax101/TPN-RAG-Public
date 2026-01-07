@@ -1,390 +1,479 @@
+#!/usr/bin/env python
 """
-TPN RAG System - Command Line Interface
-Interactive menu-driven interface for the RAG system.
+TPN RAG CLI v2 - Production Interface.
+
+Interactive CLI for the TPN RAG system with:
+- Document ingestion (PDF, Markdown, JSON)
+- Question answering with grounding verification
+- Evaluation and testing
+- System management
+
+Usage:
+    uv run python cli_v2.py
+    uv run python cli_v2.py ask "What is the protein requirement?"
+    uv run python cli_v2.py ingest /path/to/book.pdf
 """
+
 import asyncio
-import typer
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+import sys
+from pathlib import Path
 from typing import Optional
 
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.prompt import Prompt, Confirm
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich import box
+
+# Add project root to path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+
 from app.config import settings
-from app.providers import HuggingFaceEmbeddingProvider, ChromaVectorStore
-from app.models import HuggingFaceProvider
-from app.services import RAGService, DocumentLoader, HybridRAGService, AdvancedRAGConfig
+from app.logger import logger
 
-cli = typer.Typer(help="TPN RAG System CLI", invoke_without_command=True)
+# Initialize
 console = Console()
+app = typer.Typer(
+    name="tpn-rag",
+    help="TPN RAG System - Clinical Q&A powered by your knowledge base",
+    add_completion=False,
+)
 
 
-def get_rag_service(llm_model: str = None, advanced: bool = False) -> RAGService:
-    """Creates RAG service instance using HuggingFace models."""
-    embedding_provider = HuggingFaceEmbeddingProvider()
-    vector_store = ChromaVectorStore()
-    llm_provider = HuggingFaceProvider(model_name=llm_model or settings.hf_llm_model)
-    
-    if advanced:
-        # Config aligned with evaluation script settings
-        # HyDE and Multi-Query significantly improve retrieval quality
-        config = AdvancedRAGConfig(
-            enable_bm25_hybrid=True,
-            enable_cross_encoder=True,
-            enable_multi_query=True,   # ENABLED: Generates query variants
-            enable_hyde=True           # ENABLED: Hypothetical Document Embeddings
-        )
-        return HybridRAGService(
-            embedding_provider=embedding_provider,
-            vector_store=vector_store,
-            llm_provider=llm_provider,
-            advanced_config=config
-        )
-    
-    return RAGService(
-        embedding_provider=embedding_provider,
-        vector_store=vector_store,
-        llm_provider=llm_provider
-    )
-
+# =============================================================================
+# BANNER
+# =============================================================================
 
 def show_banner():
     """Display the application banner."""
     banner = """
-╔═══════════════════════════════════════════════════════════╗
-║          TPN RAG System - Clinical Q&A Assistant          ║
-║      Retrieval-Augmented Generation for TPN Guidelines    ║
-╚═══════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║              TPN RAG System v2.1 - Clinical Q&A                  ║
+║         Grounded in YOUR Knowledge Base (ASPEN Guidelines)       ║
+╚══════════════════════════════════════════════════════════════════╝
     """
     console.print(banner, style="bold cyan")
 
 
-def show_main_menu():
-    """Display the main interactive menu."""
+# =============================================================================
+# MAIN MENU
+# =============================================================================
+
+@app.command("menu")
+def interactive_menu():
+    """Start interactive menu mode."""
     show_banner()
     
-    menu = """
-[bold]Available Commands:[/bold]
-
-  [cyan]1. init[/cyan]      - Initialize: Load documents & create embeddings
-  [cyan]2. stats[/cyan]     - Show collection statistics  
-  [cyan]3. ask[/cyan]       - Ask a question (Simple RAG)
-  [cyan]4. ask-adv[/cyan]   - Ask a question (Advanced RAG: BM25 + Reranking)
-  [cyan]5. eval[/cyan]      - Run MCQ evaluation
-  [cyan]6. serve[/cyan]     - Start API server
-  [cyan]7. reset[/cyan]     - Reset embeddings database
-  [cyan]0. exit[/cyan]      - Exit
-
-[bold]Quick Start:[/bold]
-  1. First run [cyan]init[/cyan] to create embeddings from documents
-  2. Then use [cyan]ask[/cyan] or [cyan]ask-adv[/cyan] to query the system
-  3. Run [cyan]eval[/cyan] to test accuracy on MCQ questions
-"""
-    console.print(Panel(menu, title="Main Menu", border_style="blue"))
-
-
-@cli.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
-    """TPN RAG System - Interactive CLI"""
-    if ctx.invoked_subcommand is None:
-        interactive_mode()
-
-
-def interactive_mode():
-    """Run interactive menu mode."""
     while True:
-        show_main_menu()
+        console.print("\n[bold]Main Menu:[/bold]")
+        console.print("  [cyan]1[/cyan] 📚 Ingest Documents (PDF, Markdown)")
+        console.print("  [cyan]2[/cyan] ❓ Ask a Question")
+        console.print("  [cyan]3[/cyan] 📊 Run Evaluation")
+        console.print("  [cyan]4[/cyan] 📈 Show Statistics")
+        console.print("  [cyan]5[/cyan] 🔄 Rebuild Vector Store")
+        console.print("  [cyan]6[/cyan] ⚙️  Settings")
+        console.print("  [cyan]0[/cyan] 🚪 Exit")
         
-        choice = Prompt.ask("\n[bold]Enter command[/bold]", default="help")
+        choice = Prompt.ask("\n[bold]Select option[/bold]", default="2")
         
-        if choice in ["0", "exit", "quit", "q"]:
+        if choice in ["0", "exit", "quit"]:
             console.print("\n[yellow]Goodbye![/yellow]\n")
             break
-        elif choice in ["1", "init"]:
-            run_init_interactive()
-        elif choice in ["2", "stats"]:
-            run_stats()
-        elif choice in ["3", "ask"]:
-            run_ask_interactive(advanced=False)
-        elif choice in ["4", "ask-adv", "advanced"]:
-            run_ask_interactive(advanced=True)
-        elif choice in ["5", "eval"]:
-            run_eval_interactive()
-        elif choice in ["6", "serve"]:
-            run_serve()
-        elif choice in ["7", "reset"]:
-            run_reset()
+        elif choice == "1":
+            asyncio.run(ingest_interactive())
+        elif choice == "2":
+            asyncio.run(ask_interactive())
+        elif choice == "3":
+            asyncio.run(eval_interactive())
+        elif choice == "4":
+            asyncio.run(show_stats())
+        elif choice == "5":
+            asyncio.run(rebuild_vectorstore())
+        elif choice == "6":
+            show_settings()
         else:
-            console.print(f"[red]Unknown command: {choice}[/red]")
-        
-        input("\nPress Enter to continue...")
+            console.print(f"[red]Unknown option: {choice}[/red]")
 
 
-def run_init_interactive():
-    """Interactive initialization."""
-    console.print("\n[bold]Initialize RAG System[/bold]\n")
+# =============================================================================
+# DOCUMENT INGESTION
+# =============================================================================
+
+@app.command("ingest")
+def ingest_command(
+    path: Path = typer.Argument(..., help="Path to file or directory"),
+    chunk_size: int = typer.Option(1000, "--chunk-size", "-s"),
+    overlap: int = typer.Option(200, "--overlap", "-o"),
+):
+    """Ingest documents into the knowledge base."""
+    asyncio.run(ingest_documents(path, chunk_size, overlap))
+
+
+async def ingest_interactive():
+    """Interactive document ingestion."""
+    console.print("\n[bold]📚 Document Ingestion[/bold]")
+    console.print("-" * 50)
     
-    rag_service = get_rag_service()
+    console.print("\nSupported formats:")
+    console.print("  • PDF files (clinical books, guidelines)")
+    console.print("  • Markdown files (.md)")
+    console.print("  • JSON files (from parsing service)")
     
-    async def do_init():
-        stats = await rag_service.get_collection_stats()
+    path_str = Prompt.ask("\nEnter file or directory path")
+    path = Path(path_str).expanduser()
+    
+    if not path.exists():
+        console.print(f"[red]Path not found: {path}[/red]")
+        return
+    
+    chunk_size = int(Prompt.ask("Chunk size (characters)", default="1000"))
+    overlap = int(Prompt.ask("Chunk overlap", default="200"))
+    
+    await ingest_documents(path, chunk_size, overlap)
+
+
+async def ingest_documents(path: Path, chunk_size: int = 1000, overlap: int = 200):
+    """Ingest documents from file or directory."""
+    
+    console.print(f"\n[cyan]Processing: {path}[/cyan]")
+    
+    # Import components
+    from app.ingestion.chunker import SemanticChunker
+    from app.document_processing.pdf_loader import PDFLoader  # We'll create this
+    
+    chunker = SemanticChunker(chunk_size=chunk_size, chunk_overlap=overlap)
+    all_documents = []
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
         
-        if stats["total_chunks"] > 0:
-            console.print(f"[yellow]Collection already has {stats['total_chunks']} chunks.[/yellow]")
-            if not Confirm.ask("Do you want to reinitialize (delete existing)?"):
+        if path.is_file():
+            task = progress.add_task(f"Processing {path.name}...")
+            
+            if path.suffix.lower() == ".pdf":
+                # Load PDF
+                loader = PDFLoader()
+                docs = await loader.load_and_chunk(path, chunk_size, overlap)
+                all_documents.extend(docs)
+            elif path.suffix.lower() == ".md":
+                docs = chunker.process_markdown_file(path)
+                all_documents.extend(docs)
+            elif path.suffix.lower() == ".json":
+                docs = chunker.process_json_document(path)
+                all_documents.extend(docs)
+            else:
+                console.print(f"[yellow]Unsupported format: {path.suffix}[/yellow]")
                 return
-            rag_service.vector_store.reset_collection()
-        
-        console.print("\n[cyan]Loading documents from data/documents/...[/cyan]")
-        loader = DocumentLoader(rag_service)
-        result = await loader.load_all_documents()
-        
-        console.print(f"\n[green]Success! Loaded {result['loaded']} documents ({result['total_chunks']} chunks)[/green]")
-        if result['failed'] > 0:
-            console.print(f"[red]Failed: {result['failed']} documents[/red]")
+            
+            progress.update(task, completed=True)
+            
+        elif path.is_dir():
+            # Process directory
+            pdf_files = list(path.glob("**/*.pdf"))
+            md_files = list(path.glob("**/*.md"))
+            json_files = list(path.glob("**/*_response.json"))
+            
+            total = len(pdf_files) + len(md_files) + len(json_files)
+            task = progress.add_task(f"Processing {total} files...", total=total)
+            
+            for pdf_file in pdf_files:
+                try:
+                    loader = PDFLoader()
+                    docs = await loader.load_and_chunk(pdf_file, chunk_size, overlap)
+                    all_documents.extend(docs)
+                except Exception as e:
+                    console.print(f"[yellow]Warning: {pdf_file.name}: {e}[/yellow]")
+                progress.advance(task)
+            
+            for md_file in md_files:
+                docs = chunker.process_markdown_file(md_file)
+                all_documents.extend(docs)
+                progress.advance(task)
+            
+            for json_file in json_files:
+                docs = chunker.process_json_document(json_file)
+                all_documents.extend(docs)
+                progress.advance(task)
     
-    asyncio.run(do_init())
+    if not all_documents:
+        console.print("[yellow]No documents processed[/yellow]")
+        return
+    
+    console.print(f"\n[green]✓ Processed {len(all_documents)} chunks[/green]")
+    
+    # Add to vector store
+    if Confirm.ask("Add to vector store?", default=True):
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Indexing documents...")
+            
+            try:
+                from langchain_chroma import Chroma
+            except ImportError:
+                from langchain_community.vectorstores import Chroma
+            from langchain_huggingface import HuggingFaceEmbeddings
+
+            embeddings = HuggingFaceEmbeddings(
+                model_name=settings.hf_embedding_model,
+                model_kwargs={"trust_remote_code": True}
+            )
+            
+            vectorstore = Chroma(
+                collection_name=settings.chroma_collection_name,
+                embedding_function=embeddings,
+                persist_directory=str(settings.chromadb_dir),
+            )
+            
+            vectorstore.add_documents(all_documents)
+            
+            progress.update(task, completed=True)
+        
+        # Get count
+        count = vectorstore._collection.count()
+        console.print(f"[green]✓ Vector store now has {count} chunks[/green]")
 
 
-def run_stats():
-    """Show collection statistics."""
-    console.print("\n[bold]Collection Statistics[/bold]\n")
-    
-    rag_service = get_rag_service()
-    
-    async def do_stats():
-        stats = await rag_service.get_collection_stats()
-        
-        table = Table(title="RAG System Status")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        
-        table.add_row("Total Chunks", str(stats.get("total_chunks", 0)))
-        table.add_row("Total Documents", str(stats.get("total_documents", 0)))
-        table.add_row("Collection Name", stats.get("collection_name", "N/A"))
-        table.add_row("Embedding Model", rag_service.embedding_provider.model_name)
-        table.add_row("LLM Model", rag_service.llm_provider.default_model or "Auto-detected")
-        
-        console.print(table)
-        
-        if stats.get("total_chunks", 0) == 0:
-            console.print("\n[yellow]No documents loaded. Run 'init' first.[/yellow]")
-    
-    asyncio.run(do_stats())
+# =============================================================================
+# ASK QUESTION
+# =============================================================================
+
+@app.command("ask")
+def ask_command(
+    question: str = typer.Argument(..., help="Your clinical question"),
+    advanced: bool = typer.Option(False, "--advanced", "-a", help="Use agentic RAG"),
+):
+    """Ask a clinical TPN question."""
+    asyncio.run(ask_question(question, advanced))
 
 
-def run_ask_interactive(advanced: bool = False):
+async def ask_interactive():
     """Interactive question asking."""
-    from app.models import RAGQuery
+    console.print("\n[bold]❓ Ask a Question[/bold]")
+    console.print("-" * 50)
     
-    mode = "Advanced RAG (BM25 + Cross-Encoder)" if advanced else "Simple RAG"
-    console.print(f"\n[bold]Ask a Question - {mode}[/bold]\n")
+    console.print("\n[dim]Your answer will be grounded in the TPN knowledge base.")
+    console.print("The system will NOT make up information.[/dim]")
     
-    question = Prompt.ask("[cyan]Enter your question[/cyan]")
+    question = Prompt.ask("\n[bold]Question[/bold]")
     
     if not question.strip():
-        console.print("[red]No question provided[/red]")
         return
     
-    rag_service = get_rag_service(advanced=advanced)
+    # Check for options (MCQ format)
+    has_options = Confirm.ask("Is this an MCQ with options?", default=False)
+    options = ""
+    if has_options:
+        console.print("Enter options (e.g., A. First | B. Second | C. Third):")
+        options = Prompt.ask("Options")
     
-    async def do_ask():
-        stats = await rag_service.get_collection_stats()
-        if stats.get("total_chunks", 0) == 0:
-            console.print("[red]No documents loaded. Run 'init' first.[/red]")
-            return
-        
-        console.print(f"\n[dim]Searching and generating answer...[/dim]\n")
-        
-        query = RAGQuery(
-            question=question,
-            search_limit=5,
-            temperature=0.1
-        )
-        
-        response = await rag_service.ask(query)
-        
-        console.print(Panel(response.answer, title="Answer", border_style="green"))
-        
-        if response.sources:
-            table = Table(title="Sources Used")
-            table.add_column("Document", style="cyan")
-            table.add_column("Score", style="yellow")
-            table.add_column("Section")
-            
-            for source in response.sources[:5]:
-                table.add_row(
-                    source.document_name[:50],
-                    f"{source.score:.3f}",
-                    source.chunk.section or "N/A"
-                )
-            
-            console.print(table)
-        
-        console.print(f"\n[dim]Time: Search {response.search_time_ms:.0f}ms | Generation {response.generation_time_ms:.0f}ms | Total {response.total_time_ms:.0f}ms[/dim]")
+    advanced = Confirm.ask("Use advanced agentic mode?", default=False)
     
-    asyncio.run(do_ask())
+    await ask_question(question, advanced, options)
 
 
-def run_eval_interactive():
+async def ask_question(question: str, advanced: bool = False, options: str = ""):
+    """Answer a clinical question using RAG."""
+    
+    console.print(f"\n[cyan]Question:[/cyan] {question}")
+    if options:
+        console.print(f"[cyan]Options:[/cyan] {options}")
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        
+        if advanced:
+            task = progress.add_task("Using Agentic RAG (with document grading)...")
+            
+            from app.chains.agentic_rag import create_agentic_mcq_rag
+            rag = await create_agentic_mcq_rag()
+            
+            result = await rag.answer(
+                question=question,
+                options=options or "N/A",
+                answer_type="single" if options else "open",
+            )
+        else:
+            task = progress.add_task("Using Standard RAG...")
+            
+            from app.chains.mcq_chain import create_mcq_chain
+            chain = create_mcq_chain()
+            await chain.initialize()
+            
+            result = await chain.answer(
+                question=question,
+                options=options or "N/A",
+                answer_type="single" if options else "open",
+            )
+        
+        progress.update(task, completed=True)
+    
+    # Display result
+    console.print("\n" + "=" * 60)
+    
+    if options and result.get("answer"):
+        console.print(f"[bold green]Answer:[/bold green] {result['answer']}")
+    
+    console.print(f"\n[bold]Clinical Reasoning:[/bold]")
+    console.print(Panel(result.get("thinking", "No reasoning provided"), border_style="dim"))
+    
+    # Grounding info
+    console.print(f"\n[dim]Confidence: {result.get('confidence', 'unknown')}[/dim]")
+    
+    if result.get("rewrite_count", 0) > 0:
+        console.print(f"[dim]Query refined {result['rewrite_count']} times for better retrieval[/dim]")
+    
+    if result.get("sources"):
+        console.print("\n[bold]Sources used:[/bold]")
+        for i, src in enumerate(result.get("sources", [])[:3], 1):
+            console.print(f"  {i}. {src.get('source', 'Unknown')}")
+    
+    console.print("=" * 60)
+
+
+# =============================================================================
+# EVALUATION
+# =============================================================================
+
+async def eval_interactive():
     """Interactive evaluation."""
-    console.print("\n[bold]Run MCQ Evaluation[/bold]\n")
+    console.print("\n[bold]📊 Run Evaluation[/bold]")
+    console.print("-" * 50)
     
-    console.print("""
-[cyan]Evaluation Options:[/cyan]
-
-  For MCQ Evaluation:
-  1. RAG Evaluation (custom metrics) - Tests RAG pipeline with your MCQ dataset
-  2. Baseline Evaluation (LLM only) - Tests LLM without RAG for comparison
-
-  For Open-Ended Q&A:
-  3. RAGAS Evaluation (requires OpenAI API) - Industry-standard for paragraph answers
-""")
-    
-    choice = Prompt.ask("Select evaluation type", choices=["1", "2", "3"], default="1")
-    
-    if choice == "1":
-        console.print("\n[cyan]Starting RAG Evaluation...[/cyan]\n")
-        import subprocess
-        subprocess.run(["uv", "run", "python", "eval/rag_evaluation.py"])
-    elif choice == "2":
-        console.print("\n[cyan]Starting Baseline Evaluation...[/cyan]\n")
-        import subprocess
-        subprocess.run(["uv", "run", "python", "eval/baseline_evaluation.py"])
-    else:
-        console.print("\n[cyan]Starting RAGAS Evaluation (uses OpenAI API)...[/cyan]\n")
-        import subprocess
-        subprocess.run(["uv", "run", "python", "eval/ragas_evaluation.py"])
-
-
-def run_serve():
-    """Start the API server."""
-    console.print("\n[bold]Starting API Server[/bold]\n")
-    
-    host = Prompt.ask("Host", default="0.0.0.0")
-    port = Prompt.ask("Port", default="8000")
-    
-    console.print(f"\n[cyan]Starting server at http://{host}:{port}[/cyan]")
-    console.print("[dim]API docs at /docs | Press Ctrl+C to stop[/dim]\n")
-    
-    import uvicorn
-    uvicorn.run("app.api.app:app", host=host, port=int(port))
-
-
-def run_reset():
-    """Reset the vector store."""
-    console.print("\n[bold]Reset Collection[/bold]\n")
-    
-    if not Confirm.ask("[red]This will delete all embeddings. Continue?[/red]"):
-        console.print("[yellow]Cancelled[/yellow]")
+    csv_path = Path("eval/tpn_mcq_cleaned.csv")
+    if not csv_path.exists():
+        console.print(f"[red]Evaluation file not found: {csv_path}[/red]")
         return
     
-    rag_service = get_rag_service()
-    rag_service.vector_store.reset_collection()
+    limit = Prompt.ask("Number of questions (leave empty for all)", default="")
+    max_q = int(limit) if limit.isdigit() else None
     
-    console.print("[green]Collection reset successfully[/green]")
-
-
-# Direct command versions (for non-interactive use)
-@cli.command()
-def init(force: bool = typer.Option(False, "--force", "-f", help="Force re-initialization")):
-    """Initialize: Load documents and create embeddings."""
-    console.print("[bold]Initializing RAG system...[/bold]\n")
-    settings.ensure_directories()
+    advanced = Confirm.ask("Use advanced agentic mode?", default=True)
     
-    rag_service = get_rag_service()
+    console.print("\n[cyan]Starting evaluation...[/cyan]")
     
-    async def do_init():
-        stats = await rag_service.get_collection_stats()
-        
-        if stats["total_chunks"] > 0 and not force:
-            console.print(f"[yellow]Collection has {stats['total_chunks']} chunks. Use --force to reinitialize.[/yellow]")
-            return
-        
-        if force:
-            rag_service.vector_store.reset_collection()
-        
-        loader = DocumentLoader(rag_service)
-        result = await loader.load_all_documents()
-        
-        console.print(f"[green]Loaded {result['loaded']} documents ({result['total_chunks']} chunks)[/green]")
+    # Import and run
+    from eval.rag_evaluation_v2 import RAGEvaluatorV2
     
-    asyncio.run(do_init())
-
-
-@cli.command()
-def ask(
-    question: str = typer.Argument(..., help="Question to ask"),
-    advanced: bool = typer.Option(False, "--advanced", "-a", help="Use advanced RAG")
-):
-    """Ask a question using RAG."""
-    from app.models import RAGQuery
+    evaluator = RAGEvaluatorV2(
+        csv_path=str(csv_path),
+        model=settings.hf_llm_model,
+    )
     
-    mode = "Advanced" if advanced else "Simple"
-    console.print(f"[dim]{mode} RAG[/dim]\n")
+    await evaluator.run_evaluation(max_questions=max_q)
+
+
+# =============================================================================
+# STATISTICS
+# =============================================================================
+
+async def show_stats():
+    """Show system statistics."""
+    console.print("\n[bold]📈 System Statistics[/bold]")
+    console.print("-" * 50)
+
+    try:
+        from langchain_chroma import Chroma
+    except ImportError:
+        from langchain_community.vectorstores import Chroma
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.hf_embedding_model,
+        model_kwargs={"trust_remote_code": True}
+    )
     
-    rag_service = get_rag_service(advanced=advanced)
+    vectorstore = Chroma(
+        collection_name=settings.chroma_collection_name,
+        embedding_function=embeddings,
+        persist_directory=str(settings.chromadb_dir),
+    )
     
-    async def do_ask():
-        query = RAGQuery(question=question, search_limit=5, temperature=0.1)
-        response = await rag_service.ask(query)
-        
-        console.print(Panel(response.answer, title="Answer", border_style="green"))
-        
-        if response.sources:
-            table = Table(title="Sources")
-            table.add_column("Document")
-            table.add_column("Score")
-            
-            for s in response.sources[:5]:
-                table.add_row(s.document_name[:40], f"{s.score:.3f}")
-            
-            console.print(table)
+    try:
+        count = vectorstore._collection.count()
+    except:
+        count = 0
     
-    asyncio.run(do_ask())
+    table = Table(box=box.SIMPLE)
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value")
+    
+    table.add_row("Vector Store Chunks", str(count))
+    table.add_row("Collection Name", settings.chroma_collection_name)
+    table.add_row("Embedding Model", settings.hf_embedding_model)
+    table.add_row("LLM Model", settings.hf_llm_model)
+    table.add_row("Chunk Size", str(settings.chunk_size))
+    table.add_row("Chunk Overlap", str(settings.chunk_overlap))
+    table.add_row("ChromaDB Path", str(settings.chromadb_dir))
+    
+    console.print(table)
+    
+    if count == 0:
+        console.print("\n[yellow]⚠ No documents indexed! Run 'Ingest Documents' first.[/yellow]")
 
 
-@cli.command()
-def stats():
-    """Show collection statistics."""
-    run_stats()
+# =============================================================================
+# REBUILD
+# =============================================================================
 
-
-@cli.command()
-def serve(
-    host: str = typer.Option("0.0.0.0", "--host", "-h"),
-    port: int = typer.Option(8000, "--port", "-p")
-):
-    """Start the FastAPI server."""
-    import uvicorn
-    console.print(f"[cyan]Server at http://{host}:{port} | Docs at /docs[/cyan]")
-    uvicorn.run("app.api.app:app", host=host, port=port)
-
-
-@cli.command()
-def reset():
-    """Reset the embeddings database."""
-    if Confirm.ask("[red]Delete all embeddings?[/red]"):
-        rag_service = get_rag_service()
-        rag_service.vector_store.reset_collection()
-        console.print("[green]Reset complete[/green]")
-
-
-@cli.command(name="eval")
-def run_evaluation(
-    baseline: bool = typer.Option(False, "--baseline", "-b", help="Run baseline (no RAG)"),
-    limit: int = typer.Option(None, "--limit", "-l", help="Max questions")
-):
-    """Run MCQ evaluation."""
+async def rebuild_vectorstore():
+    """Rebuild vector store from scratch."""
+    console.print("\n[bold]🔄 Rebuild Vector Store[/bold]")
+    console.print("-" * 50)
+    
+    if not Confirm.ask("[yellow]This will delete existing vectors. Continue?[/yellow]", default=False):
+        return
+    
     import subprocess
-    
-    if baseline:
-        cmd = ["uv", "run", "python", "eval/baseline_evaluation.py"]
-    else:
-        cmd = ["uv", "run", "python", "eval/rag_evaluation.py"]
-    
-    subprocess.run(cmd)
+    subprocess.run([
+        "uv", "run", "python", "scripts/rechunk_documents.py", "--force"
+    ], cwd=project_root)
+
+
+# =============================================================================
+# SETTINGS
+# =============================================================================
+
+def show_settings():
+    """Show current settings."""
+    console.print("\n[bold]⚙️ Current Settings[/bold]")
+    console.print("-" * 50)
+
+    table = Table(box=box.SIMPLE)
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value")
+    table.add_column("Source")
+
+    table.add_row("Embed Model", settings.hf_embedding_model, "HF_EMBEDDING_MODEL")
+    table.add_row("LLM Model", settings.hf_llm_model, "HF_LLM_MODEL")
+    table.add_row("Chunk Size", str(settings.chunk_size), "CHUNK_SIZE")
+    table.add_row("Chunk Overlap", str(settings.chunk_overlap), "CHUNK_OVERLAP")
+
+    console.print(table)
+    console.print("\n[dim]Edit .env file to change settings[/dim]")
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+@app.callback(invoke_without_command=True)
+def main(ctx: typer.Context):
+    """TPN RAG System - Clinical Q&A grounded in your knowledge base."""
+    if ctx.invoked_subcommand is None:
+        interactive_menu()
 
 
 if __name__ == "__main__":
-    cli()
+    app()

@@ -19,7 +19,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
-from app.document_processing.chunker import SemanticChunker
+from app.ingestion.chunker import SemanticChunker
 from app.config import settings
 from app.logger import logger
 

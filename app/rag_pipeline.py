@@ -220,7 +220,7 @@ class TPN_RAG:
         )
         
         # Initialize chunker
-        from app.document_processing.chunker import SemanticChunker
+        from app.ingestion.chunker import SemanticChunker
         self._chunker = SemanticChunker(
             chunk_size=self.config.chunk_size,
             chunk_overlap=self.config.chunk_overlap,

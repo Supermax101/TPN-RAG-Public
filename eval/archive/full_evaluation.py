@@ -239,8 +239,8 @@ class FullEvaluator:
             persist_directory=str(project_root / "data" / "chromadb"),
         )
 
-        print("Initializing LLM provider...")
-        llm = HuggingFaceProvider(model_name=self.model_name)
+        print("Initializing LLM provider (local mode for large models)...")
+        llm = HuggingFaceProvider(model_name=self.model_name, use_local=True)
 
         # Run evaluation
         print(f"\nEvaluating {len(df)} questions...\n")
@@ -433,13 +433,19 @@ async def main():
     parser.add_argument("--embedding", type=str, default="Qwen/Qwen3-Embedding-8B", help="Embedding model")
     parser.add_argument("--csv", type=str, default="eval/tpn_mcq_cleaned.csv", help="Path to MCQ CSV")
     parser.add_argument("--output", type=str, default="eval/results", help="Output directory")
+    parser.add_argument("--local", action="store_true", default=True, help="Use local model inference (default for large models)")
+    parser.add_argument("--api", action="store_true", help="Use HuggingFace Inference API instead of local")
 
     args = parser.parse_args()
+
+    # If --api is specified, use API mode; otherwise use local
+    use_local = not args.api
 
     evaluator = FullEvaluator(
         model_name=args.model,
         embedding_model=args.embedding,
         output_dir=args.output,
+        use_local=use_local,
     )
 
     await evaluator.run_evaluation(
