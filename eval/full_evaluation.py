@@ -152,24 +152,13 @@ class FullEvaluator:
                 for d in docs
             ])
 
-            # Generate answer
-            prompt = f"""You are a clinical TPN expert. Answer based ONLY on the context.
-
-CONTEXT:
-{context}
-
-QUESTION: {question}
-
-Answer concisely with specific clinical values when available."""
-
-            response = await llm_provider.generate(
-                prompt=prompt,
-                model=self.model_name,
-                temperature=0.0,
-                max_tokens=500,
+            # Generate answer using the LLMProvider interface
+            response = llm_provider.generate(
+                question=question,
+                context=context,
             )
 
-            generated = response if isinstance(response, str) else str(response)
+            generated = response.answer if hasattr(response, 'answer') else str(response)
 
             response_time = (time.time() - start_time) * 1000
 
