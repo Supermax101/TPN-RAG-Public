@@ -62,11 +62,11 @@ class PipelineConfig(BaseModel):
     # Pipeline mode
     mode: PipelineMode = Field(default=PipelineMode.STANDARD)
     
-    # Retrieval settings
-    retrieval_k: int = Field(default=5, description="Documents to retrieve")
+    # Retrieval settings (optimized for better recall - was 5, now 10)
+    retrieval_k: int = Field(default=10, description="Documents to retrieve")
     enable_bm25: bool = Field(default=True)
     enable_reranking: bool = Field(default=True)
-    relevance_threshold: float = Field(default=0.55)
+    relevance_threshold: float = Field(default=0.45)  # Lowered for better recall
     
     # Chunking settings
     chunk_size: int = Field(default=1000)

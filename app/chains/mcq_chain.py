@@ -51,8 +51,8 @@ class MCQChainConfig(BaseModel):
     temperature: float = Field(default=0.0, description="LLM temperature")
     max_tokens: int = Field(default=1000, description="Max response tokens")
     
-    # Retrieval settings
-    retrieval_k: int = Field(default=5, description="Number of documents to retrieve")
+    # Retrieval settings (optimized for better recall)
+    retrieval_k: int = Field(default=10, description="Number of documents to retrieve")
     enable_bm25: bool = Field(default=True, description="Enable BM25 hybrid search")
     enable_reranking: bool = Field(default=True, description="Enable cross-encoder reranking")
     
@@ -290,7 +290,7 @@ class MCQChain:
 
 def create_mcq_chain(
     model: str = "qwen2.5:7b",
-    retrieval_k: int = 5,
+    retrieval_k: int = 10,  # Increased from 5 for better recall
     enable_reranking: bool = True,
 ) -> MCQChain:
     """

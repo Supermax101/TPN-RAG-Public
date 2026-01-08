@@ -22,10 +22,10 @@ from ..logger import logger
 class RetrievalConfig(BaseModel):
     """Configuration for the retrieval chain."""
     
-    # Retrieval settings
-    k: int = Field(default=10, description="Number of documents to retrieve")
-    final_k: int = Field(default=5, description="Number of documents after reranking")
-    score_threshold: float = Field(default=0.3, description="Minimum similarity score")
+    # Retrieval settings (optimized for better recall - was k=10, final_k=5)
+    k: int = Field(default=15, description="Number of documents to retrieve initially")
+    final_k: int = Field(default=10, description="Number of documents after reranking")
+    score_threshold: float = Field(default=0.25, description="Minimum similarity score")
     
     # Hybrid search
     enable_bm25: bool = Field(default=True, description="Enable BM25 keyword search")
