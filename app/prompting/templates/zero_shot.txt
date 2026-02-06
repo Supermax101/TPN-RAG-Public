@@ -1,12 +1,13 @@
-{context_block}
-
 Answer the user question directly and concisely.
 If this is an MCQ, return the final choice letter.
 
-{options_block}
-
 Question:
 {question}
+
+{options_block}
+
+Reference context (use as supporting evidence when relevant):
+{context_block}
 
 Output format (follow EXACTLY):
 Reasoning: <brief reasoning>

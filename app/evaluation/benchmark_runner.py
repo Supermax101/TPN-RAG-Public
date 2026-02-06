@@ -28,7 +28,7 @@ from .benchmark_types import (
     RetrievalSnapshot,
     RunRecord,
 )
-from ..prompting import TPN_SYSTEM_PROMPT
+from ..prompting import get_system_prompt
 from .metrics import AnswerMetrics
 from .prompting import render_prompt
 from .provider_adapter import PROVIDER_RATE_LIMITS, create_provider_adapter
@@ -186,13 +186,14 @@ class BenchmarkRunner:
         prompt: str,
         model: ModelSpec,
         run_id: str,
+        system_prompt: str,
         temperature: float = 0.0,
         seed: Optional[int] = None,
     ):
         """Make a single LLM call."""
         return await adapter.generate(
             prompt=prompt,
-            system=TPN_SYSTEM_PROMPT,
+            system=system_prompt,
             temperature=temperature,
             max_tokens=1000,
             model_id=model.model_name,
@@ -206,6 +207,7 @@ class BenchmarkRunner:
         prompt: str,
         model: ModelSpec,
         run_id: str,
+        system_prompt: str,
     ) -> tuple[str, int, float]:
         """
         Run CoT-SC: multiple independent passes at temp=0.7, majority-vote.
@@ -221,7 +223,7 @@ class BenchmarkRunner:
         for i in range(_COT_SC_PASSES):
             result = await adapter.generate(
                 prompt=prompt,
-                system=TPN_SYSTEM_PROMPT,
+                system=system_prompt,
                 temperature=0.7,
                 max_tokens=1000,
                 model_id=model.model_name,
@@ -259,6 +261,7 @@ class BenchmarkRunner:
     ) -> RunRecord:
         run_id = uuid.uuid4().hex
         context = retrieval_snapshot.context_text if retrieval_snapshot else None
+        system_prompt = get_system_prompt(use_rag=rag_enabled)
         prompt = render_prompt(
             strategy=strategy,
             question=sample.question,
@@ -278,11 +281,11 @@ class BenchmarkRunner:
                 # Real CoT-SC: 3 independent passes + majority vote
                 # Intentionally omit seed for diversity at temp=0.7
                 response_text, tokens_used, latency_ms = await self._run_cot_sc(
-                    adapter, prompt, model, run_id,
+                    adapter, prompt, model, run_id, system_prompt,
                 )
             else:
                 result = await self._generate_single(
-                    adapter, prompt, model, run_id, seed=self.config.seed,
+                    adapter, prompt, model, run_id, system_prompt, seed=self.config.seed,
                 )
                 response_text = result.text
                 tokens_used = result.tokens_used
@@ -307,6 +310,7 @@ class BenchmarkRunner:
                         try:
                             retry_result = await self._generate_single(
                                 adapter, prompt, model, f"{run_id}_retry{retry_i}",
+                                system_prompt,
                                 seed=None,  # vary output
                             )
                             retry_answer, _, _ = parse_mcq_response(
@@ -326,7 +330,7 @@ class BenchmarkRunner:
                         structured = await adapter.generate_structured(
                             prompt=prompt,
                             schema=_MCQ_SCHEMA,
-                            system=TPN_SYSTEM_PROMPT,
+                            system=system_prompt,
                             temperature=0.0,
                             max_tokens=1000,
                             model_id=model.model_name,
@@ -619,4 +623,3 @@ async def run_benchmark(config: ExperimentConfig, retriever: Optional[RetrieverA
     """Convenience helper for script entrypoints."""
     runner = BenchmarkRunner(config=config, retriever=retriever)
     return await runner.run()
-

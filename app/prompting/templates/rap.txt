@@ -1,13 +1,13 @@
-Use only the retrieved context to answer.
-If the context is insufficient, respond with INSUFFICIENT_CONTEXT.
-
-## TPN CLINICAL KNOWLEDGE BASE
-{context_block}
-
-{options_block}
+Prioritize retrieved context, but use clinical reasoning to select the best-supported answer.
+Do not output INSUFFICIENT_CONTEXT. Always return the best answer letter(s).
 
 Question:
 {question}
+
+{options_block}
+
+## TPN CLINICAL KNOWLEDGE BASE
+{context_block}
 
 Output format (follow EXACTLY):
 Reasoning: <source-grounded reasoning>

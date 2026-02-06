@@ -1,14 +1,15 @@
 Follow the style shown in examples, then answer the target question.
 
-{context_block}
-
 Examples:
 {few_shots_block}
 
-{options_block}
-
 Question:
 {question}
+
+{options_block}
+
+Reference context (use as supporting evidence when relevant):
+{context_block}
 
 Output format (follow EXACTLY):
 Reasoning: <brief reasoning>

@@ -23,7 +23,7 @@ from app.evaluation.provider_adapter import create_provider_adapter
 from app.evaluation.retriever_adapter import RetrieverAdapter
 from app.evaluation.prompting import render_prompt
 from app.evaluation.benchmark_types import PromptStrategy
-from app.prompting import TPN_SYSTEM_PROMPT
+from app.prompting import get_system_prompt
 
 # Default models per provider
 DEFAULT_MODELS = {
@@ -56,7 +56,13 @@ async def ask_one(
     context_text = None
     retrieval_info = None
     if with_rag:
-        retriever = RetrieverAdapter(persist_dir=persist_dir, top_k=10, candidate_k=60)
+        retriever = RetrieverAdapter(
+            persist_dir=persist_dir,
+            top_k=6,
+            candidate_k=40,
+            max_context_chars=6000,
+            max_query_decompositions=3,
+        )
         snapshot = retriever.retrieve(query=question, query_id="cli", run_id="cli")
         context_text = snapshot.context_text
         retrieval_info = {
@@ -74,7 +80,7 @@ async def ask_one(
 
     result = await adapter.generate(
         prompt=prompt,
-        system=TPN_SYSTEM_PROMPT,
+        system=get_system_prompt(use_rag=with_rag),
         temperature=0.0,
         max_tokens=1000,
         model_id=model_name,

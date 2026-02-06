@@ -45,6 +45,7 @@ from app.evaluation import (
 DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
     # --- Phase 1: SOTA API models ---
     "gpt-5.2": ModelSpec(model_id="gpt-5.2", provider="openai", model_name="gpt-5.2", tier=ModelTier.SOTA),
+    "gpt-5-mini": ModelSpec(model_id="gpt-5-mini", provider="openai", model_name="gpt-5-mini", tier=ModelTier.SOTA),
     "claude-sonnet": ModelSpec(model_id="claude-sonnet", provider="anthropic", model_name="claude-sonnet-4-5-20250929", tier=ModelTier.SOTA),
     "gemini-3-flash": ModelSpec(model_id="gemini-3-flash", provider="gemini", model_name="gemini-3-flash-preview", tier=ModelTier.SOTA),
     "grok-4.1-fast": ModelSpec(model_id="grok-4.1-fast", provider="xai", model_name="grok-4-1-fast-reasoning", tier=ModelTier.SOTA),
@@ -68,12 +69,18 @@ def parse_args():
     parser.add_argument("--persist-dir", type=str, default="./data", help="Persisted retrieval index root")
     parser.add_argument("--output-dir", type=str, default="eval/results/benchmark", help="Benchmark output directory")
     parser.add_argument("--repeats", type=int, default=5, help="Repeat runs per condition")
-    parser.add_argument("--top-k", type=int, default=10, help="Top-k chunks in retrieval snapshot")
+    parser.add_argument("--top-k", type=int, default=6, help="Top-k chunks in retrieval snapshot")
     parser.add_argument(
         "--candidate-k",
         type=int,
-        default=60,
+        default=40,
         help="Retrieval candidate pool size before context packing/rerank",
+    )
+    parser.add_argument(
+        "--max-context-chars",
+        type=int,
+        default=6000,
+        help="Maximum retrieved context length injected into prompts",
     )
     parser.add_argument(
         "--retrieval-iterations",
@@ -84,7 +91,7 @@ def parse_args():
     parser.add_argument(
         "--max-decompositions",
         type=int,
-        default=4,
+        default=3,
         help="Max decomposition/expansion queries per iteration",
     )
     parser.add_argument(
@@ -145,6 +152,7 @@ def main():
         iterative_retrieval=not args.disable_iterative_retrieval,
         retrieval_iterations=args.retrieval_iterations,
         max_query_decompositions=args.max_decompositions,
+        max_context_chars=args.max_context_chars,
         include_no_rag=args.include_baseline,
         include_rag=not args.no_rag,
         prompt_strategies=prompt_strategies,

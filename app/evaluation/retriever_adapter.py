@@ -56,12 +56,14 @@ class RetrieverAdapter:
     def __init__(
         self,
         persist_dir: str | Path,
-        top_k: int = 10,
+        top_k: int = 6,
         candidate_k: int = 40,
-        max_context_chars: int = 12000,
+        max_context_chars: int = 6000,
         iterative_retrieval: bool = True,
         retrieval_iterations: int = 2,
         max_query_decompositions: int = 4,
+        min_chunk_score_floor: float = 0.45,
+        min_chunk_score_ratio: float = 0.75,
     ):
         self.persist_dir = Path(persist_dir)
         self.top_k = max(1, top_k)
@@ -71,6 +73,8 @@ class RetrieverAdapter:
         self.iterative_retrieval = iterative_retrieval
         self.retrieval_iterations = max(1, retrieval_iterations)
         self.max_query_decompositions = max(1, max_query_decompositions)
+        self.min_chunk_score_floor = min_chunk_score_floor
+        self.min_chunk_score_ratio = min_chunk_score_ratio
         self._cache: Dict[str, RetrievalSnapshot] = {}
 
         # High-accuracy default stack:
@@ -325,38 +329,39 @@ class RetrieverAdapter:
 
     def _pack_context(self, chunks: List[NormalizedChunk]) -> str:
         """
-        Diversity-aware context packing:
-        - keep top-ranked chunks as primary signal
-        - inject bounded source diversity early
-        - then fill remaining budget by rank order
+        Precision-first context packing.
+
+        Preserve reranker rank order and trim by character budget.
         """
-        by_source: Dict[str, List[NormalizedChunk]] = {}
-        for chunk in chunks:
-            by_source.setdefault(chunk.source, []).append(chunk)
-
-        best_per_source: List[NormalizedChunk] = []
-        for source_chunks in by_source.values():
-            best_per_source.append(min(source_chunks, key=lambda x: x.rank))
-        best_per_source.sort(key=lambda x: x.rank)
-
-        diversity_budget = max(3, min(self.top_k, 8))
-        selected: List[NormalizedChunk] = best_per_source[:diversity_budget]
-
-        selected_ids = {id(chunk) for chunk in selected}
-        for chunk in sorted(chunks, key=lambda x: x.rank):
-            if id(chunk) not in selected_ids:
-                selected.append(chunk)
-                selected_ids.add(id(chunk))
-
         parts: List[str] = []
         total_chars = 0
-        for chunk in selected:
+        for chunk in sorted(chunks, key=lambda x: x.rank):
             part = f"[Source: {chunk.source}{f', p.{chunk.page}' if chunk.page else ''}]\n{chunk.content}\n"
             if total_chars + len(part) > self.max_context_chars:
                 break
             parts.append(part)
             total_chars += len(part)
         return "\n---\n".join(parts)
+
+    def _filter_low_relevance(self, chunks: List[NormalizedChunk]) -> List[NormalizedChunk]:
+        """
+        Drop weak reranker tail chunks to reduce context noise.
+
+        Uses a dynamic threshold derived from top score with a floor. If scores are
+        too small (e.g., fallback rank scores), skip filtering.
+        """
+        if not chunks:
+            return chunks
+
+        top_score = float(chunks[0].score)
+        if top_score <= 0.15:
+            return chunks
+
+        threshold = max(self.min_chunk_score_floor, top_score * self.min_chunk_score_ratio)
+        filtered = [chunk for chunk in chunks if float(chunk.score) >= threshold]
+        if len(filtered) >= 2:
+            return filtered
+        return chunks[: min(2, len(chunks))]
 
     def retrieve(
         self,
@@ -367,7 +372,8 @@ class RetrieverAdapter:
     ) -> RetrievalSnapshot:
         cache_key = stable_text_hash(
             f"{query_id}:{query}:{self.top_k}:{self.candidate_k}:{self.max_context_chars}:"
-            f"{self.iterative_retrieval}:{self.retrieval_iterations}:{self.max_query_decompositions}"
+            f"{self.iterative_retrieval}:{self.retrieval_iterations}:{self.max_query_decompositions}:"
+            f"{self.min_chunk_score_floor}:{self.min_chunk_score_ratio}"
         )
         if not force_refresh and cache_key in self._cache:
             return self._cache[cache_key]
@@ -377,7 +383,8 @@ class RetrieverAdapter:
         retrieval_time_ms = (time.time() - start) * 1000
 
         chunks = self._normalize_chunks(docs)
-        primary_chunks = chunks[: self.top_k]
+        filtered_chunks = self._filter_low_relevance(chunks)
+        primary_chunks = filtered_chunks[: self.top_k] if filtered_chunks else chunks[: self.top_k]
         context = self._pack_context(primary_chunks)
         context_hash = stable_text_hash(context)
 

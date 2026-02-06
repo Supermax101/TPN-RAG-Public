@@ -68,12 +68,12 @@ class ExperimentConfig(BaseModel):
     name: str = "tpn_publishable_benchmark"
     seed: int = 42
     repeats: int = Field(default=5, ge=1)
-    top_k: int = Field(default=10, ge=1, le=50)
-    retrieval_candidate_k: int = Field(default=60, ge=1, le=200)
+    top_k: int = Field(default=6, ge=1, le=50)
+    retrieval_candidate_k: int = Field(default=40, ge=1, le=200)
     iterative_retrieval: bool = True
     retrieval_iterations: int = Field(default=2, ge=1, le=4)
-    max_query_decompositions: int = Field(default=4, ge=1, le=8)
-    max_context_chars: int = Field(default=12000, ge=1000)
+    max_query_decompositions: int = Field(default=3, ge=1, le=8)
+    max_context_chars: int = Field(default=6000, ge=1000)
     fair_shared_context: bool = True
     include_no_rag: bool = True
     include_rag: bool = True

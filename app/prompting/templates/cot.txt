@@ -1,11 +1,12 @@
 Think step by step and then provide the final answer.
 
-{context_block}
+Question:
+{question}
 
 {options_block}
 
-Question:
-{question}
+Reference context (use as supporting evidence when relevant):
+{context_block}
 
 Output format (follow EXACTLY):
 Reasoning: <step-by-step reasoning>
