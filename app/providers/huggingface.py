@@ -100,16 +100,15 @@ class HuggingFaceProvider(SyncLLMProvider):
 
             load_kwargs = {
                 "trust_remote_code": True,
-                "device_map": "auto",  # let accelerate handle placement
+                "device_map": "auto",  # let accelerate handle multi-device placement
             }
             if self.quantize_4bit:
                 # Requires: pip install bitsandbytes accelerate
                 load_kwargs["load_in_4bit"] = True
-                load_kwargs["bnb_4bit_compute_dtype"] = torch.float16
-                # device_map stays "auto" for bitsandbytes
+                load_kwargs["bnb_4bit_compute_dtype"] = torch.bfloat16  # H200 native BF16
             else:
-                load_kwargs["torch_dtype"] = torch.float16 if self.device != "cpu" else torch.float32
-                load_kwargs["device_map"] = self.device
+                # Use "auto" to respect each model's native dtype (BF16 for Gemma/Qwen)
+                load_kwargs["torch_dtype"] = "auto"
 
             self._model = AutoModelForCausalLM.from_pretrained(
                 self.model_name, **load_kwargs,
@@ -188,10 +187,17 @@ class HuggingFaceProvider(SyncLLMProvider):
         messages.append({"role": "user", "content": prompt})
 
         try:
+            # Qwen3 thinking models: disable thinking to control latency/tokens
+            template_kwargs = {"tokenize": False, "add_generation_prompt": True}
+            if "qwen3" in self.model_name.lower():
+                template_kwargs["enable_thinking"] = False
+
             text = self._tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True,
+                messages, **template_kwargs,
             )
-            inputs = self._tokenizer(text, return_tensors="pt").to(self.device)
+            # Use model's actual device (respects device_map="auto" placement)
+            target_device = next(self._model.parameters()).device
+            inputs = self._tokenizer(text, return_tensors="pt").to(target_device)
             input_length = inputs.input_ids.shape[1]
 
             with torch.no_grad():

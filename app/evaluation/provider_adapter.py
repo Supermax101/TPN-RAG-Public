@@ -227,9 +227,14 @@ def create_provider_adapter(provider: str, model_name: str, api_key_env: Optiona
     if provider in {"huggingface", "hf"}:
         from ..providers.huggingface import HuggingFaceProvider
 
-        # Auto-detect: 100B+ models need 4-bit quantization on single GPU
+        # gpt-oss models use MXFP4 natively — don't add BnB 4-bit on top.
+        # Only use BnB 4-bit for non-gpt-oss 70B+ models.
         param_hint = model_name.lower()
-        needs_quant = any(s in param_hint for s in ["120b", "100b", "70b", "72b"])
+        is_gpt_oss = "gpt-oss" in param_hint
+        needs_quant = (
+            not is_gpt_oss
+            and any(s in param_hint for s in ["120b", "100b", "70b", "72b"])
+        )
         return SyncModelWrapper(
             HuggingFaceProvider(
                 model_name=model_name,

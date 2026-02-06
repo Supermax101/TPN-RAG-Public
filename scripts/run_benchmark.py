@@ -52,7 +52,7 @@ DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
     # --- Phase 2: Open-source HuggingFace models ---
     "gpt-oss-120b": ModelSpec(model_id="gpt-oss-120b", provider="huggingface", model_name="openai/gpt-oss-120b", tier=ModelTier.OPEN),
     "gpt-oss-20b": ModelSpec(model_id="gpt-oss-20b", provider="huggingface", model_name="openai/gpt-oss-20b", tier=ModelTier.OPEN),
-    "qwen2.5-32b": ModelSpec(model_id="qwen2.5-32b", provider="huggingface", model_name="Qwen/Qwen2.5-32B", tier=ModelTier.OPEN),
+    "qwen2.5-32b": ModelSpec(model_id="qwen2.5-32b", provider="huggingface", model_name="Qwen/Qwen2.5-32B-Instruct", tier=ModelTier.OPEN),
     "qwen3-30b-a3b": ModelSpec(model_id="qwen3-30b-a3b", provider="huggingface", model_name="Qwen/Qwen3-30B-A3B-Instruct-2507", tier=ModelTier.OPEN),
     "medgemma-27b": ModelSpec(model_id="medgemma-27b", provider="huggingface", model_name="google/medgemma-27b-text-it", tier=ModelTier.OPEN),
     "gemma3-27b": ModelSpec(model_id="gemma3-27b", provider="huggingface", model_name="google/gemma-3-27b-it", tier=ModelTier.OPEN),
