@@ -390,13 +390,31 @@ class RetrievalPipeline:
         if chroma_path.exists():
             try:
                 import chromadb
-                from chromadb.config import Settings
+                from chromadb.config import Settings as ChromaSettings
 
                 client = chromadb.PersistentClient(
                     path=str(chroma_path),
-                    settings=Settings(anonymized_telemetry=False),
+                    settings=ChromaSettings(anonymized_telemetry=False),
                 )
-                vector_collection = client.get_collection(settings.chroma_collection_name)
+
+                # Use the same embedding function that was used at ingestion
+                embedding_fn = None
+                if settings.embedding_provider == "openai":
+                    import os
+                    from dotenv import load_dotenv
+                    load_dotenv()
+                    from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+                    api_key = os.getenv("OPENAI_API_KEY") or settings.openai_api_key
+                    if api_key:
+                        embedding_fn = OpenAIEmbeddingFunction(
+                            api_key=api_key,
+                            model_name=settings.embedding_model,
+                        )
+
+                vector_collection = client.get_collection(
+                    settings.chroma_collection_name,
+                    embedding_function=embedding_fn,
+                )
                 logger.info(f"Loaded ChromaDB collection with {vector_collection.count()} documents")
             except Exception as e:
                 logger.warning(f"Failed to load ChromaDB: {e}")
