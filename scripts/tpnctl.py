@@ -2,13 +2,15 @@
 """
 TPN benchmark control-plane CLI.
 
-This CLI is orchestration-only: it shells out to project scripts and does not
-directly run local model inference itself.
+Provides orchestration commands (status, benchmark, ingest, …) plus
+interactive model tools (list-models, quick-test, ask).
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +25,10 @@ console = Console()
 app = typer.Typer(add_completion=False, help="Control-plane CLI for TPN RAG benchmark workflows")
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Ensure project root is importable
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def _run(cmd: list[str], cwd: Optional[Path] = None, dry_run: bool = False) -> int:
@@ -187,6 +193,11 @@ def benchmark(
     ),
     no_rag: bool = typer.Option(False, "--no-rag", help="Disable RAG conditions"),
     include_baseline: bool = typer.Option(False, "--include-baseline", help="Include no-RAG baseline (off by default)"),
+    max_concurrent: int = typer.Option(5, "--max-concurrent", help="Max concurrent API calls"),
+    agentic_retrieval: bool = typer.Option(False, "--agentic-retrieval", help="Enable LLM relevance judging"),
+    agentic_judge_provider: str = typer.Option("openai", "--agentic-judge-provider", help="Provider for agentic judge"),
+    agentic_judge_model: str = typer.Option("gpt-4o-mini", "--agentic-judge-model", help="Model for agentic judge"),
+    dynamic_few_shot: bool = typer.Option(False, "--dynamic-few-shot", help="Enable embedding-based few-shot selection"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print command only"),
 ) -> None:
     """Run full benchmark matrix."""
@@ -209,6 +220,8 @@ def benchmark(
         str(max_decompositions),
         "--models",
         models,
+        "--max-concurrent",
+        str(max_concurrent),
     ]
     if disable_iterative_retrieval:
         cmd.append("--disable-iterative-retrieval")
@@ -218,6 +231,10 @@ def benchmark(
         cmd.append("--no-rag")
     if include_baseline:
         cmd.append("--include-baseline")
+    if agentic_retrieval:
+        cmd.extend(["--agentic-retrieval", "--agentic-judge-provider", agentic_judge_provider, "--agentic-judge-model", agentic_judge_model])
+    if dynamic_few_shot:
+        cmd.append("--dynamic-few-shot")
     code = _run(cmd, dry_run=dry_run)
     raise typer.Exit(code=code)
 
@@ -273,6 +290,115 @@ def show_latest(
             console.print(f"[dim]Rows in latest summary: {len(data.get('rows', []))}[/dim]")
         except Exception:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Provider / model discovery
+# ---------------------------------------------------------------------------
+
+_PROVIDER_DEFAULTS = {
+    "openai": ("gpt-4o", "OPENAI_API_KEY"),
+    "anthropic": ("claude-sonnet-4-5-20250514", "ANTHROPIC_API_KEY"),
+    "gemini": ("gemini-2.5-flash", "GEMINI_API_KEY"),
+    "xai": ("grok-4-fast-reasoning", "XAI_API_KEY"),
+    "kimi": ("kimi-k2-0905-preview", "KIMI_API_KEY"),
+}
+
+
+@app.command("list-models")
+def list_models(
+    check_health: bool = typer.Option(False, "--check-health", help="Ping each provider API"),
+) -> None:
+    """Show available providers, default models, and API key status."""
+    table = Table(title="TPN Provider Matrix")
+    table.add_column("Provider")
+    table.add_column("Default Model")
+    table.add_column("API Key")
+    if check_health:
+        table.add_column("Health")
+
+    for provider, (model, env_var) in _PROVIDER_DEFAULTS.items():
+        key_status = "SET" if os.environ.get(env_var) else "MISSING"
+        row = [provider, model, key_status]
+
+        if check_health:
+            if key_status == "MISSING":
+                row.append("SKIP")
+            else:
+                try:
+                    from app.evaluation.provider_adapter import create_provider_adapter
+
+                    adapter = create_provider_adapter(provider, model)
+                    ok = asyncio.run(adapter.provider.check_health())
+                    row.append("OK" if ok else "FAIL")
+                except Exception as exc:
+                    row.append(f"ERR: {exc!s:.30}")
+
+        table.add_row(*row)
+
+    console.print(table)
+
+
+@app.command("quick-test")
+def quick_test(
+    provider: str = typer.Option("openai", help="Provider name"),
+    model: Optional[str] = typer.Option(None, help="Model override"),
+    with_rag: bool = typer.Option(False, "--with-rag", help="Enable RAG retrieval"),
+    persist_dir: Path = typer.Option(ROOT / "data", help="Retrieval index dir"),
+) -> None:
+    """Run one question through a single provider to verify setup."""
+    question = "A preterm infant on PN has serum potassium 2.9 mEq/L. How would you classify this?"
+
+    from scripts.ask_question import ask_one
+
+    result = asyncio.run(ask_one(
+        question=question,
+        provider=provider,
+        model=model,
+        strategy="ZS",
+        with_rag=with_rag,
+        persist_dir=str(persist_dir),
+    ))
+
+    console.print(f"\n[bold]Provider:[/bold] {result['provider']} / {result['model']}")
+    console.print(f"[bold]Strategy:[/bold] {result['strategy']}")
+    console.print(f"[bold]Latency:[/bold] {result['latency_ms']:.0f}ms")
+    if result["retrieval"]:
+        r = result["retrieval"]
+        console.print(f"[bold]RAG:[/bold] {r['chunks']} chunks, {r['context_chars']} chars")
+    console.print(f"\n[green]{'='*60}[/green]")
+    console.print(result["answer"])
+
+
+@app.command("ask")
+def ask(
+    question: str = typer.Argument(..., help="Clinical TPN question"),
+    provider: str = typer.Option("openai", help="Provider name"),
+    model: Optional[str] = typer.Option(None, help="Model override"),
+    strategy: str = typer.Option("ZS", help="Prompt strategy: ZS, FEW_SHOT, COT, COT_SC, RAP"),
+    with_rag: bool = typer.Option(True, "--with-rag/--no-rag", help="Enable/disable RAG"),
+    persist_dir: Path = typer.Option(ROOT / "data", help="Retrieval index dir"),
+) -> None:
+    """Ask a clinical TPN question with optional RAG and prompt strategy."""
+    from scripts.ask_question import ask_one
+
+    result = asyncio.run(ask_one(
+        question=question,
+        provider=provider,
+        model=model,
+        strategy=strategy,
+        with_rag=with_rag,
+        persist_dir=str(persist_dir),
+    ))
+
+    console.print(f"\n[bold]Provider:[/bold] {result['provider']} / {result['model']}")
+    console.print(f"[bold]Strategy:[/bold] {result['strategy']}")
+    console.print(f"[bold]Latency:[/bold] {result['latency_ms']:.0f}ms")
+    if result["retrieval"]:
+        r = result["retrieval"]
+        console.print(f"[bold]RAG:[/bold] {r['chunks']} chunks from {r['sources']}")
+    console.print(f"\n[green]{'='*60}[/green]")
+    console.print(result["answer"])
 
 
 if __name__ == "__main__":

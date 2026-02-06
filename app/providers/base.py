@@ -111,9 +111,29 @@ class LLMProvider(ABC):
         model: Optional[str] = None,
         temperature: float = 0.1,
         max_tokens: int = 500,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        system_prompt: Optional[str] = None,
     ) -> str:
         pass
+
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: dict,
+        model: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 500,
+        system_prompt: Optional[str] = None,
+    ) -> dict:
+        """
+        Generate a structured JSON response conforming to *schema*.
+
+        Default implementation raises NotImplementedError; providers that
+        support native JSON mode / structured output should override this.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support structured output"
+        )
 
     @abstractmethod
     async def get_available_models(self) -> List[str]:

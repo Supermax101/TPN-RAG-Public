@@ -5,12 +5,16 @@ Unified async provider adapters for benchmark experiments.
 from __future__ import annotations
 
 import asyncio
+import json
+import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Any, Dict, Optional, Protocol
 
 from ..config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -50,14 +54,59 @@ class AsyncProviderWrapper:
         run_id: Optional[str] = None,
     ) -> GenerationResult:
         start = time.time()
-        full_prompt = f"{system}\n\n{prompt}" if system else prompt
         text = await self.provider.generate(
-            prompt=full_prompt,
+            prompt=prompt,
+            system_prompt=system,
             model=model_id or self.default_model,
             temperature=temperature,
             max_tokens=max_tokens,
         )
         return GenerationResult(text=text, latency_ms=(time.time() - start) * 1000)
+
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: dict,
+        system: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 800,
+        model_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Try provider's native structured output; fall back to text + JSON parse.
+        """
+        try:
+            return await self.provider.generate_structured(
+                prompt=prompt,
+                schema=schema,
+                model=model_id or self.default_model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                system_prompt=system,
+            )
+        except NotImplementedError:
+            pass
+        except Exception as e:
+            logger.debug("Native structured output failed, falling back to text: %s", e)
+
+        # Fallback: ask for JSON in the prompt, parse the response
+        json_prompt = f"{prompt}\n\nRespond with ONLY valid JSON matching this schema: {json.dumps(schema)}"
+        text = await self.provider.generate(
+            prompt=json_prompt,
+            system_prompt=system,
+            model=model_id or self.default_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        # Try to extract JSON from the response
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            import re
+            match = re.search(r"\{.*\}", text, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            raise
 
 
 class SyncModelWrapper:
@@ -76,10 +125,11 @@ class SyncModelWrapper:
         run_id: Optional[str] = None,
     ) -> GenerationResult:
         start = time.time()
-        full_prompt = f"{system}\n\n{prompt}" if system else prompt
+        if system:
+            self.provider.config.system_prompt = system
         response = await asyncio.to_thread(
             self.provider.generate,
-            question=full_prompt,
+            question=prompt,
             context=None,
             use_rag=False,
         )

@@ -29,6 +29,7 @@ from typing import List, Optional, Dict, Any, Tuple, Union
 
 from .cleaner import DocumentCleaner, CleaningStats
 from .chunker import SemanticChunker, Chunk, ChunkingStats
+from ..retrieval.tokenizer import clinical_tokenize
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -113,6 +114,7 @@ class IngestionPipeline:
         embedding_provider: str = "openai",
         embedding_model: str = "text-embedding-3-large",
         collection_name: str = "tpn_documents",
+        chunker_type: str = "recursive",
     ):
         """
         Initialize the ingestion pipeline.
@@ -127,6 +129,7 @@ class IngestionPipeline:
             embedding_provider: Embedding provider ('openai' or 'huggingface')
             embedding_model: Embedding model name
             collection_name: ChromaDB collection name
+            chunker_type: "recursive" (default) or "semantic" (embedding-boundary)
         """
         self.docs_dir = Path(docs_dir)
         self.persist_dir = Path(persist_dir) if persist_dir else None
@@ -136,11 +139,20 @@ class IngestionPipeline:
 
         # Initialize cleaner and chunker
         self.cleaner = DocumentCleaner(preserve_table_ids=False)
-        self.chunker = SemanticChunker(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            min_chunk_size=min_chunk_size,
-        )
+
+        if chunker_type == "semantic":
+            from .semantic_chunker import SemanticBoundaryChunker
+
+            self.chunker = SemanticBoundaryChunker(
+                max_chunk_size=chunk_size,
+                min_chunk_size=min_chunk_size,
+            )
+        else:
+            self.chunker = SemanticChunker(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                min_chunk_size=min_chunk_size,
+            )
 
         # Will be initialized when needed
         self._chroma_client = None
@@ -416,11 +428,10 @@ class IngestionPipeline:
         except ImportError:
             raise ImportError("rank_bm25 not installed. Run: pip install rank-bm25")
 
-        # Tokenize documents (simple whitespace tokenization)
+        # Tokenize documents using clinical-aware tokenizer
         tokenized_corpus = []
         for chunk in chunks:
-            # Simple tokenization - can be improved with better NLP
-            tokens = chunk.content.lower().split()
+            tokens = clinical_tokenize(chunk.content)
             tokenized_corpus.append(tokens)
             self._bm25_corpus.append(chunk.content)
             self._bm25_metadata.append(chunk.metadata)
@@ -477,7 +488,7 @@ class IngestionPipeline:
         if not hasattr(self, "_bm25") or self._bm25 is None:
             raise ValueError("BM25 index not created. Run pipeline first.")
 
-        tokens = query.lower().split()
+        tokens = clinical_tokenize(query)
         scores = self._bm25.get_scores(tokens)
 
         # Get top-k indices

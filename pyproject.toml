@@ -44,7 +44,7 @@ dependencies = [
     
     # LLM providers (direct APIs)
     "openai>=1.58.0",
-    "google-generativeai>=0.8.0",
+    "google-genai>=1.0.0",
     "anthropic>=0.40.0",
     
     # Evaluation
@@ -71,7 +71,7 @@ dev = [
 ]
 
 [project.scripts]
-rag = "cli:app"
+tpnctl = "scripts.tpnctl:app"
 
 [build-system]
 requires = ["hatchling"]

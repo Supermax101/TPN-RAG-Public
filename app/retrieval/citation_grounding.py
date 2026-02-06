@@ -103,15 +103,23 @@ class CitationGrounder:
         r'(?:ASPEN|ESPGHAN|AAP)',  # Guidelines
     ]
 
-    def __init__(self, min_match_threshold: float = 0.3):
+    def __init__(self, min_match_threshold: float = 0.3, use_nli: bool = False):
         """
         Initialize the citation grounder.
 
         Args:
             min_match_threshold: Minimum similarity score to consider a match (0-1)
+            use_nli: If True, blend NLI entailment score with heuristic overlap.
+                     Requires ``sentence-transformers`` with cross-encoder support.
         """
         self.min_match_threshold = min_match_threshold
+        self.use_nli = use_nli
+        self._nli_grounder = None
         self._clinical_patterns = [re.compile(p, re.IGNORECASE) for p in self.CLINICAL_PATTERNS]
+
+        if use_nli:
+            from .nli_grounding import NLIGrounder
+            self._nli_grounder = NLIGrounder()
 
     def _clean_source_name(self, source: str) -> str:
         """Clean source name for display in citations."""
@@ -197,14 +205,26 @@ class CitationGrounder:
 
         # Return weighted average
         if not scores:
-            return 0.0
-
-        # Weight clinical terms and numbers higher
-        if len(scores) >= 3:
-            return 0.4 * scores[0] + 0.4 * scores[1] + 0.2 * scores[2]
+            heuristic_score = 0.0
+        elif len(scores) >= 3:
+            heuristic_score = 0.4 * scores[0] + 0.4 * scores[1] + 0.2 * scores[2]
         elif len(scores) == 2:
-            return 0.5 * scores[0] + 0.5 * scores[1]
-        return scores[0]
+            heuristic_score = 0.5 * scores[0] + 0.5 * scores[1]
+        else:
+            heuristic_score = scores[0]
+
+        # Blend with NLI entailment score when available
+        if self._nli_grounder is not None:
+            try:
+                label, confidence = self._nli_grounder.verify(answer_segment, chunk_content)
+                if label == "contradiction":
+                    return 0.0  # Contradictory evidence → force zero
+                nli_score = confidence if label == "entailment" else 0.0
+                return 0.5 * heuristic_score + 0.5 * nli_score
+            except Exception:
+                pass  # Fall back to heuristic only
+
+        return heuristic_score
 
     def _remove_citations(self, text: str) -> Tuple[str, int]:
         """

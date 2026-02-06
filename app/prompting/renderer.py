@@ -101,6 +101,7 @@ class PromptRenderer:
     """
 
     template_dir: Path = Path(__file__).parent / "templates"
+    example_pool: Optional[object] = None  # FewShotPool instance (optional)
 
     TEMPLATE_FILES: Dict[str, str] = None  # type: ignore[assignment]
 
@@ -138,9 +139,19 @@ class PromptRenderer:
         strategy_value = _normalize_strategy(strategy)
         template = self._load_template(strategy_value)
 
+        # Dynamic few-shot: use pool when FEW_SHOT strategy and no explicit examples
+        effective_examples = few_shot_examples
+        if (
+            effective_examples is None
+            and strategy_value == "FEW_SHOT"
+            and self.example_pool is not None
+            and hasattr(self.example_pool, "select")
+        ):
+            effective_examples = self.example_pool.select(question, k=2)
+
         options_block = _format_options(options)
         context_block = _format_context(context)
-        few_shots_block = _format_few_shots(few_shot_examples)
+        few_shots_block = _format_few_shots(effective_examples)
 
         prompt = template.format(
             question=question.strip(),
@@ -160,11 +171,18 @@ def render_prompt(
     options: Optional[Sequence[str]] = None,
     context: Optional[str] = None,
     few_shot_examples: Optional[Iterable[Dict[str, str]]] = None,
+    example_pool: Optional[object] = None,
 ) -> str:
     """
     Convenience function to render a prompt using shared default templates.
+
+    If *example_pool* is given, it overrides the default renderer's pool
+    for this call only.
     """
-    return _DEFAULT_RENDERER.render(
+    renderer = _DEFAULT_RENDERER
+    if example_pool is not None and renderer.example_pool is not example_pool:
+        renderer = PromptRenderer(example_pool=example_pool)
+    return renderer.render(
         strategy=strategy,
         question=question,
         options=options,

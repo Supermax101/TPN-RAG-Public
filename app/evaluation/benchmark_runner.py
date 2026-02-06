@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from ..logger import logger
-from ..parsers.mcq_parser import answers_match, normalize_answer, parse_mcq_response
+from ..parsers.mcq_parser import MCQAnswer, answers_match, normalize_answer, parse_mcq_response
 from .benchmark_types import (
     DatasetSchema,
     DatasetTrack,
@@ -46,6 +46,18 @@ _TPN_SYSTEM_PROMPT = (
 
 # Number of independent passes for CoT-SC majority voting
 _COT_SC_PASSES = 3
+
+# JSON Schema for structured MCQ output (matches MCQAnswer Pydantic model)
+_MCQ_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "thinking": {"type": "string", "description": "Step-by-step clinical reasoning"},
+        "answer": {"type": "string", "description": "Single letter answer: A, B, C, D, E, or F"},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    },
+    "required": ["thinking", "answer", "confidence"],
+    "additionalProperties": False,
+}
 
 
 def _coerce_options(raw) -> Optional[List[str]]:
@@ -122,8 +134,27 @@ class BenchmarkRunner:
         retriever: Optional[RetrieverAdapter] = None,
     ):
         self.config = config
-        self.retriever = retriever
         self.answer_metrics = AnswerMetrics()
+
+        # Optionally wrap retriever with agentic relevance judging
+        if retriever and config.agentic_retrieval:
+            from .agentic_retriever import AgenticRetrieverAdapter
+
+            self.retriever = AgenticRetrieverAdapter(
+                base_retriever=retriever,
+                judge_provider=config.agentic_judge_provider,
+                judge_model=config.agentic_judge_model,
+            )
+        else:
+            self.retriever = retriever
+
+        # Optionally init dynamic few-shot pool
+        self._example_pool = None
+        if config.dynamic_few_shot:
+            from ..prompting.example_data import TPN_EXAMPLE_POOL
+            from ..prompting.example_pool import FewShotPool
+
+            self._example_pool = FewShotPool(TPN_EXAMPLE_POOL)
 
     def _condition_grid(self) -> List[Tuple[PromptStrategy, bool]]:
         conditions: List[Tuple[PromptStrategy, bool]] = []
@@ -238,6 +269,7 @@ class BenchmarkRunner:
             question=sample.question,
             options=sample.options,
             context=context,
+            example_pool=self._example_pool,
         )
 
         started = time.time()
@@ -264,10 +296,29 @@ class BenchmarkRunner:
         parsed_answer = None
         correct = None
         metrics: Dict[str, float] = {}
+        structured_output_used = False
 
         if not error:
             if sample.track == DatasetTrack.MCQ:
+                # Parse answer: regex first, structured output only if regex fails
                 parsed_answer, _, _ = parse_mcq_response(response_text, is_multi_answer=True)
+
+                if parsed_answer == "PARSE_ERROR":
+                    # Regex failed — try structured output as rescue
+                    try:
+                        structured = await adapter.generate_structured(
+                            prompt=prompt,
+                            schema=_MCQ_SCHEMA,
+                            system=_TPN_SYSTEM_PROMPT,
+                            temperature=0.0,
+                            max_tokens=1000,
+                            model_id=model.model_name,
+                        )
+                        parsed_answer = normalize_answer(structured.get("answer", ""))
+                        structured_output_used = True
+                    except Exception:
+                        pass  # Keep PARSE_ERROR
+
                 expected = normalize_answer(sample.answer_key or "")
                 actual = normalize_answer(parsed_answer)
                 exact, partial = answers_match(actual, expected)
@@ -312,22 +363,50 @@ class BenchmarkRunner:
             latency_ms=latency_ms,
             tokens_used=tokens_used,
             metrics=metrics,
+            structured_output_used=structured_output_used,
             error=error,
         )
+
+    async def _gated_run(
+        self,
+        semaphore: asyncio.Semaphore,
+        model: ModelSpec,
+        adapter,
+        sample: DatasetSchema,
+        strategy: PromptStrategy,
+        rag_enabled: bool,
+        repeat_index: int,
+        retrieval_snapshot: Optional[RetrievalSnapshot],
+    ) -> RunRecord:
+        """Run a single benchmark call gated by a concurrency semaphore."""
+        async with semaphore:
+            return await self._run_one(
+                model=model,
+                adapter=adapter,
+                sample=sample,
+                strategy=strategy,
+                rag_enabled=rag_enabled,
+                repeat_index=repeat_index,
+                retrieval_snapshot=retrieval_snapshot,
+            )
 
     async def run(self) -> Dict[str, object]:
         """
         Execute full benchmark matrix and return summary + record paths.
+
+        Model calls within each (sample, strategy) pair are parallelized
+        using asyncio.gather with a concurrency semaphore.
         """
         samples = self._load_all_samples()
         models = [m for m in self.config.models if m.enabled]
         conditions = self._condition_grid()
         logger.info(
-            "Benchmark start: %d samples, %d models, %d conditions, %d repeats",
+            "Benchmark start: %d samples, %d models, %d conditions, %d repeats (max_concurrent=%d)",
             len(samples),
             len(models),
             len(conditions),
             self.config.repeats,
+            self.config.max_concurrent,
         )
 
         adapters = {
@@ -335,6 +414,7 @@ class BenchmarkRunner:
             for m in models
         }
 
+        semaphore = asyncio.Semaphore(self.config.max_concurrent)
         records: List[RunRecord] = []
         retrieval_cache: Dict[Tuple[str, str], RetrievalSnapshot] = {}
 
@@ -354,18 +434,25 @@ class BenchmarkRunner:
                         if self.config.fair_shared_context:
                             retrieval_cache[key] = snapshot
 
+                # Build all tasks for this (sample, strategy) pair
+                tasks = []
                 for repeat_idx in range(self.config.repeats):
                     for model in models:
-                        record = await self._run_one(
-                            model=model,
-                            adapter=adapters[model.model_id],
-                            sample=sample,
-                            strategy=strategy,
-                            rag_enabled=rag_enabled,
-                            repeat_index=repeat_idx,
-                            retrieval_snapshot=snapshot,
+                        tasks.append(
+                            self._gated_run(
+                                semaphore=semaphore,
+                                model=model,
+                                adapter=adapters[model.model_id],
+                                sample=sample,
+                                strategy=strategy,
+                                rag_enabled=rag_enabled,
+                                repeat_index=repeat_idx,
+                                retrieval_snapshot=snapshot,
+                            )
                         )
-                        records.append(record)
+
+                batch = await asyncio.gather(*tasks)
+                records.extend(batch)
 
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)

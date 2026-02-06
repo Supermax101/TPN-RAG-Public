@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     chunk_size: int = Field(default=1000, alias="CHUNK_SIZE")
     chunk_overlap: int = Field(default=400, alias="CHUNK_OVERLAP")
     
+    # Chunking strategy: "recursive" (default) or "semantic" (embedding-boundary)
+    chunker_type: str = Field(default="recursive", alias="CHUNKER_TYPE")
+
     # Reranker settings
     reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="RERANKER_MODEL")
     reranker_top_k: int = Field(default=5, alias="RERANKER_TOP_K")

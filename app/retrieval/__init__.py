@@ -26,6 +26,7 @@ from .multi_query import MultiQueryRetriever
 from .reranker import CrossEncoderReranker
 from .pipeline import RetrievalPipeline, RetrievalConfig
 from .citation_grounding import CitationGrounder, GroundingResult
+from .nli_grounding import NLIGrounder
 
 __all__ = [
     "HybridRetriever",
@@ -38,4 +39,6 @@ __all__ = [
     # Citation grounding for fine-tuned models
     "CitationGrounder",
     "GroundingResult",
+    # NLI-based semantic verification
+    "NLIGrounder",
 ]

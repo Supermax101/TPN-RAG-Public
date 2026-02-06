@@ -1,7 +1,8 @@
 """
 OpenAI LLM provider implementation.
 """
-from typing import List, Optional
+import json
+from typing import Any, Dict, List, Optional
 from openai import AsyncOpenAI
 from .base import LLMProvider
 from ..config import settings
@@ -29,21 +30,29 @@ class OpenAILLMProvider(LLMProvider):
         model: Optional[str] = None,
         temperature: float = 0.1,
         max_tokens: int = 500,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        system_prompt: Optional[str] = None,
     ) -> str:
         """Generate text response using OpenAI."""
         model_name = model or self.default_model
-        
+
         try:
             # Detect reasoning models (GPT-5, O1, O3)
             is_reasoning_model = any(x in model_name.lower() for x in ['gpt-5', 'o1', 'o3'])
-            
+
+            messages = []
+            if system_prompt:
+                # Use "developer" role for reasoning models, "system" for standard
+                role = "developer" if is_reasoning_model else "system"
+                messages.append({"role": role, "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
             kwargs = {
                 "model": model_name,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "timeout": 120.0,
             }
-            
+
             if is_reasoning_model:
                 kwargs["max_completion_tokens"] = max(max_tokens, 16000)
             else:
@@ -51,18 +60,58 @@ class OpenAILLMProvider(LLMProvider):
                 kwargs["max_tokens"] = max_tokens
                 kwargs["frequency_penalty"] = 0.3
                 kwargs["presence_penalty"] = 0.1
-            
+
             if seed is not None:
                 kwargs["seed"] = seed
-            
+
             response = await self.client.chat.completions.create(**kwargs)
-            
+
             content = response.choices[0].message.content
             return content.strip() if content else ""
-            
+
         except Exception as e:
             raise RuntimeError(f"Failed to generate text with OpenAI: {e}")
     
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: dict,
+        model: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 500,
+        system_prompt: Optional[str] = None,
+    ) -> dict:
+        """Generate structured JSON output using OpenAI's json_schema response format."""
+        model_name = model or self.default_model
+
+        try:
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
+            response = await self.client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "mcq_answer",
+                        "strict": True,
+                        "schema": schema,
+                    },
+                },
+                timeout=120.0,
+            )
+
+            content = response.choices[0].message.content or ""
+            return json.loads(content)
+
+        except Exception as e:
+            raise RuntimeError(f"Structured output failed with OpenAI: {e}")
+
     async def get_available_models(self) -> List[str]:
         """Return list of available OpenAI models from API."""
         if self._available_models is not None:

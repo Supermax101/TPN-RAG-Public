@@ -84,6 +84,11 @@ def parse_args():
     parser.add_argument("--include-baseline", action="store_true", help="Include no-RAG baseline (off by default)")
     parser.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
     parser.add_argument("--list-models", action="store_true", help="List default model keys and exit")
+    parser.add_argument("--max-concurrent", type=int, default=5, help="Max concurrent API calls (default: 5)")
+    parser.add_argument("--agentic-retrieval", action="store_true", help="Enable LLM relevance judging on retrieved chunks")
+    parser.add_argument("--agentic-judge-provider", type=str, default="openai", help="Provider for agentic judge (default: openai)")
+    parser.add_argument("--agentic-judge-model", type=str, default="gpt-4o-mini", help="Model for agentic judge (default: gpt-4o-mini)")
+    parser.add_argument("--dynamic-few-shot", action="store_true", help="Enable embedding-based few-shot example selection")
     return parser.parse_args()
 
 
@@ -131,6 +136,11 @@ def main():
         output_dir=args.output_dir,
         require_holdout_only=True,
         seed=args.seed,
+        max_concurrent=args.max_concurrent,
+        agentic_retrieval=args.agentic_retrieval,
+        agentic_judge_provider=args.agentic_judge_provider,
+        agentic_judge_model=args.agentic_judge_model,
+        dynamic_few_shot=args.dynamic_few_shot,
     )
 
     retriever = None

@@ -90,7 +90,12 @@ class ExperimentConfig(BaseModel):
     mcq_dataset_path: Optional[str] = None
     open_dataset_path: Optional[str] = None
     require_holdout_only: bool = True
+    max_concurrent: int = Field(default=5, ge=1, le=50, description="Max concurrent API calls")
     output_dir: str = "eval/results/benchmark"
+    agentic_retrieval: bool = Field(default=False, description="Enable LLM relevance judging on retrieved chunks")
+    agentic_judge_provider: str = Field(default="openai", description="Provider for agentic relevance judge")
+    agentic_judge_model: str = Field(default="gpt-4o-mini", description="Model for agentic relevance judge")
+    dynamic_few_shot: bool = Field(default=False, description="Enable embedding-based few-shot example selection")
 
     @model_validator(mode="after")
     def validate_modes(self) -> "ExperimentConfig":
@@ -197,6 +202,7 @@ class RunRecord(BaseModel):
     latency_ms: float = 0.0
     tokens_used: int = 0
     metrics: Dict[str, Any] = Field(default_factory=dict)
+    structured_output_used: bool = False
     error: Optional[str] = None
 
 
