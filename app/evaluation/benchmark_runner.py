@@ -149,6 +149,38 @@ class BenchmarkRunner:
 
             self._example_pool = FewShotPool(TPN_EXAMPLE_POOL)
 
+    def _should_use_rag_context(self, snapshot: Optional[RetrievalSnapshot]) -> tuple[bool, str, float]:
+        """
+        Decide whether to inject retrieved context into the prompt.
+
+        Goal: prevent negative lift when retrieval is weak/out-of-coverage by
+        falling back to the baseline (no-context) behavior.
+        """
+        if snapshot is None:
+            return False, "no_snapshot", 0.0
+
+        chunks = snapshot.chunks or []
+        top_score = float(chunks[0].score) if chunks else 0.0
+
+        context_text = (snapshot.context_text or "").strip()
+        if not context_text:
+            return False, "empty_context", top_score
+
+        # Always-on safety: require at least some content.
+        if snapshot.diagnostics.context_chars < self.config.rag_min_context_chars:
+            return False, "context_too_short", top_score
+
+        if not self.config.rag_gating_enabled:
+            return True, "gating_disabled", top_score
+
+        if snapshot.diagnostics.returned_count < self.config.rag_min_returned_chunks:
+            return False, "too_few_chunks", top_score
+
+        if top_score < self.config.rag_min_top_score:
+            return False, "low_top_score", top_score
+
+        return True, "pass", top_score
+
     def _condition_grid(self) -> List[Tuple[PromptStrategy, bool]]:
         conditions: List[Tuple[PromptStrategy, bool]] = []
         for strategy in self.config.prompt_strategies:
@@ -260,8 +292,19 @@ class BenchmarkRunner:
         retrieval_snapshot: Optional[RetrievalSnapshot],
     ) -> RunRecord:
         run_id = uuid.uuid4().hex
+        # RAG context gating: when retrieval is weak, omit context and use the
+        # baseline system prompt to avoid being misled by irrelevant text.
+        rag_context_used = False
+        rag_gate_reason = "no_rag"
+        rag_top_score = 0.0
+
         context = retrieval_snapshot.context_text if retrieval_snapshot else None
-        system_prompt = get_system_prompt(use_rag=rag_enabled)
+        if rag_enabled:
+            rag_context_used, rag_gate_reason, rag_top_score = self._should_use_rag_context(retrieval_snapshot)
+            if not rag_context_used:
+                context = None
+
+        system_prompt = get_system_prompt(use_rag=(rag_enabled and rag_context_used))
         prompt = render_prompt(
             strategy=strategy,
             question=sample.question,
@@ -296,7 +339,13 @@ class BenchmarkRunner:
 
         parsed_answer = None
         correct = None
-        metrics: Dict[str, float] = {}
+        metrics: Dict[str, object] = {
+            "rag_context_used": rag_context_used,
+            "rag_gate_reason": rag_gate_reason,
+            "rag_top_score": rag_top_score,
+            "rag_context_chars": retrieval_snapshot.diagnostics.context_chars if retrieval_snapshot else 0,
+            "rag_returned_chunks": retrieval_snapshot.diagnostics.returned_count if retrieval_snapshot else 0,
+        }
         structured_output_used = False
 
         if not error:
@@ -344,10 +393,12 @@ class BenchmarkRunner:
                 actual = normalize_answer(parsed_answer)
                 exact, partial = answers_match(actual, expected)
                 correct = bool(exact)
-                metrics = {
-                    "exact_match": float(exact),
-                    "partial_match": float(partial),
-                }
+                metrics.update(
+                    {
+                        "exact_match": float(exact),
+                        "partial_match": float(partial),
+                    }
+                )
             else:
                 eval_result = self.answer_metrics.evaluate_single(
                     question=sample.question,
@@ -356,12 +407,14 @@ class BenchmarkRunner:
                     ground_truth_source=sample.source_doc,
                     ground_truth_page=sample.page,
                 )
-                metrics = {
-                    "f1": eval_result.f1_score,
-                    "exact_match": eval_result.exact_match,
-                    "key_phrase_overlap": eval_result.key_phrase_overlap,
-                    "citation_match": float(eval_result.citation_match),
-                }
+                metrics.update(
+                    {
+                        "f1": eval_result.f1_score,
+                        "exact_match": eval_result.exact_match,
+                        "key_phrase_overlap": eval_result.key_phrase_overlap,
+                        "citation_match": float(eval_result.citation_match),
+                    }
+                )
 
         return RunRecord(
             run_id=run_id,

@@ -83,6 +83,29 @@ def parse_args():
         help="Maximum retrieved context length injected into prompts",
     )
     parser.add_argument(
+        "--disable-rag-gating",
+        action="store_true",
+        help="Disable RAG context gating (always inject retrieved context when RAG is enabled)",
+    )
+    parser.add_argument(
+        "--rag-min-top-score",
+        type=float,
+        default=0.62,
+        help="Minimum reranker top score required to inject retrieved context (default: 0.62)",
+    )
+    parser.add_argument(
+        "--rag-min-returned-chunks",
+        type=int,
+        default=2,
+        help="Minimum number of retrieved chunks required to inject context (default: 2)",
+    )
+    parser.add_argument(
+        "--rag-min-context-chars",
+        type=int,
+        default=200,
+        help="Minimum context length required to inject retrieved context (default: 200)",
+    )
+    parser.add_argument(
         "--retrieval-iterations",
         type=int,
         default=2,
@@ -153,6 +176,10 @@ def main():
         retrieval_iterations=args.retrieval_iterations,
         max_query_decompositions=args.max_decompositions,
         max_context_chars=args.max_context_chars,
+        rag_gating_enabled=not args.disable_rag_gating,
+        rag_min_top_score=args.rag_min_top_score,
+        rag_min_returned_chunks=args.rag_min_returned_chunks,
+        rag_min_context_chars=args.rag_min_context_chars,
         include_no_rag=args.include_baseline,
         include_rag=not args.no_rag,
         prompt_strategies=prompt_strategies,

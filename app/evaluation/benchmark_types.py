@@ -74,6 +74,27 @@ class ExperimentConfig(BaseModel):
     retrieval_iterations: int = Field(default=2, ge=1, le=4)
     max_query_decompositions: int = Field(default=3, ge=1, le=8)
     max_context_chars: int = Field(default=6000, ge=1000)
+    rag_gating_enabled: bool = Field(
+        default=True,
+        description="When true, only inject RAG context when retrieval confidence is high; otherwise fall back to baseline.",
+    )
+    rag_min_top_score: float = Field(
+        default=0.62,
+        ge=0.0,
+        le=1.0,
+        description="Minimum cross-encoder reranker top score required to use retrieved context.",
+    )
+    rag_min_returned_chunks: int = Field(
+        default=2,
+        ge=0,
+        le=50,
+        description="Minimum number of returned chunks required to use retrieved context.",
+    )
+    rag_min_context_chars: int = Field(
+        default=200,
+        ge=0,
+        description="Minimum context length required to use retrieved context (helps avoid near-empty/low-signal contexts).",
+    )
     fair_shared_context: bool = True
     include_no_rag: bool = True
     include_rag: bool = True

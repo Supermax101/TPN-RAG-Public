@@ -16,10 +16,22 @@ RETRIEVAL_ITERATIONS="${RETRIEVAL_ITERATIONS:-2}"
 MAX_DECOMPOSITIONS="${MAX_DECOMPOSITIONS:-3}"
 MAX_CONCURRENT="${MAX_CONCURRENT:-2}"
 MODELS="${MODELS:-gpt-5-mini}"
+RAG_GATING_DISABLED="${RAG_GATING_DISABLED:-0}"
+RAG_MIN_TOP_SCORE="${RAG_MIN_TOP_SCORE:-0.62}"
+RAG_MIN_RETURNED_CHUNKS="${RAG_MIN_RETURNED_CHUNKS:-2}"
+RAG_MIN_CONTEXT_CHARS="${RAG_MIN_CONTEXT_CHARS:-200}"
 
 echo "==> Git commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 
 echo "==> Running GPT-5 mini benchmark (baseline + RAG)"
+GATING_FLAGS=()
+if [[ "$RAG_GATING_DISABLED" == "1" ]]; then
+  GATING_FLAGS+=(--disable-rag-gating)
+fi
+GATING_FLAGS+=(--rag-min-top-score "$RAG_MIN_TOP_SCORE")
+GATING_FLAGS+=(--rag-min-returned-chunks "$RAG_MIN_RETURNED_CHUNKS")
+GATING_FLAGS+=(--rag-min-context-chars "$RAG_MIN_CONTEXT_CHARS")
+
 python scripts/run_benchmark.py \
   --mcq-dataset "$MCQ_DATASET" \
   --open-dataset "$OPEN_DATASET" \
@@ -31,6 +43,7 @@ python scripts/run_benchmark.py \
   --max-context-chars "$MAX_CONTEXT_CHARS" \
   --retrieval-iterations "$RETRIEVAL_ITERATIONS" \
   --max-decompositions "$MAX_DECOMPOSITIONS" \
+  "${GATING_FLAGS[@]}" \
   --models "$MODELS" \
   --include-baseline \
   --max-concurrent "$MAX_CONCURRENT"
