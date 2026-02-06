@@ -23,18 +23,7 @@ from app.evaluation.provider_adapter import create_provider_adapter
 from app.evaluation.retriever_adapter import RetrieverAdapter
 from app.evaluation.prompting import render_prompt
 from app.evaluation.benchmark_types import PromptStrategy
-
-_TPN_SYSTEM_PROMPT = (
-    "You are a board-certified TPN (Total Parenteral Nutrition) Clinical Specialist "
-    "with expertise in neonatal and pediatric nutrition support. You are taking the "
-    "ASPEN Nutrition Support Certification exam.\n\n"
-    "CRITICAL INSTRUCTIONS:\n"
-    "1. ALWAYS prioritize the Clinical Knowledge Base when provided.\n"
-    "2. Your answers MUST be grounded in the provided context.\n"
-    "3. If the context contradicts your training, TRUST THE CONTEXT.\n"
-    "4. For 'FALSE' or 'LEAST likely' questions, identify the INCORRECT statement.\n"
-    "5. Follow the output format precisely."
-)
+from app.prompting import TPN_SYSTEM_PROMPT
 
 # Default models per provider
 DEFAULT_MODELS = {
@@ -85,7 +74,7 @@ async def ask_one(
 
     result = await adapter.generate(
         prompt=prompt,
-        system=_TPN_SYSTEM_PROMPT,
+        system=TPN_SYSTEM_PROMPT,
         temperature=0.0,
         max_tokens=1000,
         model_id=model_name,

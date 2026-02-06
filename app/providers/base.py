@@ -148,26 +148,24 @@ class LLMProvider(ABC):
 # Sync provider base (used by HuggingFaceProvider)
 # ---------------------------------------------------------------------------
 
-# Prompt templates for sync providers
-RAG_PROMPT_TEMPLATE = """Answer the following question about Total Parenteral Nutrition (TPN) using the provided context.
+from ..prompting.system_prompt import TPN_SYSTEM_PROMPT
 
-CONTEXT:
-{context}
+_RAG_PROMPT = (
+    "Answer the following question about Total Parenteral Nutrition (TPN) "
+    "using the provided context.\n\n"
+    "CONTEXT:\n{context}\n\n"
+    "QUESTION: {question}\n\n"
+    "Provide a clear, accurate answer. "
+    "If the context doesn't contain enough information, say so."
+)
 
-QUESTION: {question}
-
-Provide a clear, accurate answer. If the context doesn't contain enough information, say so."""
-
-BASELINE_PROMPT_TEMPLATE = """Answer the following question about Total Parenteral Nutrition (TPN) based on your knowledge.
-
-QUESTION: {question}
-
-Provide a clear, accurate answer. If you're uncertain, indicate your level of confidence."""
-
-DEFAULT_SYSTEM_PROMPT = """You are a clinical nutrition expert specializing in Total Parenteral Nutrition (TPN).
-Answer questions accurately and concisely based on the provided context.
-If the context doesn't contain relevant information, say so clearly.
-Always cite specific values, dosages, and guidelines when available."""
+_BASELINE_PROMPT = (
+    "Answer the following question about Total Parenteral Nutrition (TPN) "
+    "based on your knowledge.\n\n"
+    "QUESTION: {question}\n\n"
+    "Provide a clear, accurate answer. "
+    "If you're uncertain, indicate your level of confidence."
+)
 
 
 class SyncLLMProvider(ABC):
@@ -209,11 +207,11 @@ class SyncLLMProvider(ABC):
                 )
 
         if use_rag and context:
-            prompt = RAG_PROMPT_TEMPLATE.format(context=context, question=question)
+            prompt = _RAG_PROMPT.format(context=context, question=question)
         else:
-            prompt = BASELINE_PROMPT_TEMPLATE.format(question=question)
+            prompt = _BASELINE_PROMPT.format(question=question)
 
-        system_prompt = self.config.system_prompt or DEFAULT_SYSTEM_PROMPT
+        system_prompt = self.config.system_prompt or TPN_SYSTEM_PROMPT
 
         try:
             response = self._generate_impl(prompt, system_prompt)

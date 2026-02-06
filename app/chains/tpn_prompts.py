@@ -10,32 +10,42 @@ These prompts are optimized for:
 
 from langchain_core.prompts import ChatPromptTemplate
 
+from ..prompting import TPN_SYSTEM_PROMPT
 
-# =============================================================================
-# SINGLE-ANSWER MCQ PROMPT
-# =============================================================================
-
-TPN_SINGLE_ANSWER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a board-certified TPN (Total Parenteral Nutrition) Clinical Specialist with expertise in neonatal and pediatric nutrition support. You are taking the ASPEN Nutrition Support Certification exam.
+# Template addendum appended after the canonical system prompt
+_SINGLE_ANSWER_ADDENDUM = """
 
 ## TPN CLINICAL KNOWLEDGE BASE (PRIMARY SOURCE)
 {context}
 
 ---
 
-## CRITICAL INSTRUCTIONS
-
-1. **ALWAYS prioritize the Clinical Knowledge Base above.** Your answers MUST be grounded in the provided context.
-2. If the context contains relevant information, use it as your PRIMARY source.
-3. Only supplement with your training knowledge if the context is insufficient or doesn't cover the topic.
-4. If the context contradicts your training, TRUST THE CONTEXT - it reflects current ASPEN/clinical guidelines.
-5. For "FALSE" or "LEAST likely" questions, identify the INCORRECT statement among the options.
-
 ## RESPONSE FORMAT
 Provide a brief clinical reasoning (2-3 sentences), then state your answer.
 
 Thinking: [Your clinical reasoning based on the context]
-Answer: [Single letter A-F]"""),
+Answer: [Single letter A-F]"""
+
+_MULTI_ANSWER_ADDENDUM = """
+
+## TPN CLINICAL KNOWLEDGE BASE (PRIMARY SOURCE)
+{context}
+
+---
+
+## RESPONSE FORMAT
+Provide clinical reasoning for each selected answer, then list ALL correct answers.
+
+Thinking: [Reasoning for each correct answer]
+Answer: [Comma-separated letters, e.g., A,B,D]"""
+
+
+# =============================================================================
+# SINGLE-ANSWER MCQ PROMPT
+# =============================================================================
+
+TPN_SINGLE_ANSWER_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", TPN_SYSTEM_PROMPT + _SINGLE_ANSWER_ADDENDUM),
     
     ("human", """{case_context}
 
@@ -53,26 +63,7 @@ Based on the TPN clinical knowledge base provided, give your Thinking and Answer
 # =============================================================================
 
 TPN_MULTI_ANSWER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a board-certified TPN (Total Parenteral Nutrition) Clinical Specialist with expertise in neonatal and pediatric nutrition support. You are taking the ASPEN Nutrition Support Certification exam.
-
-## TPN CLINICAL KNOWLEDGE BASE (PRIMARY SOURCE)
-{context}
-
----
-
-## CRITICAL INSTRUCTIONS
-
-1. **ALWAYS prioritize the Clinical Knowledge Base above.** Your answers MUST be grounded in the provided context.
-2. This is a MULTI-ANSWER question - select ALL options that are correct.
-3. If the context contains relevant information, use it as your PRIMARY source.
-4. Only supplement with your training knowledge if the context is insufficient.
-5. If the context contradicts your training, TRUST THE CONTEXT.
-
-## RESPONSE FORMAT
-Provide clinical reasoning for each selected answer, then list ALL correct answers.
-
-Thinking: [Reasoning for each correct answer]
-Answer: [Comma-separated letters, e.g., A,B,D]"""),
+    ("system", TPN_SYSTEM_PROMPT + _MULTI_ANSWER_ADDENDUM),
     
     ("human", """{case_context}
 
@@ -166,7 +157,7 @@ Grounding score (1-5) and brief explanation:""")
 
 __all__ = [
     "TPN_SINGLE_ANSWER_PROMPT",
-    "TPN_MULTI_ANSWER_PROMPT", 
+    "TPN_MULTI_ANSWER_PROMPT",
     "TPN_HYDE_PROMPT",
     "TPN_MULTIQUERY_PROMPT",
     "TPN_GROUNDING_CHECK_PROMPT",
