@@ -188,7 +188,7 @@ def benchmark(
         help="Disable decomposition + iterative retrieval loop",
     ),
     models: str = typer.Option(
-        "gpt-4o,claude-sonnet,gemini-2.5-pro,grok-4,kimi-k2",
+        "gpt-5.2,claude-sonnet,gemini-3-flash,grok-4.1-fast,kimi-k2.5",
         help="Comma-separated model keys",
     ),
     no_rag: bool = typer.Option(False, "--no-rag", help="Disable RAG conditions"),
@@ -297,11 +297,11 @@ def show_latest(
 # ---------------------------------------------------------------------------
 
 _PROVIDER_DEFAULTS = {
-    "openai": ("gpt-4o", "OPENAI_API_KEY"),
-    "anthropic": ("claude-sonnet-4-5-20250514", "ANTHROPIC_API_KEY"),
-    "gemini": ("gemini-2.5-flash", "GEMINI_API_KEY"),
-    "xai": ("grok-4-fast-reasoning", "XAI_API_KEY"),
-    "kimi": ("kimi-k2-0905-preview", "KIMI_API_KEY"),
+    "openai": ("gpt-5.2", "OPENAI_API_KEY"),
+    "anthropic": ("claude-sonnet-4-5-20250929", "ANTHROPIC_API_KEY"),
+    "gemini": ("gemini-3-flash-preview", "GEMINI_API_KEY"),
+    "xai": ("grok-4-1-fast-reasoning", "XAI_API_KEY"),
+    "kimi": ("kimi-k2.5", "KIMI_API_KEY"),
 }
 
 
