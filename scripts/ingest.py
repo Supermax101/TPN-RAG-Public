@@ -40,6 +40,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Union
 
+# Add project root to path so `app.*` imports work when run as a script
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -196,6 +199,8 @@ class SemanticChunker:
         self.chunk_overlap = chunk_overlap
         self.min_chunk_size = min_chunk_size
 
+    _PLACEHOLDER_RE = re.compile(r"\[TABLE\]")
+
     def chunk(self, text: str, source: Optional[str] = None, additional_metadata: Optional[dict] = None) -> List[Chunk]:
         if not text or not text.strip():
             return []
@@ -203,13 +208,56 @@ class SemanticChunker:
         text_without_tables, tables = self._extract_tables(text)
         text_chunks = self._recursive_split(text_without_tables)
 
-        all_chunks = []
-        for chunk_text in text_chunks:
-            if "[TABLE]" not in chunk_text and chunk_text.strip():
-                all_chunks.append(Chunk(content=chunk_text.strip(), metadata={"type": "text"}))
+        all_items: List[Tuple[int, Chunk]] = []
+        search_start = 0
 
+        # Text chunks: split on placeholders, find each part with advancing cursor
+        for chunk_text in text_chunks:
+            if not chunk_text.strip():
+                continue
+            parts = self._PLACEHOLDER_RE.split(chunk_text)
+            first_part = True
+            for part in parts:
+                # Strip lines containing partial placeholder tokens leaked via overlap
+                cleaned = "\n".join(
+                    ln for ln in part.split("\n") if "TABLE" not in ln or not ln.strip().startswith("[")
+                ).strip()
+                if not cleaned:
+                    continue
+                part = cleaned
+                prefix = part[:80]
+                if first_part:
+                    find_from = max(0, search_start - self.chunk_overlap)
+                    first_part = False
+                else:
+                    find_from = search_start
+                pos = text_without_tables.find(prefix, find_from)
+                if pos == -1:
+                    pos = len(text_without_tables)
+                else:
+                    search_start = pos + len(prefix)
+                all_items.append((pos, Chunk(
+                    content=part,
+                    metadata={"type": "text"},
+                    is_table=False,
+                )))
+
+        # Table chunks: locate by placeholder positions in text_without_tables
+        ph_search = 0
         for _, table_content in tables:
-            all_chunks.append(Chunk(content=table_content.strip(), metadata={"type": "table"}, is_table=True))
+            ph_pos = text_without_tables.find("[TABLE]", ph_search)
+            if ph_pos == -1:
+                ph_pos = len(text_without_tables)
+            else:
+                ph_search = ph_pos + len("[TABLE]")
+            all_items.append((ph_pos, Chunk(
+                content=table_content.strip(),
+                metadata={"type": "table"},
+                is_table=True,
+            )))
+
+        all_items.sort(key=lambda x: x[0])
+        all_chunks = [chunk for _, chunk in all_items]
 
         base_meta = additional_metadata or {}
         if source:
@@ -736,7 +784,7 @@ def main():
         if len(stats.errors) > 5:
             print(f"  ... and {len(stats.errors) - 5} more")
 
-    if stats.files_failed > 0:
+    if stats.files_failed > 0 or stats.errors:
         return 1
     return 0
 

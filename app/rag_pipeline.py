@@ -276,20 +276,6 @@ class TPN_RAG:
             "PDF loading has been removed. Use the markdown ingestion pipeline instead: "
             "python scripts/ingest.py --docs-dir data/documents"
         )
-        # Legacy import removed:
-        
-        loader = PDFLoader()
-        documents = await loader.load_and_chunk(
-            path,
-            chunk_size=chunk_size or self.config.chunk_size,
-            chunk_overlap=chunk_overlap or self.config.chunk_overlap,
-        )
-        
-        if documents:
-            self._vectorstore.add_documents(documents)
-            logger.info(f"Ingested {len(documents)} chunks from {path.name}")
-        
-        return len(documents)
     
     async def ingest_markdown(
         self,

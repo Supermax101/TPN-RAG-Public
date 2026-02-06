@@ -139,7 +139,7 @@ class SemanticChunker:
         text_chunks = self._recursive_split(text_without_tables)
 
         # Step 3: Combine tables and text chunks in document order
-        all_chunks = self._merge_chunks_with_tables(text, text_chunks, tables)
+        all_chunks = self._merge_chunks_with_tables(text_without_tables, text_chunks, tables)
 
         # Step 4: Add metadata to all chunks
         base_metadata = additional_metadata or {}
@@ -289,41 +289,76 @@ class SemanticChunker:
 
         return [c for c in chunks if c]
 
+    # Regex matching [TABLE_PLACEHOLDER_N] tokens injected by _extract_tables
+    _PLACEHOLDER_RE = re.compile(r"\[TABLE_PLACEHOLDER_\d+\]")
+
     def _merge_chunks_with_tables(
         self,
-        original_text: str,
+        text_without_tables: str,
         text_chunks: List[str],
         tables: List[tuple[int, str]],
     ) -> List[Chunk]:
         """
         Merge text chunks and table chunks in document order.
 
-        Note: This is a simplified approach that adds tables at appropriate positions.
-        For more accurate positioning, we could track positions more carefully.
+        Searches in text_without_tables (where the chunks originated) using
+        an advancing cursor so repeated text gets the correct position.
+        Tables are located by their placeholder positions in the same text.
         """
-        result = []
+        all_items: List[Tuple[int, Chunk]] = []
+        search_start = 0
 
-        # Add text chunks first
+        # Text chunks: split on placeholders, find each part with advancing cursor
         for chunk_text in text_chunks:
-            # Skip placeholder markers
-            if "[TABLE_PLACEHOLDER_" in chunk_text:
+            if not chunk_text.strip():
                 continue
-            if chunk_text.strip():
-                result.append(Chunk(
-                    content=chunk_text.strip(),
+            parts = self._PLACEHOLDER_RE.split(chunk_text)
+            first_part = True
+            for part in parts:
+                # Strip lines containing partial placeholder tokens leaked via
+                # chunk overlap slicing through [TABLE_PLACEHOLDER_N] markers.
+                cleaned = "\n".join(
+                    ln for ln in part.split("\n") if "TABLE_PLACEHOLDER" not in ln
+                ).strip()
+                if not cleaned:
+                    continue
+                part = cleaned
+                prefix = part[:80]
+                if first_part:
+                    # At chunk boundary, back up by overlap for adjacent-chunk overlap
+                    find_from = max(0, search_start - self.chunk_overlap)
+                    first_part = False
+                else:
+                    # Within same chunk (parts separated by placeholders), advance only
+                    find_from = search_start
+                pos = text_without_tables.find(prefix, find_from)
+                if pos == -1:
+                    pos = len(text_without_tables)  # fallback: put at end
+                else:
+                    search_start = pos + len(prefix)
+                all_items.append((pos, Chunk(
+                    content=part,
                     metadata={"type": "text"},
-                    is_table=False
-                ))
+                    is_table=False,
+                )))
 
-        # Add table chunks
+        # Table chunks: locate by placeholder positions in text_without_tables
+        placeholder_tag = f"[TABLE_PLACEHOLDER_{len(tables)}]"
+        ph_search = 0
         for _, table_content in tables:
-            result.append(Chunk(
+            ph_pos = text_without_tables.find(placeholder_tag, ph_search)
+            if ph_pos == -1:
+                ph_pos = len(text_without_tables)
+            else:
+                ph_search = ph_pos + len(placeholder_tag)
+            all_items.append((ph_pos, Chunk(
                 content=table_content.strip(),
                 metadata={"type": "table"},
-                is_table=True
-            ))
+                is_table=True,
+            )))
 
-        return result
+        all_items.sort(key=lambda x: x[0])
+        return [chunk for _, chunk in all_items]
 
     def get_stats(self, chunks: List[Chunk]) -> ChunkingStats:
         """Calculate statistics for a list of chunks."""

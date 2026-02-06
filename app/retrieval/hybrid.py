@@ -11,6 +11,7 @@ Example:
     >>> results = retriever.retrieve("protein requirements", top_k=5)
 """
 
+import hashlib
 import logging
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Callable
@@ -227,7 +228,7 @@ class HybridRetriever:
 
         # Process vector results
         for rank, (content, metadata, score) in enumerate(vector_results):
-            content_hash = hash(content[:500])  # Hash first 500 chars
+            content_hash = hashlib.md5(content[:500].encode()).hexdigest()
 
             # RRF score contribution from vector
             rrf_contribution = self.config.vector_weight / (k + rank + 1)
@@ -240,7 +241,7 @@ class HybridRetriever:
 
         # Process BM25 results
         for rank, (content, metadata, score) in enumerate(bm25_results):
-            content_hash = hash(content[:500])
+            content_hash = hashlib.md5(content[:500].encode()).hexdigest()
 
             # RRF score contribution from BM25
             rrf_contribution = self.config.bm25_weight / (k + rank + 1)

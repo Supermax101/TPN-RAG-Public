@@ -109,7 +109,7 @@ class PipelineResult:
     """Result from the retrieval pipeline."""
 
     query: str
-    results: List[RerankResult]
+    results: List[RerankResult] = field(default_factory=list)
     expanded_queries: List[str] = field(default_factory=list)
     hypothetical_doc: Optional[str] = None
     retrieval_time_ms: float = 0.0

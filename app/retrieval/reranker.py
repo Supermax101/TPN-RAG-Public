@@ -100,11 +100,14 @@ class CrossEncoderReranker:
         self.config = config or RerankerConfig()
         self._model = None
         self._initialized = False
+        self._init_failed = False
 
     def _initialize(self) -> bool:
         """Lazy initialization of the reranker model."""
         if self._initialized:
             return True
+        if self._init_failed:
+            return False
 
         try:
             from sentence_transformers import CrossEncoder
@@ -125,9 +128,11 @@ class CrossEncoderReranker:
                 "sentence-transformers not installed. "
                 "Run: pip install sentence-transformers"
             )
+            self._init_failed = True
             return False
         except Exception as e:
             logger.error(f"Failed to load reranker model: {e}")
+            self._init_failed = True
             return False
 
     def rerank(

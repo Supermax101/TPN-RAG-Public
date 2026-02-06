@@ -21,9 +21,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import logging
+import random
 import sys
+import tempfile
 from pathlib import Path
 
 # Add project root to path
@@ -140,76 +143,113 @@ class SimpleRetrieverAdapter:
 
 
 def run_comparison(args):
-    """Run the model comparison."""
-    from app.evaluation.comparison import ModelComparison
+    """Run the model comparison via the benchmark runner."""
+    from app.evaluation.benchmark_types import (
+        ExperimentConfig,
+        ModelSpec,
+        ModelTier,
+        PromptStrategy,
+    )
+    from app.evaluation.benchmark_runner import run_benchmark
 
-    # Parse model specs
-    models = []
+    # Parse model specs into ModelSpec objects
+    model_specs = []
     for spec in args.models:
         try:
             provider, model_name = parse_model_spec(spec)
-            models.append((provider, model_name))
+            tier = ModelTier.OPEN if provider == "huggingface" else ModelTier.SOTA
+            model_specs.append(ModelSpec(
+                model_id=f"{provider}/{model_name}",
+                provider=provider,
+                model_name=model_name,
+                tier=tier,
+            ))
             logger.info(f"Added model: {provider}/{model_name}")
         except ValueError as e:
             logger.error(str(e))
-            return
+            return 1
 
-    if not models:
+    if not model_specs:
         logger.error("No valid models specified")
-        return
+        return 1
 
-    # Load retriever
+    # Load retriever if persist-dir provided
     retriever = None
     if args.persist_dir:
-        raw_retriever = load_retriever(args.persist_dir)
-        if raw_retriever:
-            retriever = SimpleRetrieverAdapter(raw_retriever)
+        try:
+            from app.evaluation.retriever_adapter import RetrieverAdapter
+            retriever = RetrieverAdapter(
+                persist_dir=args.persist_dir,
+                top_k=args.top_k,
+            )
+            logger.info("Loaded retriever from %s", args.persist_dir)
+        except Exception as e:
+            logger.warning("Failed to load retriever: %s", e)
 
-    if not retriever and not args.no_baseline:
-        logger.warning("No retriever loaded. Running baseline only (no RAG).")
+    has_retriever = retriever is not None
+    if not has_retriever and args.no_baseline:
+        logger.error("--no-baseline requires --persist-dir: cannot skip baseline without a retriever for RAG.")
+        return 1
+    if not has_retriever and not args.no_baseline:
+        logger.warning("No retriever loaded (--persist-dir not set). Running no-RAG only.")
 
-    # Create comparison
-    comparison = ModelComparison(
-        dataset_path=args.dataset,
-        retriever=retriever,
-        top_k=args.top_k,
-    )
+    # Sub-sample dataset if -n is smaller than full set
+    dataset_path = args.dataset
+    tmp_path = None
+    try:
+        with open(args.dataset) as f:
+            all_lines = [line for line in f if line.strip()]
+    except FileNotFoundError:
+        logger.error(f"Dataset not found: {args.dataset}")
+        return 1
 
-    # Add models
-    for provider, model_name in models:
-        comparison.add_model(provider, model_name)
+    if args.sample_size and args.sample_size < len(all_lines):
+        rng = random.Random(args.seed)
+        sampled = rng.sample(all_lines, args.sample_size)
+        tmp = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".jsonl", delete=False, prefix="compare_subset_",
+        )
+        tmp.writelines(sampled)
+        tmp.close()
+        tmp_path = tmp.name
+        dataset_path = tmp_path
+        logger.info(f"Sampled {args.sample_size} of {len(all_lines)} samples")
 
-    # Run comparison
-    logger.info(f"\nStarting comparison with {args.sample_size} samples...")
-    logger.info(f"Models: {[f'{p}/{m}' for p, m in models]}")
-    logger.info(f"Include baseline: {not args.no_baseline}")
-
-    results = comparison.run(
-        sample_size=args.sample_size,
+    config = ExperimentConfig(
+        name="compare_models",
         seed=args.seed,
-        include_baseline=not args.no_baseline,
-        save_results=True,
+        repeats=1,
+        top_k=args.top_k,
+        include_no_rag=not args.no_baseline,
+        include_rag=has_retriever,
+        prompt_strategies=[PromptStrategy.ZS],
+        models=model_specs,
+        mcq_dataset_path=dataset_path,
+        require_holdout_only=True,
         output_dir=args.output_dir,
     )
 
-    # Print results
+    try:
+        logger.info(f"Starting comparison with {len(model_specs)} models...")
+        result = asyncio.run(run_benchmark(config, retriever=retriever))
+    finally:
+        if tmp_path:
+            Path(tmp_path).unlink(missing_ok=True)
+
     print("\n" + "=" * 60)
     print("COMPARISON RESULTS")
     print("=" * 60)
-    print(results.to_markdown())
+    summary = result.get("summary", {})
+    for row in summary.get("rows", []):
+        acc = row.get("accuracy", row.get("f1_mean", "N/A"))
+        label = f"{row['model_id']} | {row['strategy']} | {row['rag_mode']}"
+        if isinstance(acc, float):
+            print(f"  {label}: {acc:.1%} (n={row['n']})")
+        else:
+            print(f"  {label}: {acc} (n={row['n']})")
 
-    # Print RAG lift for each model
-    print("\n" + "=" * 60)
-    print("RAG LIFT ANALYSIS")
-    print("=" * 60)
-
-    model_names = set(m.model_name for m in results.models)
-    for name in model_names:
-        lift = results.get_rag_lift(name)
-        if lift is not None:
-            print(f"  {name}: {lift:+.1%} improvement with RAG")
-
-    print(f"\nResults saved to: {args.output_dir}/")
+    print(f"\nRecords saved to: {result.get('records_path', args.output_dir)}")
+    print(f"Summary saved to: {result.get('summary_path', args.output_dir)}")
 
 
 def list_models():
@@ -335,15 +375,16 @@ Examples:
 
     if args.list_models:
         list_models()
-        return
+        return 0
 
     if not args.models:
         parser.print_help()
         print("\nError: --models is required. Use --list-models to see available options.")
-        return
+        return 1
 
-    run_comparison(args)
+    rc = run_comparison(args)
+    return rc if rc else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

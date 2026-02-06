@@ -54,7 +54,7 @@ ANTHROPIC_API_KEY=
 # EMBEDDING_PROVIDER=openai
 # EMBEDDING_MODEL=text-embedding-3-large
 CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
+CHUNK_OVERLAP=400
 EOF
   echo "Created .env template"
 fi

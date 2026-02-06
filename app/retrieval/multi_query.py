@@ -14,6 +14,7 @@ Example:
     >>> results = multi_query.retrieve("protein for neonates")
 """
 
+import hashlib
 import logging
 import re
 from dataclasses import dataclass
@@ -181,7 +182,7 @@ class MultiQueryRetriever:
 
                 # Deduplicate based on content
                 for result in results:
-                    content_hash = hash(result.content[:500]) if hasattr(result, 'content') else hash(str(result)[:500])
+                    content_hash = hashlib.md5((result.content[:500] if hasattr(result, 'content') else str(result)[:500]).encode()).hexdigest()
 
                     if content_hash not in seen_content:
                         seen_content.add(content_hash)

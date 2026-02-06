@@ -107,7 +107,7 @@ def clinical_tokenize(text: str) -> List[str]:
 
     # Restore ranges
     for placeholder, value in ranges.items():
-        processed = processed.replace(placeholder.lower(), value)
+        processed = processed.replace(placeholder, value)
 
     # Step 4: Split on whitespace
     tokens = processed.split()

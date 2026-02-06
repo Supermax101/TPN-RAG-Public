@@ -33,6 +33,7 @@ class ProviderAdapter(Protocol):
         max_tokens: int = 800,
         model_id: Optional[str] = None,
         run_id: Optional[str] = None,
+        seed: Optional[int] = None,
     ) -> GenerationResult:
         ...
 
@@ -52,6 +53,7 @@ class AsyncProviderWrapper:
         max_tokens: int = 800,
         model_id: Optional[str] = None,
         run_id: Optional[str] = None,
+        seed: Optional[int] = None,
     ) -> GenerationResult:
         start = time.time()
         text = await self.provider.generate(
@@ -60,6 +62,7 @@ class AsyncProviderWrapper:
             model=model_id or self.default_model,
             temperature=temperature,
             max_tokens=max_tokens,
+            seed=seed,
         )
         return GenerationResult(text=text, latency_ms=(time.time() - start) * 1000)
 
@@ -123,6 +126,7 @@ class SyncModelWrapper:
         max_tokens: int = 800,
         model_id: Optional[str] = None,
         run_id: Optional[str] = None,
+        seed: Optional[int] = None,
     ) -> GenerationResult:
         start = time.time()
         if system:

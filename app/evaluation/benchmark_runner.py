@@ -194,6 +194,7 @@ class BenchmarkRunner:
         model: ModelSpec,
         run_id: str,
         temperature: float = 0.0,
+        seed: Optional[int] = None,
     ):
         """Make a single LLM call."""
         return await adapter.generate(
@@ -203,6 +204,7 @@ class BenchmarkRunner:
             max_tokens=1000,
             model_id=model.model_name,
             run_id=run_id,
+            seed=seed,
         )
 
     async def _run_cot_sc(
@@ -281,11 +283,14 @@ class BenchmarkRunner:
         try:
             if strategy == PromptStrategy.COT_SC and sample.track == DatasetTrack.MCQ:
                 # Real CoT-SC: 3 independent passes + majority vote
+                # Intentionally omit seed for diversity at temp=0.7
                 response_text, tokens_used, latency_ms = await self._run_cot_sc(
                     adapter, prompt, model, run_id,
                 )
             else:
-                result = await self._generate_single(adapter, prompt, model, run_id)
+                result = await self._generate_single(
+                    adapter, prompt, model, run_id, seed=self.config.seed,
+                )
                 response_text = result.text
                 tokens_used = result.tokens_used
                 latency_ms = result.latency_ms

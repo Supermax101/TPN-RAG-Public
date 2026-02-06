@@ -74,7 +74,7 @@ class DocumentLoader:
         
         document_chunks = []
         for i, chunk in enumerate(chunks):
-            chunk_id = chunk.get('id', f"chunk_{i}")
+            chunk_id = chunk.get('id', f"{source_filename}_chunk_{i}")
             chunk_type = chunk.get('type', 'unknown')
             chunk_markdown = chunk.get('markdown', '')
             grounding = chunk.get('grounding', {})
