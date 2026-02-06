@@ -157,6 +157,15 @@ class SyncModelWrapper:
 
     def __init__(self, provider):
         self.provider = provider
+        self._initialized = False
+
+    def _ensure_init(self):
+        """Lazily initialize the underlying provider (model download, GPU load, etc.)."""
+        if not self._initialized:
+            if not self.provider._initialized:
+                if not self.provider._initialize():
+                    raise RuntimeError(f"Failed to initialize {self.provider.model_name}")
+            self._initialized = True
 
     async def generate(
         self,
@@ -168,8 +177,8 @@ class SyncModelWrapper:
         run_id: Optional[str] = None,
         seed: Optional[int] = None,
     ) -> GenerationResult:
+        self._ensure_init()
         start = time.time()
-        # Pass system_prompt directly to _generate_impl instead of mutating config
         response = await asyncio.to_thread(
             self.provider._generate_impl,
             prompt=prompt,
