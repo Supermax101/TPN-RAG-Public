@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 import random
 import sys
 from pathlib import Path
@@ -19,6 +20,13 @@ from typing import Dict, List
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+# Configure logging so progress is visible
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-5s %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 # Set seed for reproducibility
 SEED = 42
