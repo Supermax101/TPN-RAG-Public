@@ -43,6 +43,10 @@ from typing import List, Optional, Dict, Any, Tuple, Union
 # Add project root to path so `app.*` imports work when run as a script
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load .env file so os.getenv() picks up API keys
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
