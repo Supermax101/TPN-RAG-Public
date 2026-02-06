@@ -1,0 +1,144 @@
+{
+  "book_name": "ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition",
+  "title": "ASPEN Pediatric Nutrition Support Core Curriculum 3rd Edition",
+  "total_pages": 810,
+  "total_parts": 19,
+  "total_images": 41,
+  "processing_stats": [
+    {
+      "part": 1,
+      "pages": 43,
+      "time": 73.7,
+      "page_range": "1-43"
+    },
+    {
+      "part": 2,
+      "pages": 43,
+      "time": 88.89,
+      "page_range": "44-86"
+    },
+    {
+      "part": 3,
+      "pages": 43,
+      "time": 114.71,
+      "page_range": "87-129"
+    },
+    {
+      "part": 4,
+      "pages": 43,
+      "time": 114.23,
+      "page_range": "130-172"
+    },
+    {
+      "part": 5,
+      "pages": 43,
+      "time": 106.15,
+      "page_range": "173-215"
+    },
+    {
+      "part": 6,
+      "pages": 43,
+      "time": 105.41,
+      "page_range": "216-258"
+    },
+    {
+      "part": 7,
+      "pages": 43,
+      "time": 127.86,
+      "page_range": "259-301"
+    },
+    {
+      "part": 8,
+      "pages": 43,
+      "time": 106.26,
+      "page_range": "302-344"
+    },
+    {
+      "part": 9,
+      "pages": 43,
+      "time": 149.08,
+      "page_range": "345-387"
+    },
+    {
+      "part": 10,
+      "pages": 43,
+      "time": 91.84,
+      "page_range": "388-430"
+    },
+    {
+      "part": 11,
+      "pages": 43,
+      "time": 120.95,
+      "page_range": "431-473"
+    },
+    {
+      "part": 12,
+      "pages": 43,
+      "time": 132.17,
+      "page_range": "474-516"
+    },
+    {
+      "part": 13,
+      "pages": 43,
+      "time": 121.59,
+      "page_range": "517-559"
+    },
+    {
+      "part": 14,
+      "pages": 43,
+      "time": 112.43,
+      "page_range": "560-602"
+    },
+    {
+      "part": 15,
+      "pages": 43,
+      "time": 112.57,
+      "page_range": "603-645"
+    },
+    {
+      "part": 16,
+      "pages": 43,
+      "time": 89.88,
+      "page_range": "646-688"
+    },
+    {
+      "part": 17,
+      "pages": 43,
+      "time": 108.01,
+      "page_range": "689-731"
+    },
+    {
+      "part": 18,
+      "pages": 43,
+      "time": 104.42,
+      "page_range": "732-774"
+    },
+    {
+      "part": 19,
+      "pages": 36,
+      "time": 49.83,
+      "page_range": "775-810"
+    }
+  ],
+  "generated_at": "2026-01-25T19:16:56.924593",
+  "files": {
+    "markdown": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition.md",
+    "rmd": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition.rmd",
+    "images_dir": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition/images"
+  },
+  "image_map": {
+    "img-0.jpeg": "page0658_img-0.jpg",
+    "img-1.jpeg": "page0659_img-1.jpg",
+    "img-2.jpeg": "page0660_img-2.jpg",
+    "img-3.jpeg": "page0661_img-3.jpg",
+    "img-4.jpeg": "page0661_img-4.jpg",
+    "img-5.jpeg": "page0662_img-5.jpg",
+    "img-6.jpeg": "page0663_img-6.jpg",
+    "img-7.jpeg": "page0027_img-7.jpg",
+    "img-8.jpeg": "page0027_img-8.jpg",
+    "img-9.jpeg": "page0027_img-9.jpg",
+    "img-10.jpeg": "page0027_img-10.jpg",
+    "img-11.jpeg": "page0039_img-11.jpg",
+    "img-12.jpeg": "page0039_img-12.jpg"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "book_name": "ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition",
+  "title": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition",
+  "total_pages": 482,
+  "total_parts": 5,
+  "total_images": 19,
+  "processing_stats": [
+    {
+      "part": 1,
+      "pages": 100,
+      "time": 11.37,
+      "page_range": "1-100"
+    },
+    {
+      "part": 2,
+      "pages": 100,
+      "time": 8.51,
+      "page_range": "101-200"
+    },
+    {
+      "part": 3,
+      "pages": 100,
+      "time": 11.09,
+      "page_range": "201-300"
+    },
+    {
+      "part": 4,
+      "pages": 100,
+      "time": 8.7,
+      "page_range": "301-400"
+    },
+    {
+      "part": 5,
+      "pages": 82,
+      "time": 8.18,
+      "page_range": "401-482"
+    }
+  ],
+  "generated_at": "2026-01-25T19:16:56.878150",
+  "files": {
+    "markdown": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition.md",
+    "rmd": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition.rmd",
+    "images_dir": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition/images"
+  },
+  "image_map": {
+    "img-0.jpeg": "page0270_img-0.jpg",
+    "img-1.jpeg": "page0272_img-1.jpg",
+    "img-2.jpeg": "page0038_img-2.jpg",
+    "img-3.jpeg": "page0038_img-3.jpg",
+    "img-4.jpeg": "page0039_img-4.jpg",
+    "img-5.jpeg": "page0040_img-5.jpg",
+    "img-6.jpeg": "page0041_img-6.jpg",
+    "img-7.jpeg": "page0057_img-7.jpg",
+    "img-8.jpeg": "page0057_img-8.jpg",
+    "img-9.jpeg": "page0090_img-9.jpg",
+    "img-10.jpeg": "page0092_img-10.jpg",
+    "img-11.jpeg": "page0092_img-11.jpg",
+    "img-12.jpeg": "page0092_img-12.jpg",
+    "img-13.jpeg": "page0092_img-13.jpg",
+    "img-14.jpeg": "page0092_img-14.jpg"
+  }
+}

@@ -145,7 +145,9 @@ def run_retrieval(persist_dir: str, query: str, top_k: int = 5):
 
     # Load ChromaDB
     vector_collection = None
-    chroma_path = persist_path / "chroma"
+    chroma_path = persist_path / "chromadb"
+    if not chroma_path.exists():
+        chroma_path = persist_path / "chroma"
     if chroma_path.exists():
         try:
             import chromadb

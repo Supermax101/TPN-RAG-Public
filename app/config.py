@@ -3,7 +3,7 @@ Application configuration.
 Loads settings from environment variables and .env file.
 """
 from pathlib import Path
-from typing import Optional
+from typing import Optional, ClassVar, List, Tuple
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     # Available embedding models for comparison
     # Set HF_EMBEDDING_MODEL to use any of these
-    AVAILABLE_EMBEDDING_MODELS = [
+    AVAILABLE_EMBEDDING_MODELS: ClassVar[List[Tuple[str, str]]] = [
         ("Qwen/Qwen3-Embedding-8B", "General purpose, instruction-aware"),
         ("abhinand/MedEmbed-large-v0.1", "Best for medical/clinical IR (Recommended for TPN)"),
         ("abhinand/MedEmbed-base-v0.1", "Medical domain, smaller/faster"),
@@ -37,7 +37,9 @@ class Settings(BaseSettings):
     
     kimi_api_key: Optional[str] = Field(default=None, alias="KIMI_API_KEY")
     kimi_base_url: str = Field(default="https://api.moonshot.ai/v1", alias="KIMI_BASE_URL")
-    
+
+    anthropic_api_key: Optional[str] = Field(default=None, alias="ANTHROPIC_API_KEY")
+
     # Vector store settings
     chroma_collection_name: str = Field(default="tpn_documents", alias="CHROMA_COLLECTION_NAME")
     default_search_limit: int = Field(default=10, alias="DEFAULT_SEARCH_LIMIT")
@@ -45,7 +47,7 @@ class Settings(BaseSettings):
     # Chunking settings - optimized for clinical documents
     # 1000 chars ~ 200-250 tokens, good for semantic coherence
     chunk_size: int = Field(default=1000, alias="CHUNK_SIZE")
-    chunk_overlap: int = Field(default=200, alias="CHUNK_OVERLAP")
+    chunk_overlap: int = Field(default=400, alias="CHUNK_OVERLAP")
     
     # Reranker settings
     reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="RERANKER_MODEL")

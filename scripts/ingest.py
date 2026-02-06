@@ -2,10 +2,13 @@
 """
 Document Ingestion Script for TPN RAG System.
 
-Processes DPT2 OCR output files through the ingestion pipeline:
+Requires Python 3.11+
+
+Processes OCR markdown files through the ingestion pipeline:
 1. Cleans OCR artifacts
 2. Chunks with clinical-aware boundaries
-3. Creates ChromaDB vector store with HuggingFace embeddings (Qwen3-Embedding-8B)
+3. Creates ChromaDB vector store with configurable embeddings
+   (OpenAI text-embedding-3-large recommended for benchmark accuracy)
 4. Creates BM25 keyword index
 
 Usage:
@@ -15,16 +18,22 @@ Examples:
     # Basic ingestion with defaults
     python scripts/ingest.py --docs-dir data/documents --persist-dir ./data
 
-    # Custom embedding model
-    python scripts/ingest.py --docs-dir data/documents --embedding-model Qwen/Qwen3-Embedding-8B
+    # OpenAI embedding (recommended for benchmark runs)
+    python scripts/ingest.py --embedding-provider openai --embedding-model text-embedding-3-large
+
+    # HuggingFace embedding
+    python scripts/ingest.py --embedding-provider huggingface --embedding-model Qwen/Qwen3-Embedding-8B
 
     # Skip vector store (just BM25)
     python scripts/ingest.py --no-vector-store
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -364,11 +373,13 @@ class IngestionPipeline:
         persist_dir: Optional[str | Path] = None,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
-        embedding_model: str = "Qwen/Qwen3-Embedding-8B",
+        embedding_provider: str = "openai",
+        embedding_model: str = "text-embedding-3-large",
         collection_name: str = "tpn_documents",
     ):
         self.docs_dir = Path(docs_dir)
         self.persist_dir = Path(persist_dir) if persist_dir else None
+        self.embedding_provider = embedding_provider.lower()
         self.embedding_model = embedding_model
         self.collection_name = collection_name
 
@@ -480,7 +491,7 @@ class IngestionPipeline:
 
         if self.persist_dir:
             self.persist_dir.mkdir(parents=True, exist_ok=True)
-            chroma_path = self.persist_dir / "chroma"
+            chroma_path = self.persist_dir / "chromadb"
             self._chroma_client = chromadb.PersistentClient(
                 path=str(chroma_path),
                 settings=Settings(anonymized_telemetry=False),
@@ -518,32 +529,50 @@ class IngestionPipeline:
         logger.info(f"Created vector store with {len(documents)} chunks")
 
     def _create_embedding_function(self):
-        """Create HuggingFace embedding function for ChromaDB."""
+        """Create embedding function for ChromaDB."""
         from chromadb.utils import embedding_functions
-        from sentence_transformers import SentenceTransformer
-        import torch
 
-        class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
-            def __init__(self, model_name: str):
-                self.model_name = model_name
-                self._model = None
+        if self.embedding_provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "OPENAI_API_KEY is required for --embedding-provider openai."
+                )
+            logger.info("Using OpenAI embeddings: %s", self.embedding_model)
+            return embedding_functions.OpenAIEmbeddingFunction(
+                api_key=api_key,
+                model_name=self.embedding_model,
+            )
 
-            def _load_model(self):
-                if self._model is None:
-                    logger.info(f"Loading embedding model: {self.model_name}")
-                    self._model = SentenceTransformer(
-                        self.model_name,
-                        trust_remote_code=True,
-                        model_kwargs={"torch_dtype": torch.bfloat16}
-                    )
-                return self._model
+        if self.embedding_provider in {"huggingface", "hf"}:
+            from sentence_transformers import SentenceTransformer
+            import torch
 
-            def __call__(self, input: List[str]) -> List[List[float]]:
-                model = self._load_model()
-                embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
-                return embeddings.tolist()
+            class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
+                def __init__(self, model_name: str):
+                    self.model_name = model_name
+                    self._model = None
 
-        return HuggingFaceEmbedding(model_name=self.embedding_model)
+                def _load_model(self):
+                    if self._model is None:
+                        logger.info("Loading embedding model: %s", self.model_name)
+                        self._model = SentenceTransformer(
+                            self.model_name,
+                            trust_remote_code=True,
+                            model_kwargs={"torch_dtype": torch.bfloat16},
+                        )
+                    return self._model
+
+                def __call__(self, input: List[str]) -> List[List[float]]:
+                    model = self._load_model()
+                    embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
+                    return embeddings.tolist()
+
+            return HuggingFaceEmbedding(model_name=self.embedding_model)
+
+        raise ValueError(
+            f"Unknown embedding provider '{self.embedding_provider}'. Use 'openai' or 'huggingface'."
+        )
 
     def _create_bm25_index(self, chunks: List[Chunk]) -> None:
         try:
@@ -551,9 +580,11 @@ class IngestionPipeline:
         except ImportError:
             raise ImportError("rank_bm25 not installed. Run: pip install rank-bm25")
 
+        from app.retrieval.tokenizer import clinical_tokenize
+
         tokenized_corpus = []
         for chunk in chunks:
-            tokens = chunk.content.lower().split()
+            tokens = clinical_tokenize(chunk.content)
             tokenized_corpus.append(tokens)
             self._bm25_corpus.append(chunk.content)
             self._bm25_metadata.append(chunk.metadata)
@@ -596,8 +627,8 @@ def main():
 
     parser.add_argument(
         "--docs-dir",
-        default="/Users/chandra/Desktop/DPT2 Output",
-        help="Path to DPT2 markdown files (default: %(default)s)",
+        default="data/documents",
+        help="Path to markdown files (default: %(default)s)",
     )
     parser.add_argument(
         "--persist-dir",
@@ -617,9 +648,15 @@ def main():
         help="Overlap between chunks (default: %(default)s)",
     )
     parser.add_argument(
+        "--embedding-provider",
+        default="openai",
+        choices=["openai", "huggingface", "hf"],
+        help="Embedding provider (default: %(default)s)",
+    )
+    parser.add_argument(
         "--embedding-model",
-        default="Qwen/Qwen3-Embedding-8B",
-        help="HuggingFace embedding model (default: %(default)s)",
+        default="text-embedding-3-large",
+        help="Embedding model name (default: %(default)s)",
     )
     parser.add_argument(
         "--collection-name",
@@ -654,6 +691,7 @@ def main():
     print(f"\nSource: {args.docs_dir}")
     print(f"Persist: {args.persist_dir}")
     print(f"Chunk size: {args.chunk_size}, overlap: {args.chunk_overlap}")
+    print(f"Embedding provider: {args.embedding_provider}")
     print(f"Embedding model: {args.embedding_model}")
     print(f"Vector store: {'disabled' if args.no_vector_store else 'enabled'}")
     print(f"BM25 index: {'disabled' if args.no_bm25 else 'enabled'}")
@@ -664,6 +702,7 @@ def main():
         persist_dir=args.persist_dir,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
+        embedding_provider=args.embedding_provider,
         embedding_model=args.embedding_model,
         collection_name=args.collection_name,
     )

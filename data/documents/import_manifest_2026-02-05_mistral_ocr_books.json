@@ -1,0 +1,41 @@
+{
+  "import_batch": "2026-02-05_mistral_ocr_books",
+  "book_count": 5,
+  "records": [
+    {
+      "book_dir": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition",
+      "markdown_source": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition.md",
+      "markdown_dest": "data/documents/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition.md",
+      "metadata_dest": "data/documents/_source_metadata/2026-02-05_mistral_ocr_books/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition.metadata.json",
+      "action": "copied"
+    },
+    {
+      "book_dir": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Parenteral_Nutrition_Handbook_Third_Edition",
+      "markdown_source": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Parenteral_Nutrition_Handbook_Third_Edition/ASPEN_Parenteral_Nutrition_Handbook_Third_Edition.md",
+      "markdown_dest": "data/documents/ASPEN_Parenteral_Nutrition_Handbook_Third_Edition.md",
+      "metadata_dest": "data/documents/_source_metadata/2026-02-05_mistral_ocr_books/ASPEN_Parenteral_Nutrition_Handbook_Third_Edition.metadata.json",
+      "action": "copied"
+    },
+    {
+      "book_dir": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition",
+      "markdown_source": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition.md",
+      "markdown_dest": "data/documents/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition.md",
+      "metadata_dest": "data/documents/_source_metadata/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Neonatal_Nutrition_Handbook_3rd_Edition.metadata.json",
+      "action": "copied"
+    },
+    {
+      "book_dir": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition",
+      "markdown_source": "data/imports/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition.md",
+      "markdown_dest": "data/documents/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition.md",
+      "metadata_dest": "data/documents/_source_metadata/2026-02-05_mistral_ocr_books/ASPEN_Pediatric_Nutrition_Support_Core_Curriculum_3rd_Edition.metadata.json",
+      "action": "copied"
+    },
+    {
+      "book_dir": "data/imports/2026-02-05_mistral_ocr_books/Children_s_Health_Pediatric_Nutrition_Handbook_2023",
+      "markdown_source": "data/imports/2026-02-05_mistral_ocr_books/Children_s_Health_Pediatric_Nutrition_Handbook_2023/Children_s_Health_Pediatric_Nutrition_Handbook_2023.md",
+      "markdown_dest": "data/documents/Children_s_Health_Pediatric_Nutrition_Handbook_2023.md",
+      "metadata_dest": "data/documents/_source_metadata/2026-02-05_mistral_ocr_books/Children_s_Health_Pediatric_Nutrition_Handbook_2023.metadata.json",
+      "action": "copied"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 """
 Model Comparison CLI - Compare multiple LLMs with and without RAG.
 
+Requires Python 3.11+
+
 Usage:
     # Compare HuggingFace models
     python scripts/compare_models.py --models hf:Qwen/Qwen2.5-7B-Instruct -n 50
@@ -15,6 +17,8 @@ Usage:
     # Skip baseline (RAG only)
     python scripts/compare_models.py --models hf:Qwen/Qwen2.5-7B-Instruct --no-baseline -n 50
 """
+
+from __future__ import annotations
 
 import argparse
 import json
@@ -31,8 +35,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Default dataset path
-DEFAULT_DATASET = "/Users/chandra/Desktop/TPN2.OFinetuning/data/final/test.jsonl"
+# Default dataset path - use converted benchmark JSONL
+DEFAULT_DATASET = "eval/data/benchmark_2026-02-05/mcq_holdout.jsonl"
 
 
 def parse_model_spec(spec: str) -> tuple:
@@ -87,7 +91,9 @@ def load_retriever(persist_dir: str | None):
 
         # Load ChromaDB if available
         vector_collection = None
-        chroma_path = persist_path / "chroma"
+        chroma_path = persist_path / "chromadb"
+        if not chroma_path.exists():
+            chroma_path = persist_path / "chroma"
         if chroma_path.exists():
             try:
                 import chromadb
@@ -208,14 +214,21 @@ def run_comparison(args):
 
 def list_models():
     """List available models with dynamic HuggingFace discovery."""
-    from app.models import list_available_models, search_hf_models
+    from app.providers.huggingface import search_models as search_hf_models, list_trending_models
 
     print("\n" + "=" * 60)
     print("AVAILABLE MODELS")
     print("=" * 60)
 
     print("\nFetching trending HuggingFace models...")
-    models = list_available_models(fetch_hf=True, hf_limit=10)
+    models = {
+        "openai": ["gpt-4o", "gpt-4o-mini"],
+        "anthropic": ["claude-sonnet-4-20250514"],
+        "gemini": ["gemini-2.5-pro"],
+        "xai": ["grok-4"],
+        "kimi": ["kimi-k2"],
+        "huggingface": list_trending_models(limit=10),
+    }
 
     for provider, model_list in models.items():
         print(f"\n{provider.upper()}:")

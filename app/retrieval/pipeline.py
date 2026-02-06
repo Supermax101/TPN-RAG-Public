@@ -23,6 +23,7 @@ from .hybrid import HybridRetriever, RRFConfig, RetrievalResult
 from .hyde import HyDERetriever, HyDEConfig
 from .multi_query import MultiQueryRetriever, MultiQueryConfig
 from .reranker import CrossEncoderReranker, RerankerConfig, RerankResult
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -382,7 +383,10 @@ class RetrievalPipeline:
 
         # Load ChromaDB
         vector_collection = None
-        chroma_path = persist_dir / "chroma"
+        chroma_path = persist_dir / "chromadb"
+        if not chroma_path.exists():
+            # Backward compatibility with older persisted layout.
+            chroma_path = persist_dir / "chroma"
         if chroma_path.exists():
             try:
                 import chromadb
@@ -392,7 +396,7 @@ class RetrievalPipeline:
                     path=str(chroma_path),
                     settings=Settings(anonymized_telemetry=False),
                 )
-                vector_collection = client.get_collection("tpn_documents")
+                vector_collection = client.get_collection(settings.chroma_collection_name)
                 logger.info(f"Loaded ChromaDB collection with {vector_collection.count()} documents")
             except Exception as e:
                 logger.warning(f"Failed to load ChromaDB: {e}")

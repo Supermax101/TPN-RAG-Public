@@ -74,8 +74,7 @@ class KimiLLMProvider(LLMProvider):
         
         raise RuntimeError(f"Failed to generate text with Kimi K2 after {max_retries} retries")
 
-    @property
-    async def available_models(self) -> List[str]:
+    async def get_available_models(self) -> List[str]:
         """Return list of available Kimi models."""
         if self._available_models is not None:
             return self._available_models

@@ -63,8 +63,7 @@ class OpenAILLMProvider(LLMProvider):
         except Exception as e:
             raise RuntimeError(f"Failed to generate text with OpenAI: {e}")
     
-    @property
-    async def available_models(self) -> List[str]:
+    async def get_available_models(self) -> List[str]:
         """Return list of available OpenAI models from API."""
         if self._available_models is not None:
             return self._available_models

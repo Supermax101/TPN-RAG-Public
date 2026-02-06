@@ -87,6 +87,13 @@ data/chromadb/
 data/bm25/
 *.png
 
+# OCR import sources (large, not needed in repo)
+data/imports/
+data/ingestion_stats.json
+
+# Benchmark results (regenerated on each run)
+eval/results/
+
 # Comparison results
 comparison_results/
 

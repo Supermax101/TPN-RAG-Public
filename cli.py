@@ -142,7 +142,8 @@ async def ingest_documents(path: Path, chunk_size: int = 1000, overlap: int = 20
     
     # Import components
     from app.ingestion.chunker import SemanticChunker
-    from app.document_processing.pdf_loader import PDFLoader  # We'll create this
+    # PDF loader removed — use markdown ingestion pipeline instead
+    # from app.document_processing.pdf_loader import PDFLoader
     
     chunker = SemanticChunker(chunk_size=chunk_size, chunk_overlap=overlap)
     all_documents = []
@@ -348,30 +349,15 @@ async def ask_question(question: str, advanced: bool = False, options: str = "")
 
 async def eval_interactive():
     """Interactive evaluation."""
-    console.print("\n[bold]📊 Run Evaluation[/bold]")
+    console.print("\n[bold]Run Evaluation[/bold]")
     console.print("-" * 50)
-    
-    csv_path = Path("eval/tpn_mcq_cleaned.csv")
-    if not csv_path.exists():
-        console.print(f"[red]Evaluation file not found: {csv_path}[/red]")
-        return
-    
-    limit = Prompt.ask("Number of questions (leave empty for all)", default="")
-    max_q = int(limit) if limit.isdigit() else None
-    
-    advanced = Confirm.ask("Use advanced agentic mode?", default=True)
-    
-    console.print("\n[cyan]Starting evaluation...[/cyan]")
-    
-    # Import and run
-    from eval.rag_evaluation_v2 import RAGEvaluatorV2
-    
-    evaluator = RAGEvaluatorV2(
-        csv_path=str(csv_path),
-        model=settings.hf_llm_model,
+    console.print(
+        "\nThe evaluation framework has moved to the publishable benchmark runner."
+        "\nUse one of the following instead:"
     )
-    
-    await evaluator.run_evaluation(max_questions=max_q)
+    console.print("  [cyan]python scripts/tpnctl.py benchmark --help[/cyan]")
+    console.print("  [cyan]python scripts/run_benchmark.py --help[/cyan]")
+    console.print()
 
 
 # =============================================================================

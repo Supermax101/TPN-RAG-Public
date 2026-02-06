@@ -161,19 +161,20 @@ def parse_mcq_response(
         if line_match:
             answer = line_match.group(1).upper()
     
-    # Strategy 5: Last resort - find any A-F letter
-    # BUT be careful not to pick up letters from explanations
+    # Strategy 5: Last resort - find A-F letters only after answer-like cues
+    # to avoid matching letters inside words like "ASPEN" -> "A", "Fluid" -> "F"
     if not answer:
-        # Look for isolated letters (word boundaries)
-        letters = re.findall(r'\b([A-F])\b', clean_response.upper())
-        if letters:
-            if is_multi_answer:
-                # For multi-answer, take unique letters
-                answer = ",".join(sorted(set(letters)))
-            else:
-                # For single answer, prefer letters at the end of response
-                # (more likely to be the final answer after reasoning)
-                answer = letters[-1]
+        # Only match standalone letters that follow answer-cue phrases
+        cue_pattern = re.compile(
+            r'(?:therefore|thus|hence|correct answer|the answer|select|choose|option|'
+            r'i (?:would|will) (?:choose|select|go with)|'
+            r'best answer|most (?:appropriate|likely|correct)|final answer)'
+            r'[^A-Za-z]{0,10}([A-F])\b',
+            re.IGNORECASE,
+        )
+        cue_match = cue_pattern.search(clean_response)
+        if cue_match:
+            answer = cue_match.group(1).upper()
     
     # If still no answer, return parse error
     if not answer:

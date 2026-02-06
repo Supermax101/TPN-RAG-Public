@@ -176,8 +176,10 @@ class HybridRetriever:
             return []
 
         try:
-            # Tokenize query
-            query_tokens = query.lower().split()
+            from .tokenizer import clinical_tokenize
+
+            # Tokenize query with clinical awareness
+            query_tokens = clinical_tokenize(query)
 
             # Get BM25 scores
             scores = self.bm25_index.get_scores(query_tokens)

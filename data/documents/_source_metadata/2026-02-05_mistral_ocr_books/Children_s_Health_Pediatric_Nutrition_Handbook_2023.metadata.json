@@ -1,0 +1,46 @@
+{
+  "book_name": "Children_s_Health_Pediatric_Nutrition_Handbook_2023",
+  "title": "Children s Health Pediatric Nutrition Handbook 2023",
+  "total_pages": 290,
+  "total_parts": 3,
+  "total_images": 11,
+  "processing_stats": [
+    {
+      "part": 1,
+      "pages": 100,
+      "time": 47.13,
+      "page_range": "1-100"
+    },
+    {
+      "part": 2,
+      "pages": 100,
+      "time": 48.46,
+      "page_range": "101-200"
+    },
+    {
+      "part": 3,
+      "pages": 90,
+      "time": 37.86,
+      "page_range": "201-290"
+    }
+  ],
+  "generated_at": "2026-01-25T19:16:56.952876",
+  "files": {
+    "markdown": "/Users/chandra/Desktop/MistralOCR/data/output/Children_s_Health_Pediatric_Nutrition_Handbook_2023/Children_s_Health_Pediatric_Nutrition_Handbook_2023.md",
+    "rmd": "/Users/chandra/Desktop/MistralOCR/data/output/Children_s_Health_Pediatric_Nutrition_Handbook_2023/Children_s_Health_Pediatric_Nutrition_Handbook_2023.rmd",
+    "images_dir": "/Users/chandra/Desktop/MistralOCR/data/output/Children_s_Health_Pediatric_Nutrition_Handbook_2023/images"
+  },
+  "image_map": {
+    "img-0.jpeg": "page0012_img-0.jpg",
+    "img-1.jpeg": "page0013_img-1.jpg",
+    "img-2.jpeg": "page0014_img-2.jpg",
+    "img-3.jpeg": "page0015_img-3.jpg",
+    "img-4.jpeg": "page0016_img-4.jpg",
+    "img-5.jpeg": "page0017_img-5.jpg",
+    "img-6.jpeg": "page0018_img-6.jpg",
+    "img-7.jpeg": "page0019_img-7.jpg",
+    "img-8.jpeg": "page0020_img-8.jpg",
+    "img-9.jpeg": "page0021_img-9.jpg",
+    "img-10.jpeg": "page0053_img-10.jpg"
+  }
+}

@@ -33,7 +33,8 @@ def create_app() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        # Wildcard origin with credentials is invalid in browsers.
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )

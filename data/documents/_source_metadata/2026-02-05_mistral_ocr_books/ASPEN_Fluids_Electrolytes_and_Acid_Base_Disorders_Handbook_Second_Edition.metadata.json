@@ -1,0 +1,54 @@
+{
+  "book_name": "ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition",
+  "title": "ASPEN Fluids Electrolytes and Acid Base Disorders Handbook Second Edition",
+  "total_pages": 344,
+  "total_parts": 4,
+  "total_images": 32,
+  "processing_stats": [
+    {
+      "part": 1,
+      "pages": 100,
+      "time": 99.22,
+      "page_range": "1-100"
+    },
+    {
+      "part": 2,
+      "pages": 100,
+      "time": 92.8,
+      "page_range": "101-200"
+    },
+    {
+      "part": 3,
+      "pages": 100,
+      "time": 110.77,
+      "page_range": "201-300"
+    },
+    {
+      "part": 4,
+      "pages": 44,
+      "time": 28.63,
+      "page_range": "301-344"
+    }
+  ],
+  "generated_at": "2026-01-25T19:16:56.845021",
+  "files": {
+    "markdown": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition.md",
+    "rmd": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition.rmd",
+    "images_dir": "/Users/chandra/Desktop/MistralOCR/data/output/ASPEN_Fluids_Electrolytes_and_Acid_Base_Disorders_Handbook_Second_Edition/images"
+  },
+  "image_map": {
+    "img-0.jpeg": "page0344_img-0.jpg",
+    "img-1.jpeg": "page0344_img-1.jpg",
+    "img-2.jpeg": "page0280_img-2.jpg",
+    "img-3.jpeg": "page0294_img-3.jpg",
+    "img-4.jpeg": "page0295_img-4.jpg",
+    "img-5.jpeg": "page0296_img-5.jpg",
+    "img-6.jpeg": "page0190_img-6.jpg",
+    "img-7.jpeg": "page0190_img-7.jpg",
+    "img-8.jpeg": "page0191_img-8.jpg",
+    "img-9.jpeg": "page0192_img-9.jpg",
+    "img-10.jpeg": "page0194_img-10.jpg",
+    "img-11.jpeg": "page0071_img-11.jpg",
+    "img-12.jpeg": "page0082_img-12.jpg"
+  }
+}

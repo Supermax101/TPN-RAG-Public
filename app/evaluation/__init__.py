@@ -1,45 +1,74 @@
 """
 Evaluation module for TPN RAG system.
 
-This module provides:
-- EvaluationDataset: Load and parse grounded Q&A pairs
-- RetrievalMetrics: Measure retrieval quality (source matching)
-- AnswerMetrics: Measure answer quality (semantic similarity)
-- EvaluationHarness: Run full evaluation pipeline
-- ModelComparison: Compare multiple models with/without RAG
+Publishable benchmark framework:
+- BenchmarkRunner: Run full model x prompt-strategy matrix
+- RetrieverAdapter: Bridge between benchmark and retrieval pipeline
+- PromptStrategy / ExperimentConfig / RunRecord: Configuration types
+- Statistical tools: Cohen's kappa, Fleiss' kappa, McNemar-Bowker, etc.
+
+Citation evaluation:
 - CitationEvaluator: Evaluate citation quality for fine-tuned models
-
-Example usage:
-    >>> from app.evaluation import EvaluationHarness, ModelComparison
-    >>> harness = EvaluationHarness(rag_pipeline, dataset_path)
-    >>> results = harness.run(sample_size=100)
-    >>> print(f"Accuracy: {results.accuracy:.1%}")
-
-    >>> # For fine-tuned models with citation grounding
-    >>> from app.evaluation import CitationEvaluator
-    >>> evaluator = CitationEvaluator()
-    >>> result = evaluator.evaluate(question, answer, chunks, ground_truth_source)
-    >>> print(f"Citation accuracy: {result.source_accuracy:.1%}")
 """
 
-from .dataset import EvaluationDataset, QAPair
-from .metrics import RetrievalMetrics, AnswerMetrics, EvaluationResult
-from .harness import EvaluationHarness
-from .comparison import ModelComparison, ComparisonResult, statistical_significance
 from .citation_metrics import CitationEvaluator, CitationResult, RetrievedChunk
+from .benchmark_types import (
+    PromptStrategy,
+    DatasetTrack,
+    DatasetSchema,
+    ModelSpec,
+    ModelTier,
+    ExperimentConfig,
+    RunRecord,
+)
+from .retriever_adapter import RetrieverAdapter
+from .benchmark_runner import BenchmarkRunner, run_benchmark
+from .statistics import (
+    cohen_kappa,
+    fleiss_kappa,
+    mcnemar_bowker,
+    paired_bootstrap_ci,
+    cohen_d_paired,
+    holm_bonferroni,
+)
+from .benchmark_analysis import (
+    load_run_records,
+    summarize_accuracy,
+    compute_intra_rater_fleiss,
+    compute_inter_rater,
+    compute_rag_lift,
+    build_analysis_report,
+)
+from .data_leakage import check_data_leakage
 
 __all__ = [
-    "EvaluationDataset",
-    "QAPair",
-    "RetrievalMetrics",
-    "AnswerMetrics",
-    "EvaluationResult",
-    "EvaluationHarness",
-    "ModelComparison",
-    "ComparisonResult",
-    "statistical_significance",
-    # Citation evaluation for fine-tuned models
+    # Citation evaluation
     "CitationEvaluator",
     "CitationResult",
     "RetrievedChunk",
+    # Publishable benchmark framework
+    "PromptStrategy",
+    "DatasetTrack",
+    "DatasetSchema",
+    "ModelSpec",
+    "ModelTier",
+    "ExperimentConfig",
+    "RunRecord",
+    "RetrieverAdapter",
+    "BenchmarkRunner",
+    "run_benchmark",
+    # Statistical tools
+    "cohen_kappa",
+    "fleiss_kappa",
+    "mcnemar_bowker",
+    "paired_bootstrap_ci",
+    "cohen_d_paired",
+    "holm_bonferroni",
+    "load_run_records",
+    "summarize_accuracy",
+    "compute_intra_rater_fleiss",
+    "compute_inter_rater",
+    "compute_rag_lift",
+    "build_analysis_report",
+    "check_data_leakage",
 ]

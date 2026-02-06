@@ -20,7 +20,7 @@ MODULAR USAGE (no LangChain dependencies):
 # Use specific modules without importing everything
 from app.retrieval import RetrievalPipeline, HybridRetriever
 from app.ingestion import IngestionPipeline, SemanticChunker
-from app.evaluation import EvaluationHarness
+from app.evaluation import BenchmarkRunner
 ```
 
 LangChain 1.x Pipeline:
@@ -41,10 +41,6 @@ __all__ = [
     "RAGResponse",
     "PipelineConfig",
     "PipelineMode",
-    # Document processing
-    "SemanticChunker",
-    "ClinicalTextSplitter",
-    "PDFLoader",
     # Chains (requires LangChain)
     "MCQChain",
     "create_mcq_chain",
@@ -64,11 +60,6 @@ def __getattr__(name: str):
     # Primary interface
     if name in ("TPN_RAG", "create_rag", "RAGResponse", "PipelineConfig", "PipelineMode"):
         from .rag_pipeline import TPN_RAG, create_rag, RAGResponse, PipelineConfig, PipelineMode
-        return locals()[name]
-
-    # Document processing
-    if name in ("SemanticChunker", "ClinicalTextSplitter", "PDFLoader"):
-        from .document_processing import SemanticChunker, ClinicalTextSplitter, PDFLoader
         return locals()[name]
 
     # Chains

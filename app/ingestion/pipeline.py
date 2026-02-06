@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Union
@@ -109,7 +110,8 @@ class IngestionPipeline:
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
         min_chunk_size: int = 100,
-        embedding_model: str = "Qwen/Qwen3-Embedding-8B",
+        embedding_provider: str = "openai",
+        embedding_model: str = "text-embedding-3-large",
         collection_name: str = "tpn_documents",
     ):
         """
@@ -122,11 +124,13 @@ class IngestionPipeline:
             chunk_size: Target chunk size in characters (default 1000)
             chunk_overlap: Overlap between chunks (default 200)
             min_chunk_size: Minimum chunk size (default 100)
-            embedding_model: HuggingFace embedding model name
+            embedding_provider: Embedding provider ('openai' or 'huggingface')
+            embedding_model: Embedding model name
             collection_name: ChromaDB collection name
         """
         self.docs_dir = Path(docs_dir)
         self.persist_dir = Path(persist_dir) if persist_dir else None
+        self.embedding_provider = embedding_provider.lower()
         self.embedding_model = embedding_model
         self.collection_name = collection_name
 
@@ -301,7 +305,7 @@ class IngestionPipeline:
         # Create or connect to ChromaDB
         if self.persist_dir:
             self.persist_dir.mkdir(parents=True, exist_ok=True)
-            chroma_path = self.persist_dir / "chroma"
+            chroma_path = self.persist_dir / "chromadb"
             self._chroma_client = chromadb.PersistentClient(
                 path=str(chroma_path),
                 settings=Settings(anonymized_telemetry=False),
@@ -355,32 +359,51 @@ class IngestionPipeline:
         logger.info(f"Created vector store with {len(documents)} chunks")
 
     def _create_embedding_function(self):
-        """Create HuggingFace embedding function for ChromaDB."""
+        """Create embedding function for ChromaDB."""
         from chromadb.utils import embedding_functions
-        from sentence_transformers import SentenceTransformer
-        import torch
 
-        class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
-            def __init__(self, model_name: str):
-                self.model_name = model_name
-                self._model = None
+        if self.embedding_provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "OPENAI_API_KEY is required for embedding_provider='openai'."
+                )
+            logger.info("Using OpenAI embeddings: %s", self.embedding_model)
+            return embedding_functions.OpenAIEmbeddingFunction(
+                api_key=api_key,
+                model_name=self.embedding_model,
+            )
 
-            def _load_model(self):
-                if self._model is None:
-                    logger.info(f"Loading embedding model: {self.model_name}")
-                    self._model = SentenceTransformer(
-                        self.model_name,
-                        trust_remote_code=True,
-                        model_kwargs={"torch_dtype": torch.bfloat16}
-                    )
-                return self._model
+        if self.embedding_provider in {"huggingface", "hf"}:
+            from sentence_transformers import SentenceTransformer
+            import torch
 
-            def __call__(self, input: List[str]) -> List[List[float]]:
-                model = self._load_model()
-                embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
-                return embeddings.tolist()
+            class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
+                def __init__(self, model_name: str):
+                    self.model_name = model_name
+                    self._model = None
 
-        return HuggingFaceEmbedding(model_name=self.embedding_model)
+                def _load_model(self):
+                    if self._model is None:
+                        logger.info("Loading embedding model: %s", self.model_name)
+                        self._model = SentenceTransformer(
+                            self.model_name,
+                            trust_remote_code=True,
+                            model_kwargs={"torch_dtype": torch.bfloat16},
+                        )
+                    return self._model
+
+                def __call__(self, input: List[str]) -> List[List[float]]:
+                    model = self._load_model()
+                    embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
+                    return embeddings.tolist()
+
+            return HuggingFaceEmbedding(model_name=self.embedding_model)
+
+        raise ValueError(
+            f"Unknown embedding provider '{self.embedding_provider}'. "
+            "Use 'openai' or 'huggingface'."
+        )
 
     def _create_bm25_index(self, chunks: List[Chunk]) -> None:
         """

@@ -272,7 +272,11 @@ class TPN_RAG:
         if not path.exists():
             raise FileNotFoundError(f"PDF not found: {path}")
         
-        from app.document_processing.pdf_loader import PDFLoader
+        raise NotImplementedError(
+            "PDF loading has been removed. Use the markdown ingestion pipeline instead: "
+            "python scripts/ingest.py --docs-dir data/documents"
+        )
+        # Legacy import removed:
         
         loader = PDFLoader()
         documents = await loader.load_and_chunk(
