@@ -1,22 +1,73 @@
 """
 Embedding provider implementations.
 Converts text into vector representations for similarity search.
-Uses HuggingFace models via sentence-transformers.
+Supports OpenAI (text-embedding-3-large) and HuggingFace models.
 """
 import asyncio
+import os
 from typing import List, Optional
-from .base import EmbeddingProvider
+from .base import EmbeddingProvider as EmbeddingProviderBase
 from ..config import settings
 
 
-class HuggingFaceEmbeddingProvider(EmbeddingProvider):
+class OpenAIEmbeddingProvider(EmbeddingProviderBase):
+    """
+    Generates embeddings using OpenAI's text-embedding-3-large API.
+
+    This is the default and recommended provider for benchmark accuracy.
+    Dimension: 3072 (text-embedding-3-large).
+    """
+
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        max_concurrent: int = 10,
+    ):
+        self._model_name = model_name or settings.embedding_model
+        self._api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.max_concurrent = max_concurrent
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self._client = None
+        # Known dimensions for OpenAI embedding models
+        self._dimension = 3072 if "large" in self._model_name else 1536
+
+    def _get_client(self):
+        if self._client is None:
+            if not self._api_key:
+                raise ValueError(
+                    "OpenAI API key not found. Set OPENAI_API_KEY environment variable."
+                )
+            from openai import AsyncOpenAI
+            self._client = AsyncOpenAI(api_key=self._api_key)
+        return self._client
+
+    async def embed_texts(self, texts: List[str]) -> List[List[float]]:
+        client = self._get_client()
+        response = await client.embeddings.create(
+            model=self._model_name,
+            input=texts,
+        )
+        return [item.embedding for item in response.data]
+
+    async def embed_query(self, query: str) -> List[float]:
+        result = await self.embed_texts([query])
+        return result[0]
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+
+class HuggingFaceEmbeddingProvider(EmbeddingProviderBase):
     """
     Generates embeddings using HuggingFace models via sentence-transformers.
 
-    Recommended models for clinical/medical domain:
-    - Qwen/Qwen3-Embedding-8B (best quality, larger)
-    - BAAI/bge-large-en-v1.5 (good balance)
-    - sentence-transformers/all-mpnet-base-v2 (fast, general)
+    Use for local/offline embedding when OpenAI API is not available.
     """
 
     def __init__(
@@ -25,15 +76,7 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
         device: Optional[str] = None,
         max_concurrent: int = 10,
     ):
-        """
-        Initialize HuggingFace embedding provider.
-
-        Args:
-            model_name: HuggingFace model ID (default from settings)
-            device: Device to run on ("cuda", "mps", "cpu", or None for auto)
-            max_concurrent: Max concurrent embedding operations
-        """
-        self._model_name = model_name or settings.hf_embedding_model
+        self._model_name = model_name or settings.embedding_model
         self._device = device
         self.max_concurrent = max_concurrent
         self.semaphore = asyncio.Semaphore(max_concurrent)
@@ -77,25 +120,12 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
         return self._model
 
     async def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """
-        Embed multiple texts.
-
-        Args:
-            texts: List of texts to embed
-
-        Returns:
-            List of embedding vectors
-        """
         model = self._load_model()
-
-        # Use sync encoding since sentence-transformers handles batching well
-        # Run in thread pool to not block event loop
         loop = asyncio.get_event_loop()
 
         def _encode():
             return model.encode(
                 texts,
-                prompt_name="document",  # For Qwen3 instruction-aware embeddings
                 show_progress_bar=len(texts) > 100,
                 batch_size=32,
             )
@@ -104,23 +134,12 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
         return embeddings.tolist()
 
     async def embed_query(self, query: str) -> List[float]:
-        """
-        Embed a single query text.
-
-        Args:
-            query: Query text to embed
-
-        Returns:
-            Embedding vector
-        """
         model = self._load_model()
-
         loop = asyncio.get_event_loop()
 
         def _encode():
             return model.encode(
                 [query],
-                prompt_name="query",  # For Qwen3 instruction-aware embeddings
                 show_progress_bar=False,
             )
 
@@ -134,9 +153,5 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
     @property
     def dimension(self) -> int:
         if self._dimension is None:
-            self._load_model()  # This will set _dimension
+            self._load_model()
         return self._dimension
-
-
-# Alias for backwards compatibility
-EmbeddingProvider = HuggingFaceEmbeddingProvider

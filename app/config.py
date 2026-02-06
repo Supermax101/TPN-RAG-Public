@@ -10,21 +10,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
 
-    # HuggingFace settings - Primary provider for embeddings and LLMs
+    # HuggingFace settings
     hf_token: Optional[str] = Field(default=None, alias="HF_TOKEN")
-    hf_embedding_model: str = Field(default="Qwen/Qwen3-Embedding-8B", alias="HF_EMBEDDING_MODEL")
     hf_llm_model: str = Field(default="chandramax/tpn-gpt-oss-20b", alias="HF_LLM_MODEL")
 
-    # Available embedding models for comparison
-    # Set HF_EMBEDDING_MODEL to use any of these
-    AVAILABLE_EMBEDDING_MODELS: ClassVar[List[Tuple[str, str]]] = [
-        ("Qwen/Qwen3-Embedding-8B", "General purpose, instruction-aware"),
-        ("abhinand/MedEmbed-large-v0.1", "Best for medical/clinical IR (Recommended for TPN)"),
-        ("abhinand/MedEmbed-base-v0.1", "Medical domain, smaller/faster"),
-        ("tencent/KaLM-Embedding-Gemma3-12B-2511", "Best overall MMTEB (larger)"),
-        ("KaLM-Embedding/KaLM-embedding-multilingual-mini-instruct-v2.5", "SOTA at its size, compact"),
-        ("BAAI/bge-large-en-v1.5", "Good general purpose"),
-    ]
+    # Embedding settings — OpenAI text-embedding-3-large is the default
+    embedding_provider: str = Field(default="openai", alias="EMBEDDING_PROVIDER")
+    embedding_model: str = Field(default="text-embedding-3-large", alias="EMBEDDING_MODEL")
 
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")

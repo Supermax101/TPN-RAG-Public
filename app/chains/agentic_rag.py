@@ -181,11 +181,15 @@ class AgenticMCQRAG:
             max_new_tokens=256,
         )
 
-        # Initialize vector store with HuggingFace embeddings
-        embeddings = HuggingFaceEmbeddings(
-            model_name=settings.hf_embedding_model,
-            model_kwargs={"trust_remote_code": True}
-        )
+        # Initialize vector store embeddings
+        if settings.embedding_provider == "openai":
+            from langchain_openai import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings(model=settings.embedding_model)
+        else:
+            embeddings = HuggingFaceEmbeddings(
+                model_name=settings.embedding_model,
+                model_kwargs={"trust_remote_code": True}
+            )
 
         self.vector_store = Chroma(
             collection_name=settings.chroma_collection_name,

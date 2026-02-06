@@ -202,13 +202,15 @@ class TPN_RAG:
             from langchain_chroma import Chroma
         except ImportError:
             from langchain_community.vectorstores import Chroma
-        from langchain_huggingface import HuggingFaceEmbeddings
-
-        # Initialize HuggingFace embeddings
-        self._embeddings = HuggingFaceEmbeddings(
-            model_name=settings.hf_embedding_model,
-            model_kwargs={"trust_remote_code": True}
-        )
+        if settings.embedding_provider == "openai":
+            from langchain_openai import OpenAIEmbeddings
+            self._embeddings = OpenAIEmbeddings(model=settings.embedding_model)
+        else:
+            from langchain_huggingface import HuggingFaceEmbeddings
+            self._embeddings = HuggingFaceEmbeddings(
+                model_name=settings.embedding_model,
+                model_kwargs={"trust_remote_code": True}
+            )
 
         # Initialize vector store
         settings.chromadb_dir.mkdir(parents=True, exist_ok=True)

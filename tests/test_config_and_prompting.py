@@ -11,10 +11,9 @@ from app.evaluation.benchmark_types import (
 from app.evaluation.prompting import render_prompt
 
 
-def test_settings_imports_and_embedding_models_classvar():
-    assert settings.hf_embedding_model
-    assert isinstance(settings.AVAILABLE_EMBEDDING_MODELS, list)
-    assert len(settings.AVAILABLE_EMBEDDING_MODELS) > 0
+def test_settings_imports_and_embedding_config():
+    assert settings.embedding_model
+    assert settings.embedding_provider in {"openai", "huggingface", "hf"}
 
 
 def test_render_prompt_all_strategies():

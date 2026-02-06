@@ -11,6 +11,7 @@ __all__ = [
     "ModelConfig",
     "LLMResponse",
     "SyncLLMProvider",
+    "OpenAIEmbeddingProvider",
     "HuggingFaceEmbeddingProvider",
     "ChromaVectorStore",
     "OpenAILLMProvider",
@@ -27,6 +28,7 @@ __all__ = [
 
 # Lazy import map: attribute name -> (module, real_name)
 _LAZY_IMPORTS = {
+    "OpenAIEmbeddingProvider": (".embeddings", "OpenAIEmbeddingProvider"),
     "HuggingFaceEmbeddingProvider": (".embeddings", "HuggingFaceEmbeddingProvider"),
     "ChromaVectorStore": (".vectorstore", "ChromaVectorStore"),
     "OpenAILLMProvider": (".openai", "OpenAILLMProvider"),

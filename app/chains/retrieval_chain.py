@@ -75,13 +75,16 @@ class RetrievalChain:
             from langchain_chroma import Chroma
         except ImportError:
             from langchain_community.vectorstores import Chroma
-        from langchain_huggingface import HuggingFaceEmbeddings
-
         # Initialize embeddings
-        embeddings = HuggingFaceEmbeddings(
-            model_name=settings.hf_embedding_model,
-            model_kwargs={"trust_remote_code": True}
-        )
+        if settings.embedding_provider == "openai":
+            from langchain_openai import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings(model=settings.embedding_model)
+        else:
+            from langchain_huggingface import HuggingFaceEmbeddings
+            embeddings = HuggingFaceEmbeddings(
+                model_name=settings.embedding_model,
+                model_kwargs={"trust_remote_code": True}
+            )
         
         # Initialize or load vector store
         persist_dir = str(settings.chromadb_dir)
