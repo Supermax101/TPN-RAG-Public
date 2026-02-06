@@ -104,6 +104,35 @@ class RetrieverAdapter:
     def _normalize_whitespace(text: str) -> str:
         return " ".join(text.split()).strip()
 
+    def _focus_query(self, query: str, max_chars: int = 600) -> str:
+        """
+        Reduce long case stems down to the actual question being asked.
+
+        Many MCQ stems contain extensive case context that is irrelevant for retrieval.
+        This focusing step improves retrieval precision and reranker scoring stability.
+        """
+        text = self._normalize_whitespace(query)
+        if not text:
+            return text
+
+        # Common dataset format:
+        #   "Case context: ... Question: <actual question>"
+        m = re.search(r"\bquestion\s*:\s*", text, flags=re.IGNORECASE)
+        if not m:
+            return text[:max_chars]
+
+        before = text[: m.start()].strip()
+        after = text[m.end() :].strip()
+
+        before = re.sub(r"\bcase\s*context\s*:\s*", "", before, flags=re.IGNORECASE).strip()
+        # Keep only a short patient/context hint (first sentence-ish).
+        prefix = before.split(". ")[0].strip() if before else ""
+
+        focused = after or prefix or text
+        if prefix and after:
+            focused = f"{prefix}. {after}"
+        return focused[:max_chars]
+
     def _decompose_query(self, query: str) -> List[str]:
         """
         Deterministically split and expand a clinical query into a compact plan.
@@ -343,6 +372,31 @@ class RetrieverAdapter:
             total_chars += len(part)
         return "\n---\n".join(parts)
 
+    @staticmethod
+    def _is_low_value_chunk(text: str) -> bool:
+        """
+        Heuristic filter for chunks that waste context budget (headers, boilerplate).
+
+        Keep short chunks when they contain numeric clinical facts (often critical),
+        but drop short all-caps headers and near-empty fragments.
+        """
+        t = " ".join((text or "").split()).strip()
+        if not t:
+            return True
+        if len(t) < 40 and not re.search(r"\d", t):
+            return True
+        tokens = t.split()
+        if len(tokens) <= 6 and not re.search(r"\d", t):
+            return True
+
+        letters = [c for c in t if c.isalpha()]
+        if letters:
+            upper_ratio = sum(1 for c in letters if c.isupper()) / len(letters)
+            # Header-like: mostly uppercase and short.
+            if upper_ratio > 0.9 and len(tokens) <= 10 and len(t) <= 120:
+                return True
+        return False
+
     def _filter_low_relevance(self, chunks: List[NormalizedChunk]) -> List[NormalizedChunk]:
         """
         Drop weak reranker tail chunks to reduce context noise.
@@ -370,8 +424,9 @@ class RetrieverAdapter:
         run_id: str,
         force_refresh: bool = False,
     ) -> RetrievalSnapshot:
+        focused_query = self._focus_query(query)
         cache_key = stable_text_hash(
-            f"{query_id}:{query}:{self.top_k}:{self.candidate_k}:{self.max_context_chars}:"
+            f"{query_id}:{focused_query}:{self.top_k}:{self.candidate_k}:{self.max_context_chars}:"
             f"{self.iterative_retrieval}:{self.retrieval_iterations}:{self.max_query_decompositions}:"
             f"{self.min_chunk_score_floor}:{self.min_chunk_score_ratio}"
         )
@@ -379,10 +434,14 @@ class RetrieverAdapter:
             return self._cache[cache_key]
 
         start = time.time()
-        docs, iteration_count, refinement_used, query_plan = self._iterative_retrieve(query)
+        docs, iteration_count, refinement_used, query_plan = self._iterative_retrieve(focused_query)
         retrieval_time_ms = (time.time() - start) * 1000
 
         chunks = self._normalize_chunks(docs)
+        quality_filtered = [c for c in chunks if not self._is_low_value_chunk(c.content)]
+        # Only apply quality filter when it preserves enough candidates.
+        if len(quality_filtered) >= min(3, len(chunks)):
+            chunks = quality_filtered
         filtered_chunks = self._filter_low_relevance(chunks)
         primary_chunks = filtered_chunks[: self.top_k] if filtered_chunks else chunks[: self.top_k]
         context = self._pack_context(primary_chunks)
@@ -398,7 +457,7 @@ class RetrieverAdapter:
             returned_count=len(primary_chunks),
             iteration_count=iteration_count,
             refinement_used=refinement_used,
-            query_plan=query_plan,
+            query_plan=[f"[focused] {focused_query}"] + query_plan,
         )
 
         snapshot = RetrievalSnapshot(
