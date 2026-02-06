@@ -39,11 +39,13 @@ class HuggingFaceProvider(SyncLLMProvider):
         use_local: bool = False,
         device: Optional[str] = None,
         api_token: Optional[str] = None,
+        quantize_4bit: bool = False,
     ):
         super().__init__(model_name, config)
         self.use_local = use_local
         self.device = device
         self.api_token = api_token or os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+        self.quantize_4bit = quantize_4bit
 
         self._client = None
         self._tokenizer = None
@@ -90,16 +92,27 @@ class HuggingFaceProvider(SyncLLMProvider):
                 else:
                     self.device = "cpu"
 
-            logger.info(f"Loading {self.model_name} on {self.device}...")
+            logger.info(f"Loading {self.model_name} on {self.device} (4bit={self.quantize_4bit})...")
 
             self._tokenizer = AutoTokenizer.from_pretrained(
                 self.model_name, trust_remote_code=True,
             )
+
+            load_kwargs = {
+                "trust_remote_code": True,
+                "device_map": "auto",  # let accelerate handle placement
+            }
+            if self.quantize_4bit:
+                # Requires: pip install bitsandbytes accelerate
+                load_kwargs["load_in_4bit"] = True
+                load_kwargs["bnb_4bit_compute_dtype"] = torch.float16
+                # device_map stays "auto" for bitsandbytes
+            else:
+                load_kwargs["torch_dtype"] = torch.float16 if self.device != "cpu" else torch.float32
+                load_kwargs["device_map"] = self.device
+
             self._model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.float16 if self.device != "cpu" else torch.float32,
-                device_map=self.device,
-                trust_remote_code=True,
+                self.model_name, **load_kwargs,
             )
             self._initialized = True
             logger.info(f"Model loaded successfully on {self.device}")

@@ -10,6 +10,6 @@ Examples:
 Question:
 {question}
 
-Output format:
+Output format (follow EXACTLY):
 Reasoning: <brief reasoning>
-Answer: <final answer>
+Answer: <ONLY the letter(s), e.g. A or A, C, D — nothing else>

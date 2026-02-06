@@ -9,6 +9,6 @@ If the context is insufficient, respond with INSUFFICIENT_CONTEXT.
 Question:
 {question}
 
-Output format:
+Output format (follow EXACTLY):
 Reasoning: <source-grounded reasoning>
-Answer: <final answer>
+Answer: <ONLY the letter(s), e.g. A or A, C, D — nothing else>

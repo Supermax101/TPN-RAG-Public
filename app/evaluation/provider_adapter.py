@@ -38,6 +38,40 @@ class ProviderAdapter(Protocol):
         ...
 
 
+# Per-provider temperature rules (hard-won from prior evaluation runs)
+# GPT-5+: API errors if you send temperature at all → None (skip param)
+# Gemini 3: lower values cause issues → force 1.0
+# Kimi K2.5: thinking mode requires 1.0
+_TEMPERATURE_OVERRIDES = {
+    "gpt-5": None,   # matched by substring
+    "gemini-3": 1.0,
+    "kimi-k2.5": 1.0,
+    "kimi-k2-5": 1.0,
+}
+
+# Per-provider concurrency / delay hints
+PROVIDER_RATE_LIMITS = {
+    "openai":    {"max_concurrent": 5, "delay": 0.2},
+    "anthropic": {"max_concurrent": 5, "delay": 0.5},
+    "google":    {"max_concurrent": 2, "delay": 2.0},
+    "gemini":    {"max_concurrent": 2, "delay": 2.0},
+    "xai":       {"max_concurrent": 5, "delay": 0.2},
+    "kimi":      {"max_concurrent": 3, "delay": 1.0},
+}
+
+
+def _apply_temperature_override(model_name: str, temperature: float) -> Optional[float]:
+    """Return the effective temperature for a model.
+
+    Returns None if the model must NOT receive a temperature parameter.
+    """
+    lower = model_name.lower()
+    for pattern, override in _TEMPERATURE_OVERRIDES.items():
+        if pattern in lower:
+            return override
+    return temperature
+
+
 class AsyncProviderWrapper:
     """Wrap app.providers.* async providers with a unified benchmark signature."""
 
@@ -55,15 +89,21 @@ class AsyncProviderWrapper:
         run_id: Optional[str] = None,
         seed: Optional[int] = None,
     ) -> GenerationResult:
+        effective_model = model_id or self.default_model
+        effective_temp = _apply_temperature_override(effective_model, temperature)
+
         start = time.time()
-        text = await self.provider.generate(
+        kwargs = dict(
             prompt=prompt,
             system_prompt=system,
-            model=model_id or self.default_model,
-            temperature=temperature,
+            model=effective_model,
             max_tokens=max_tokens,
             seed=seed,
         )
+        # Only pass temperature when the model accepts it
+        if effective_temp is not None:
+            kwargs["temperature"] = effective_temp
+        text = await self.provider.generate(**kwargs)
         return GenerationResult(text=text, latency_ms=(time.time() - start) * 1000)
 
     async def generate_structured(
@@ -113,7 +153,7 @@ class AsyncProviderWrapper:
 
 
 class SyncModelWrapper:
-    """Wrap app.models.* sync providers with async interface."""
+    """Wrap app.providers.huggingface sync providers with async interface."""
 
     def __init__(self, provider):
         self.provider = provider
@@ -129,13 +169,11 @@ class SyncModelWrapper:
         seed: Optional[int] = None,
     ) -> GenerationResult:
         start = time.time()
-        if system:
-            self.provider.config.system_prompt = system
+        # Pass system_prompt directly to _generate_impl instead of mutating config
         response = await asyncio.to_thread(
-            self.provider.generate,
-            question=prompt,
-            context=None,
-            use_rag=False,
+            self.provider._generate_impl,
+            prompt=prompt,
+            system_prompt=system,
         )
         text = response.answer if hasattr(response, "answer") else str(response)
         tokens = getattr(response, "tokens_used", 0)
@@ -180,7 +218,17 @@ def create_provider_adapter(provider: str, model_name: str, api_key_env: Optiona
     if provider in {"huggingface", "hf"}:
         from ..providers.huggingface import HuggingFaceProvider
 
-        return SyncModelWrapper(HuggingFaceProvider(model_name=model_name))
+        # Auto-detect: 100B+ models need 4-bit quantization on single GPU
+        param_hint = model_name.lower()
+        needs_quant = any(s in param_hint for s in ["120b", "100b", "70b", "72b"])
+        return SyncModelWrapper(
+            HuggingFaceProvider(
+                model_name=model_name,
+                use_local=True,
+                device="cuda",
+                quantize_4bit=needs_quant,
+            )
+        )
 
     if provider == "anthropic":
         from ..providers.anthropic import AnthropicLLMProvider

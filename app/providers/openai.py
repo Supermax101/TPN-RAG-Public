@@ -39,6 +39,8 @@ class OpenAILLMProvider(LLMProvider):
         try:
             # Detect reasoning models (GPT-5, O1, O3)
             is_reasoning_model = any(x in model_name.lower() for x in ['gpt-5', 'o1', 'o3'])
+            # GPT-5+ models reject explicit temperature parameter
+            is_gpt5 = 'gpt-5' in model_name.lower()
 
             messages = []
             if system_prompt:
@@ -54,7 +56,12 @@ class OpenAILLMProvider(LLMProvider):
             }
 
             if is_reasoning_model:
+                # GPT-5+ uses max_completion_tokens (not max_tokens)
                 kwargs["max_completion_tokens"] = max(max_tokens, 16000)
+                # GPT-5 does not accept temperature at all; other reasoning
+                # models (o1/o3) also skip it
+                if not is_gpt5:
+                    pass  # o1/o3 also skip temperature
             else:
                 kwargs["temperature"] = temperature
                 kwargs["max_tokens"] = max_tokens

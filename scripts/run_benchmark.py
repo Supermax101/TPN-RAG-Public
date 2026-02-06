@@ -35,11 +35,21 @@ from app.evaluation import (
 
 
 DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
-    "gpt-4o": ModelSpec(model_id="gpt-4o", provider="openai", model_name="gpt-4o", tier=ModelTier.SOTA),
-    "claude-sonnet": ModelSpec(model_id="claude-sonnet", provider="anthropic", model_name="claude-sonnet-4-20250514", tier=ModelTier.SOTA),
-    "gemini-2.5-pro": ModelSpec(model_id="gemini-2.5-pro", provider="gemini", model_name="gemini-2.5-pro", tier=ModelTier.SOTA),
-    "grok-4": ModelSpec(model_id="grok-4", provider="xai", model_name="grok-4", tier=ModelTier.SOTA),
-    "kimi-k2": ModelSpec(model_id="kimi-k2", provider="kimi", model_name="kimi-k2", tier=ModelTier.SOTA),
+    # --- Phase 1: SOTA API models ---
+    "gpt-5.2": ModelSpec(model_id="gpt-5.2", provider="openai", model_name="gpt-5.2", tier=ModelTier.SOTA),
+    "claude-sonnet": ModelSpec(model_id="claude-sonnet", provider="anthropic", model_name="claude-sonnet-4-5-20250929", tier=ModelTier.SOTA),
+    "gemini-3-flash": ModelSpec(model_id="gemini-3-flash", provider="gemini", model_name="gemini-3-flash-preview", tier=ModelTier.SOTA),
+    "grok-4.1-fast": ModelSpec(model_id="grok-4.1-fast", provider="xai", model_name="grok-4-1-fast-reasoning", tier=ModelTier.SOTA),
+    "kimi-k2.5": ModelSpec(model_id="kimi-k2.5", provider="kimi", model_name="kimi-k2.5", tier=ModelTier.SOTA),
+    # --- Phase 2: Open-source HuggingFace models ---
+    "gpt-oss-120b": ModelSpec(model_id="gpt-oss-120b", provider="huggingface", model_name="openai/gpt-oss-120b", tier=ModelTier.OPEN),
+    "gpt-oss-20b": ModelSpec(model_id="gpt-oss-20b", provider="huggingface", model_name="openai/gpt-oss-20b", tier=ModelTier.OPEN),
+    "qwen2.5-32b": ModelSpec(model_id="qwen2.5-32b", provider="huggingface", model_name="Qwen/Qwen2.5-32B", tier=ModelTier.OPEN),
+    "qwen3-30b-a3b": ModelSpec(model_id="qwen3-30b-a3b", provider="huggingface", model_name="Qwen/Qwen3-30B-A3B-Instruct-2507", tier=ModelTier.OPEN),
+    "medgemma-27b": ModelSpec(model_id="medgemma-27b", provider="huggingface", model_name="google/medgemma-27b-text-it", tier=ModelTier.OPEN),
+    "gemma3-27b": ModelSpec(model_id="gemma3-27b", provider="huggingface", model_name="google/gemma-3-27b-it", tier=ModelTier.OPEN),
+    "phi-4": ModelSpec(model_id="phi-4", provider="huggingface", model_name="microsoft/phi-4", tier=ModelTier.OPEN),
+    "ministral-14b": ModelSpec(model_id="ministral-14b", provider="huggingface", model_name="mistralai/Ministral-3-14B-Instruct-2512", tier=ModelTier.OPEN),
 }
 
 
@@ -157,9 +167,30 @@ def main():
 
     runner = BenchmarkRunner(config=config, retriever=retriever)
     result = asyncio.run(runner.run())
-    print("Benchmark complete:")
-    print(f"  Records: {result['records_path']}")
-    print(f"  Summary: {result['summary_path']}")
+    print("\n" + "=" * 60)
+    print("BENCHMARK COMPLETE")
+    print("=" * 60)
+    print(f"  Records (JSONL):  {result['records_path']}")
+    print(f"  Summary (JSON):   {result['summary_path']}")
+    print(f"  Accuracy (CSV):   {result['csv_path']}")
+    if result.get("model_dirs"):
+        print(f"\n  Per-model output directories:")
+        for d in result["model_dirs"]:
+            print(f"    {d}/")
+    print("=" * 60)
+
+    # Print accuracy table to stdout
+    summary = result.get("summary", {})
+    rows = summary.get("rows", [])
+    if rows:
+        print(f"\n{'Model':<20} {'Strategy':<10} {'RAG':<8} {'N':>4} {'Accuracy':>10} {'Latency(ms)':>12}")
+        print("-" * 70)
+        for row in rows:
+            acc = row.get("accuracy", row.get("f1_mean", 0))
+            print(
+                f"{row['model_id']:<20} {row['strategy']:<10} {row['rag_mode']:<8} "
+                f"{row['n']:>4} {acc:>9.1%} {row['latency_ms_mean']:>11.0f}"
+            )
 
 
 if __name__ == "__main__":

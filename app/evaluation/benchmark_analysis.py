@@ -65,7 +65,7 @@ def compute_intra_rater_fleiss(records: Sequence[RunRecord]) -> List[Dict]:
         if r.track != DatasetTrack.MCQ or r.error:
             continue
         condition = (r.model_id, r.prompt_strategy.value, r.rag_enabled)
-        by_condition[condition][r.sample_id][r.repeat_index] = r.parsed_answer or "PARSE_ERROR"
+        by_condition[condition][r.sample_id][r.repeat_index] = r.parsed_answer or "UNKNOWN"
 
     rows = []
     for condition, sample_map in sorted(by_condition.items()):
@@ -100,7 +100,7 @@ def compute_inter_rater(records: Sequence[RunRecord], repeat_index: int = 0) -> 
     grouped = defaultdict(lambda: defaultdict(dict))
     for r in filtered:
         key = (r.prompt_strategy.value, r.rag_enabled)
-        grouped[key][r.model_id][r.sample_id] = r.parsed_answer or "PARSE_ERROR"
+        grouped[key][r.model_id][r.sample_id] = r.parsed_answer or "UNKNOWN"
 
     rows = []
     for (strategy, rag), model_map in sorted(grouped.items()):

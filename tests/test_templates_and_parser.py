@@ -146,6 +146,97 @@ def test_parser_handles_therefore_cue():
     assert answer == "D"
 
 
+def test_parser_negation_rejects_not_A():
+    """Parser should NOT extract A when 'the answer is not A'."""
+    response = "The answer is not A because it contradicts guidelines. Answer: C"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "C", f"Expected C, got {answer}"
+
+
+def test_parser_negation_rejects_isnt():
+    """Parser should reject 'isn't B'."""
+    response = "The correct answer isn't B. The best answer is D."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "D", f"Expected D, got {answer}"
+
+
+def test_parser_boxed_answer():
+    """Parser extracts \\boxed{X} format (LaTeX)."""
+    response = "After analysis, \\boxed{B}"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "B"
+
+
+def test_parser_multi_select_comma():
+    """Parser handles multi-select 'A, C, D'."""
+    response = "Answer: A, C, D"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "A,C,D"
+
+
+def test_parser_multi_select_and():
+    """Parser handles multi-select 'A and C'."""
+    response = "The correct answer is A and C"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "A,C"
+
+
+def test_parser_returns_unknown_for_no_match():
+    """Parser returns UNKNOWN instead of guessing on ambiguous text."""
+    response = "Based on ASPEN guidelines, the recommendation is to start with dextrose."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "UNKNOWN", f"Expected UNKNOWN, got {answer}"
+
+
+def test_parser_last_line_standalone():
+    """Parser catches standalone letter on last line."""
+    response = "Preterm infants need higher protein.\nASPEN recommends 3-4 g/kg/day.\nC"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "C"
+
+
+def test_parser_correct_answer_is():
+    """Parser catches 'correct answer is X'."""
+    response = "After reviewing the context, the correct answer is B."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "B"
+
+
+def test_parser_final_answer():
+    """Parser catches 'final answer is X'."""
+    response = "Let me think step by step. My final answer is A."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "A"
+
+
+def test_parser_x_is_correct():
+    """Parser catches 'X is correct'."""
+    response = "Looking at all options, D is correct based on ASPEN."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "D"
+
+
+def test_parser_uses_last_answer_match():
+    """Parser should use LAST 'Answer: X' match for self-corrections."""
+    response = "I think Answer: B. Actually, reviewing the guidelines, Answer: C"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "C", f"Expected C (last match), got {answer}"
+
+
+def test_parser_bold_markdown():
+    """Parser should extract letter from bold markdown **X**."""
+    response = "After careful analysis of the options, the answer is **D**."
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "D", f"Expected D from bold markdown, got {answer}"
+
+
+def test_parser_bold_markdown_not_false_positive():
+    """Bold extraction should be lower priority than explicit 'Answer: X'."""
+    response = "Option **B** looks plausible but Answer: C"
+    answer, _, _ = parse_mcq_response(response)
+    assert answer == "C", f"Expected C from 'Answer: C', got {answer}"
+
+
 # ---------------------------------------------------------------------------
 # Clinical tokenizer tests
 # ---------------------------------------------------------------------------

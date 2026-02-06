@@ -3,11 +3,13 @@ Publishable benchmark runner:
 - strict dataset schema validation
 - fair shared retrieval snapshots for RAG conditions
 - unified run ledger (RunRecord jsonl)
+- per-model output directories with CSV accuracy summaries
 """
 
 from __future__ import annotations
 
 import asyncio
+import csv
 import json
 import time
 import uuid
@@ -34,6 +36,9 @@ from .retriever_adapter import RetrieverAdapter
 
 # Number of independent passes for CoT-SC majority voting
 _COT_SC_PASSES = 3
+
+# Retry limit when parser returns UNKNOWN before structured output rescue
+_UNKNOWN_RETRIES = 3
 
 # JSON Schema for structured MCQ output (matches MCQAnswer Pydantic model)
 _MCQ_SCHEMA: dict = {
@@ -293,11 +298,30 @@ class BenchmarkRunner:
 
         if not error:
             if sample.track == DatasetTrack.MCQ:
-                # Parse answer: regex first, structured output only if regex fails
+                # Parse answer: regex first, retry on UNKNOWN, structured rescue last
                 parsed_answer, _, _ = parse_mcq_response(response_text, is_multi_answer=True)
 
-                if parsed_answer == "PARSE_ERROR":
-                    # Regex failed — try structured output as rescue
+                # Retry up to _UNKNOWN_RETRIES times when parser returns UNKNOWN
+                if parsed_answer == "UNKNOWN":
+                    for retry_i in range(_UNKNOWN_RETRIES):
+                        try:
+                            retry_result = await self._generate_single(
+                                adapter, prompt, model, f"{run_id}_retry{retry_i}",
+                                seed=None,  # vary output
+                            )
+                            retry_answer, _, _ = parse_mcq_response(
+                                retry_result.text, is_multi_answer=True,
+                            )
+                            if retry_answer != "UNKNOWN":
+                                response_text = retry_result.text
+                                parsed_answer = retry_answer
+                                tokens_used += retry_result.tokens_used
+                                break
+                        except Exception:
+                            pass  # continue retrying
+
+                if parsed_answer == "UNKNOWN":
+                    # All retries failed — structured output rescue
                     try:
                         structured = await adapter.generate_structured(
                             prompt=prompt,
@@ -310,7 +334,7 @@ class BenchmarkRunner:
                         parsed_answer = normalize_answer(structured.get("answer", ""))
                         structured_output_used = True
                     except Exception:
-                        pass  # Keep PARSE_ERROR
+                        pass  # Keep UNKNOWN
 
                 expected = normalize_answer(sample.answer_key or "")
                 actual = normalize_answer(parsed_answer)
@@ -450,6 +474,8 @@ class BenchmarkRunner:
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         stamp = time.strftime("%Y%m%d_%H%M%S")
+
+        # --- Global combined files (backward compat) ---
         ledger_path = output_dir / f"run_records_{stamp}.jsonl"
         with ledger_path.open("w", encoding="utf-8") as f:
             for r in records:
@@ -458,10 +484,48 @@ class BenchmarkRunner:
         summary = self._summarize(records)
         summary_path = output_dir / f"summary_{stamp}.json"
         summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-        logger.info("Benchmark complete. Records: %s, Summary: %s", ledger_path, summary_path)
+
+        # --- Per-model output directories ---
+        model_records: Dict[str, List[RunRecord]] = defaultdict(list)
+        for r in records:
+            model_records[r.model_id].append(r)
+
+        model_dirs = []
+        for model_id, m_records in model_records.items():
+            model_dir = output_dir / model_id
+            model_dir.mkdir(parents=True, exist_ok=True)
+
+            # Per-model JSONL (full responses)
+            m_ledger = model_dir / f"run_records_{stamp}.jsonl"
+            with m_ledger.open("w", encoding="utf-8") as f:
+                for r in m_records:
+                    f.write(r.model_dump_json() + "\n")
+
+            # Per-model summary JSON
+            m_summary = self._summarize(m_records)
+            m_summary_path = model_dir / f"summary_{stamp}.json"
+            m_summary_path.write_text(json.dumps(m_summary, indent=2), encoding="utf-8")
+
+            # Per-model accuracy CSV
+            m_csv_path = model_dir / f"accuracy_{stamp}.csv"
+            self._write_accuracy_csv(m_csv_path, m_summary)
+
+            model_dirs.append(str(model_dir))
+            logger.info("  Model %s → %s", model_id, model_dir)
+
+        # --- Global accuracy CSV (all models combined) ---
+        global_csv_path = output_dir / f"accuracy_{stamp}.csv"
+        self._write_accuracy_csv(global_csv_path, summary)
+
+        logger.info(
+            "Benchmark complete. Records: %s, Summary: %s, CSV: %s",
+            ledger_path, summary_path, global_csv_path,
+        )
         return {
             "records_path": str(ledger_path),
             "summary_path": str(summary_path),
+            "csv_path": str(global_csv_path),
+            "model_dirs": model_dirs,
             "summary": summary,
         }
 
@@ -503,6 +567,22 @@ class BenchmarkRunner:
             "repeats": self.config.repeats,
             "rows": table,
         }
+
+    @staticmethod
+    def _write_accuracy_csv(path: Path, summary: Dict[str, object]) -> None:
+        """Write summary rows to a CSV file for easy analysis."""
+        rows = summary.get("rows", [])
+        if not rows:
+            return
+        # Collect all column names across all rows
+        fieldnames = list(dict.fromkeys(
+            col for row in rows for col in row.keys()
+        ))
+        with path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
 
 
 async def run_benchmark(config: ExperimentConfig, retriever: Optional[RetrieverAdapter] = None):

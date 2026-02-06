@@ -20,11 +20,11 @@ _SINGLE_ANSWER_ADDENDUM = """
 
 ---
 
-## RESPONSE FORMAT
+## RESPONSE FORMAT (follow EXACTLY)
 Provide a brief clinical reasoning (2-3 sentences), then state your answer.
 
 Thinking: [Your clinical reasoning based on the context]
-Answer: [Single letter A-F]"""
+Answer: [ONLY the single letter A-F — no option text, no explanation, nothing else]"""
 
 _MULTI_ANSWER_ADDENDUM = """
 
@@ -33,11 +33,11 @@ _MULTI_ANSWER_ADDENDUM = """
 
 ---
 
-## RESPONSE FORMAT
+## RESPONSE FORMAT (follow EXACTLY)
 Provide clinical reasoning for each selected answer, then list ALL correct answers.
 
 Thinking: [Reasoning for each correct answer]
-Answer: [Comma-separated letters, e.g., A,B,D]"""
+Answer: [ONLY the letter(s), e.g. A, C, D — no option text, no explanation, nothing else]"""
 
 
 # =============================================================================

@@ -47,6 +47,10 @@ class KimiLLMProvider(LLMProvider):
         """Generate text response using Kimi K2 with retry logic for rate limits."""
         model_name = model or self.default_model
 
+        # Kimi K2.5 thinking mode exhausts token budget — needs high max_tokens
+        if "k2.5" in model_name.lower() or "k2-5" in model_name.lower():
+            max_tokens = max(max_tokens, 32768)
+
         max_retries = 5
         base_delay = 10
 

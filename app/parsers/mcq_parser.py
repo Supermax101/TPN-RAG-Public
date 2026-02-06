@@ -1,8 +1,26 @@
 """
 MCQ Answer Parsing and Structured Output Models.
 
-Provides Pydantic models for structured MCQ responses and robust parsing
-logic that handles various LLM output formats.
+7-priority extraction system with negation handling.
+
+Priority Order:
+  1   │ \\boxed{X}  (LaTeX boxed)                        │ \\boxed{C}
+  2   │ correct/best answer is X                         │ correct answer is B
+  3   │ final answer is X                                │ final answer is C
+  3b  │ Answer: X  or  Ans: X anywhere                   │ Ans: B
+  4a  │ therefore/thus/hence X                           │ therefore C
+  4b  │ select/choose X                                  │ select B
+  4c  │ I would choose/select X                          │ I would choose A
+  4d  │ it is X                                          │ it is C
+  4e  │ X is correct                                     │ B is correct
+  5   │ Last line is standalone letter(s)                │ ...reasoning\\nC
+  6   │ First standalone letter in response              │ C. Because ...
+
+Safety features:
+  - Negation detection — rejects "The answer is not A"
+  - Multi-select support — A,C,D or "A and C"
+  - Precision-first — returns UNKNOWN rather than risk false positives
+  - Word boundaries — won't match A inside words like "ASPEN"
 """
 
 import re
@@ -10,15 +28,91 @@ from typing import Optional, List, Literal
 from pydantic import BaseModel, Field, field_validator
 
 
+# ---------------------------------------------------------------------------
+# Valid answer letters
+# ---------------------------------------------------------------------------
+_VALID_LETTERS = frozenset("ABCDEF")
+
+# ---------------------------------------------------------------------------
+# Negation window: words before a letter that invalidate the match
+# ---------------------------------------------------------------------------
+_NEGATION_PATTERN = re.compile(
+    r'\b(?:not|n\'t|isn\'t|isnt|cannot|never|incorrect|wrong|eliminate|except|exclude|ruling out)\b',
+    re.IGNORECASE,
+)
+
+# How many characters before the match to scan for negation
+_NEGATION_WINDOW = 30
+
+
+# ---------------------------------------------------------------------------
+# Multi-letter extraction  (handles "A, C, D" / "A and C" / "A,B")
+# ---------------------------------------------------------------------------
+_MULTI_LETTER = re.compile(
+    r'([A-F])(?:\s*[,&]\s*|\s+and\s+)([A-F])(?:(?:\s*[,&]\s*|\s+and\s+)([A-F]))?'
+    r'(?:(?:\s*[,&]\s*|\s+and\s+)([A-F]))?',
+    re.IGNORECASE,
+)
+
+_SINGLE_LETTER = re.compile(r'\b([A-F])\b')
+
+
+def _extract_letters(text: str) -> str:
+    """Pull one or more answer letters from a short text span."""
+    text = text.strip().upper()
+    # Try multi first
+    m = _MULTI_LETTER.search(text)
+    if m:
+        letters = sorted({g.upper() for g in m.groups() if g})
+        return ",".join(letters)
+    # Single
+    m = _SINGLE_LETTER.search(text)
+    if m:
+        return m.group(1).upper()
+    return ""
+
+
+def _is_negated(text: str, match_start: int) -> bool:
+    """Check if a match is preceded by negation words within the window.
+
+    Only looks within the same clause — stops at sentence boundaries
+    (period, semicolon, exclamation, question mark) to avoid rejecting
+    a valid match because of negation in a *prior* sentence.
+    """
+    window_start = max(0, match_start - _NEGATION_WINDOW)
+    window = text[window_start:match_start]
+    # Trim to the last sentence boundary so negation in prior sentence
+    # doesn't bleed through
+    boundary = re.search(r'[.;!?]\s+', window)
+    if boundary:
+        window = window[boundary.end():]
+    return bool(_NEGATION_PATTERN.search(window))
+
+
+def _standalone_letter_on_line(line: str) -> str:
+    """Return a letter only if the line is essentially just letter(s)."""
+    stripped = line.strip()
+    # "C" or "C." or "C)" or "(C)"
+    m = re.match(r'^\(?([A-F])\)?\s*[.:]?\s*$', stripped, re.IGNORECASE)
+    if m:
+        return m.group(1).upper()
+    # Multi: "A, C" or "A,C,D"
+    m = re.match(
+        r'^([A-F](?:\s*[,&]\s*[A-F]|\s+and\s+[A-F])+)\s*[.:]?\s*$',
+        stripped, re.IGNORECASE,
+    )
+    if m:
+        return _extract_letters(m.group(1))
+    return ""
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Pydantic structured output models (unchanged API)
+# ═══════════════════════════════════════════════════════════════════════════
+
 class MCQAnswer(BaseModel):
-    """
-    Structured output for single-answer MCQ questions.
-    
-    Use with LangChain's .with_structured_output() for reliable parsing:
-    
-        llm.with_structured_output(MCQAnswer)
-    """
-    
+    """Structured output for single-answer MCQ questions."""
+
     thinking: str = Field(
         description="Step-by-step clinical reasoning explaining the answer choice"
     )
@@ -33,28 +127,22 @@ class MCQAnswer(BaseModel):
         default=True,
         description="Whether the provided context was used to answer"
     )
-    
+
     @field_validator('answer')
     @classmethod
     def validate_answer(cls, v: str) -> str:
-        """Ensure answer is a valid single letter A-F."""
         v = v.strip().upper()
-        if v not in ['A', 'B', 'C', 'D', 'E', 'F']:
-            # Try to extract a letter
-            match = re.search(r'\b([A-F])\b', v)
+        if v not in _VALID_LETTERS:
+            match = _SINGLE_LETTER.search(v)
             if match:
                 return match.group(1)
-            raise ValueError(f"Answer must be A, B, C, D, E, or F. Got: {v}")
+            raise ValueError(f"Answer must be A-F. Got: {v}")
         return v
 
 
 class MCQMultiAnswer(BaseModel):
-    """
-    Structured output for multi-answer MCQ questions.
-    
-    Use when the question asks to "select all that apply".
-    """
-    
+    """Structured output for multi-answer MCQ questions."""
+
     thinking: str = Field(
         description="Step-by-step clinical reasoning for each selected answer"
     )
@@ -69,174 +157,251 @@ class MCQMultiAnswer(BaseModel):
         default=True,
         description="Whether the provided context was used to answer"
     )
-    
+
     @field_validator('answers')
     @classmethod
     def validate_answers(cls, v: List[str]) -> List[str]:
-        """Ensure all answers are valid letters A-F."""
         valid = []
         for ans in v:
             ans = ans.strip().upper()
-            if ans in ['A', 'B', 'C', 'D', 'E', 'F']:
+            if ans in _VALID_LETTERS:
                 valid.append(ans)
         if not valid:
             raise ValueError("At least one valid answer (A-F) required")
-        return sorted(set(valid))  # Dedupe and sort
-    
+        return sorted(set(valid))
+
     @property
     def answer_string(self) -> str:
-        """Return comma-separated answer string for comparison."""
         return ",".join(sorted(self.answers))
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# 7-Priority parser
+# ═══════════════════════════════════════════════════════════════════════════
+
 def parse_mcq_response(
     raw_response: str,
-    is_multi_answer: bool = False
+    is_multi_answer: bool = False,
 ) -> tuple[str, str, str]:
     """
-    Robust fallback parser for MCQ responses when structured output fails.
-    
+    7-priority answer extraction with negation handling.
+
     Returns:
-        Tuple of (answer, thinking, confidence)
-    
-    This handles various response formats:
-    - "Answer: A" / "The answer is A"
-    - "A" (just the letter)
-    - "A, B, C" (multi-answer)
-    - JSON responses
-    - Chain-of-thought with "Answer:" at end
+        (answer, thinking, confidence)
+        answer is "UNKNOWN" when nothing matches (precision-first).
     """
-    
-    # Clean the response
-    clean_response = raw_response.strip()
-    
-    # Remove thinking tags if present
-    clean_response = re.sub(
-        r'<think>.*?</think>', '', clean_response, 
-        flags=re.DOTALL | re.IGNORECASE
-    )
-    
+    text = raw_response.strip()
+
+    # Strip <think>...</think> tags (DeepSeek/Qwen reasoning wrappers)
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = text.strip()
+
     thinking = ""
     answer = ""
     confidence = "medium"
-    
-    # Strategy 1: Look for explicit "Answer:" pattern (most reliable)
-    answer_match = re.search(
-        r'(?:answer|choice|selection)(?:\s+is)?[:\s]+([A-F](?:\s*,\s*[A-F])*)',
-        clean_response,
-        re.IGNORECASE
-    )
-    if answer_match:
-        answer = answer_match.group(1).replace(" ", "").upper()
-        # Everything before is thinking
-        thinking = clean_response[:answer_match.start()].strip()
-    
-    # Strategy 2: Look for "Thinking:" then "Answer:" format
+
+    # ------------------------------------------------------------------
+    # Priority 1: \boxed{X}
+    # ------------------------------------------------------------------
+    m = re.search(r'\\boxed\{([A-F](?:\s*,\s*[A-F])*)\}', text, re.IGNORECASE)
+    if m and not _is_negated(text, m.start()):
+        answer = _extract_letters(m.group(1))
+        thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 2: "correct answer is X" / "best answer is X"
+    # ------------------------------------------------------------------
     if not answer:
-        thinking_match = re.search(
-            r'thinking[:\s]+(.+?)(?:answer[:\s]+([A-F](?:\s*,\s*[A-F])*))',
-            clean_response,
-            re.IGNORECASE | re.DOTALL
+        m = re.search(
+            r'\b(?:correct|best|right)\s+answer\s+is\s+([A-F](?:\s*[,&]\s*[A-F]|\s+and\s+[A-F])*)\b',
+            text, re.IGNORECASE,
         )
-        if thinking_match:
-            thinking = thinking_match.group(1).strip()
-            answer = thinking_match.group(2).replace(" ", "").upper()
-    
-    # Strategy 3: Response starts with letter(s)
+        if m and not _is_negated(text, m.start()):
+            answer = _extract_letters(m.group(1))
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 3: "final answer is X"
+    # ------------------------------------------------------------------
     if not answer:
-        start_match = re.match(
-            r'^([A-F](?:\s*,\s*[A-F])*)\b',
-            clean_response.upper()
+        m = re.search(
+            r'\bfinal\s+answer\s+is\s+([A-F](?:\s*[,&]\s*[A-F]|\s+and\s+[A-F])*)\b',
+            text, re.IGNORECASE,
         )
-        if start_match:
-            answer = start_match.group(1).replace(" ", "")
-    
-    # Strategy 4: Find letter at start of a line
+        if m and not _is_negated(text, m.start()):
+            answer = _extract_letters(m.group(1))
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 3b: "Answer: X" or "Ans: X" anywhere
+    #   Use LAST match to handle self-corrections like
+    #   "Answer: B. Actually, Answer: C" → C
+    # ------------------------------------------------------------------
     if not answer:
-        line_match = re.search(
-            r'(?:^|\n)\s*([A-F])\s*[.:\)]\s',
-            clean_response,
-            re.IGNORECASE
+        all_matches = list(re.finditer(
+            r'\b(?:answer|ans)\s*[:\-]\s*([A-F](?:\s*[,&]\s*[A-F]|\s+and\s+[A-F])*)\b',
+            text, re.IGNORECASE,
+        ))
+        # Walk backwards to find the last non-negated match
+        for m in reversed(all_matches):
+            if not _is_negated(text, m.start()):
+                answer = _extract_letters(m.group(1))
+                thinking = text[:m.start()].strip()
+                break
+
+    # ------------------------------------------------------------------
+    # Priority 4a: "therefore X" / "thus X" / "hence X"
+    # ------------------------------------------------------------------
+    if not answer:
+        m = re.search(
+            r'\b(?:therefore|thus|hence|so)\s*,?\s+(?:the\s+answer\s+is\s+)?([A-F])\b',
+            text, re.IGNORECASE,
         )
-        if line_match:
-            answer = line_match.group(1).upper()
-    
-    # Strategy 5: Last resort - find A-F letters only after answer-like cues
-    # to avoid matching letters inside words like "ASPEN" -> "A", "Fluid" -> "F"
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 4b: "select X" / "choose X"
+    # ------------------------------------------------------------------
     if not answer:
-        # Only match standalone letters that follow answer-cue phrases
-        cue_pattern = re.compile(
-            r'(?:therefore|thus|hence|correct answer|the answer|select|choose|option|'
-            r'i (?:would|will) (?:choose|select|go with)|'
-            r'best answer|most (?:appropriate|likely|correct)|final answer)'
-            r'[^A-Za-z]{0,10}([A-F])\b',
-            re.IGNORECASE,
+        m = re.search(
+            r'\b(?:select|choose|pick)\s+([A-F])\b',
+            text, re.IGNORECASE,
         )
-        cue_match = cue_pattern.search(clean_response)
-        if cue_match:
-            answer = cue_match.group(1).upper()
-    
-    # If still no answer, return parse error
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 4c: "I would choose X" / "I will select X"
+    # ------------------------------------------------------------------
     if not answer:
-        answer = "PARSE_ERROR"
-    
-    # Extract confidence if mentioned
-    if re.search(r'\b(high|highly)\s+confiden', clean_response, re.IGNORECASE):
+        m = re.search(
+            r'\bI\s+(?:would|will|shall)\s+(?:choose|select|go\s+with|pick)\s+([A-F])\b',
+            text, re.IGNORECASE,
+        )
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 4d: "it is X"
+    # ------------------------------------------------------------------
+    if not answer:
+        m = re.search(
+            r'\bit\s+is\s+([A-F])\b',
+            text, re.IGNORECASE,
+        )
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 4e: "X is correct" / "X is the correct answer"
+    # ------------------------------------------------------------------
+    if not answer:
+        m = re.search(
+            r'\b([A-F])\s+is\s+(?:the\s+)?(?:correct|right|best)\b',
+            text, re.IGNORECASE,
+        )
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 5: Last non-empty line is standalone letter(s)
+    # ------------------------------------------------------------------
+    if not answer:
+        lines = [ln for ln in text.splitlines() if ln.strip()]
+        if lines:
+            last = _standalone_letter_on_line(lines[-1])
+            if last:
+                answer = last
+                thinking = "\n".join(lines[:-1]).strip()
+
+    # ------------------------------------------------------------------
+    # Priority 5b: Bold markdown **X** — extract letter from bold
+    # ------------------------------------------------------------------
+    if not answer:
+        m = re.search(r'\*\*([A-F])\*\*', text, re.IGNORECASE)
+        if m and not _is_negated(text, m.start()):
+            answer = m.group(1).upper()
+            thinking = text[:m.start()].strip()
+
+    # ------------------------------------------------------------------
+    # Priority 6: First standalone letter in the response
+    #   (only if response is short — ≤3 lines — to avoid false positives)
+    # ------------------------------------------------------------------
+    if not answer:
+        lines = [ln for ln in text.splitlines() if ln.strip()]
+        if len(lines) <= 3 and lines:
+            first = _standalone_letter_on_line(lines[0])
+            if first:
+                answer = first
+                thinking = "\n".join(lines[1:]).strip()
+
+    # ------------------------------------------------------------------
+    # Precision-first: UNKNOWN instead of guessing
+    # ------------------------------------------------------------------
+    if not answer:
+        answer = "UNKNOWN"
+
+    # ------------------------------------------------------------------
+    # Confidence extraction
+    # ------------------------------------------------------------------
+    if re.search(r'\b(?:high|highly)\s+confiden', text, re.IGNORECASE):
         confidence = "high"
-    elif re.search(r'\b(low|uncertain|unsure)', clean_response, re.IGNORECASE):
+    elif re.search(r'\b(?:low|uncertain|unsure|not\s+sure)', text, re.IGNORECASE):
         confidence = "low"
-    
-    # Use the full response as thinking if we didn't extract it
-    if not thinking and answer != "PARSE_ERROR":
-        thinking = clean_response
-    
+
+    if not thinking and answer not in ("UNKNOWN",):
+        thinking = text
+
     return answer, thinking, confidence
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Normalization & matching (unchanged API)
+# ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_answer(answer: str) -> str:
     """
     Normalize an answer string for comparison.
-    
-    Handles:
-    - "A" -> "A"
-    - "A,B,C" -> "A,B,C" (sorted, deduped)
-    - "A, B, C" -> "A,B,C"
-    - "a,b" -> "A,B"
+
+    "A" -> "A"  |  "A,B,C" -> "A,B,C"  |  "a, b" -> "A,B"
     """
     answer = answer.strip().upper()
-    
-    # Handle special cases
-    if answer in ["ALL", "ALL OF THE ABOVE"]:
+
+    if answer in ("ALL", "ALL OF THE ABOVE"):
         return "ALL"
-    if answer in ["NONE", "NONE OF THE ABOVE"]:
+    if answer in ("NONE", "NONE OF THE ABOVE"):
         return "NONE"
-    
-    # Extract letters
+
     letters = re.findall(r'\b([A-F])\b', answer)
     if letters:
         return ",".join(sorted(set(letters)))
-    
+
     return answer
 
 
 def answers_match(predicted: str, expected: str) -> tuple[bool, bool]:
     """
     Compare predicted and expected answers.
-    
+
     Returns:
-        Tuple of (exact_match, partial_match)
+        (exact_match, partial_match)
     """
     pred_norm = normalize_answer(predicted)
     exp_norm = normalize_answer(expected)
-    
+
     exact_match = pred_norm == exp_norm
-    
-    # Partial match for multi-answer
+
     partial_match = False
     if not exact_match and "," in exp_norm:
         pred_set = set(pred_norm.split(","))
         exp_set = set(exp_norm.split(","))
-        if pred_set & exp_set:  # Any overlap
+        if pred_set & exp_set:
             partial_match = True
-    
+
     return exact_match, partial_match
