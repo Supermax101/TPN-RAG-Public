@@ -31,7 +31,7 @@ from .benchmark_types import (
 from ..prompting import TPN_SYSTEM_PROMPT
 from .metrics import AnswerMetrics
 from .prompting import render_prompt
-from .provider_adapter import create_provider_adapter
+from .provider_adapter import PROVIDER_RATE_LIMITS, create_provider_adapter
 from .retriever_adapter import RetrieverAdapter
 
 # Number of independent passes for CoT-SC majority voting
@@ -387,6 +387,7 @@ class BenchmarkRunner:
     async def _gated_run(
         self,
         semaphore: asyncio.Semaphore,
+        delay: float,
         model: ModelSpec,
         adapter,
         sample: DatasetSchema,
@@ -394,10 +395,13 @@ class BenchmarkRunner:
         rag_enabled: bool,
         repeat_index: int,
         retrieval_snapshot: Optional[RetrievalSnapshot],
+        progress: Optional[Dict[str, int]] = None,
     ) -> RunRecord:
-        """Run a single benchmark call gated by a concurrency semaphore."""
+        """Run a single benchmark call gated by a per-provider semaphore + delay."""
         async with semaphore:
-            return await self._run_one(
+            if delay > 0:
+                await asyncio.sleep(delay)
+            record = await self._run_one(
                 model=model,
                 adapter=adapter,
                 sample=sample,
@@ -406,24 +410,34 @@ class BenchmarkRunner:
                 repeat_index=repeat_index,
                 retrieval_snapshot=retrieval_snapshot,
             )
+            if progress is not None:
+                progress["done"] += 1
+                done = progress["done"]
+                total = progress["total"]
+                if done % 10 == 0 or done == total:
+                    pct = done / total * 100
+                    logger.info("Progress: %d/%d (%.0f%%)", done, total, pct)
+            return record
 
     async def run(self) -> Dict[str, object]:
         """
         Execute full benchmark matrix and return summary + record paths.
 
-        Model calls within each (sample, strategy) pair are parallelized
-        using asyncio.gather with a concurrency semaphore.
+        ALL calls across all samples are parallelized using asyncio.gather
+        with per-provider semaphores and inter-request delays.
         """
         samples = self._load_all_samples()
         models = [m for m in self.config.models if m.enabled]
         conditions = self._condition_grid()
+
+        total_calls = len(samples) * len(conditions) * self.config.repeats * len(models)
         logger.info(
-            "Benchmark start: %d samples, %d models, %d conditions, %d repeats (max_concurrent=%d)",
+            "Benchmark start: %d samples × %d conditions × %d repeats × %d models = %d total calls",
             len(samples),
-            len(models),
             len(conditions),
             self.config.repeats,
-            self.config.max_concurrent,
+            len(models),
+            total_calls,
         )
 
         adapters = {
@@ -431,33 +445,48 @@ class BenchmarkRunner:
             for m in models
         }
 
-        semaphore = asyncio.Semaphore(self.config.max_concurrent)
+        # Per-provider semaphores + delays from rate limit config
+        provider_semaphores: Dict[str, asyncio.Semaphore] = {}
+        provider_delays: Dict[str, float] = {}
+        for m in models:
+            p = m.provider.lower()
+            if p not in provider_semaphores:
+                limits = PROVIDER_RATE_LIMITS.get(p, {"max_concurrent": self.config.max_concurrent, "delay": 0.0})
+                provider_semaphores[p] = asyncio.Semaphore(limits["max_concurrent"])
+                provider_delays[p] = limits["delay"]
+
         records: List[RunRecord] = []
         retrieval_cache: Dict[Tuple[str, str], RetrievalSnapshot] = {}
+        progress = {"done": 0, "total": total_calls}
 
+        # Pre-compute retrieval snapshots (sequential — disk I/O)
+        for sample in samples:
+            for strategy, rag_enabled in conditions:
+                if rag_enabled and self.retriever:
+                    key = (sample.sample_id, strategy.value)
+                    if key not in retrieval_cache:
+                        retrieval_cache[key] = self.retriever.retrieve(
+                            query=sample.question,
+                            query_id=sample.sample_id,
+                            run_id=uuid.uuid4().hex,
+                        )
+
+        # Build ALL tasks upfront, then gather
+        all_tasks = []
         for sample in samples:
             for strategy, rag_enabled in conditions:
                 snapshot = None
                 if rag_enabled and self.retriever:
                     key = (sample.sample_id, strategy.value)
-                    if self.config.fair_shared_context and key in retrieval_cache:
-                        snapshot = retrieval_cache[key]
-                    else:
-                        snapshot = self.retriever.retrieve(
-                            query=sample.question,
-                            query_id=sample.sample_id,
-                            run_id=uuid.uuid4().hex,
-                        )
-                        if self.config.fair_shared_context:
-                            retrieval_cache[key] = snapshot
+                    snapshot = retrieval_cache.get(key)
 
-                # Build all tasks for this (sample, strategy) pair
-                tasks = []
                 for repeat_idx in range(self.config.repeats):
                     for model in models:
-                        tasks.append(
+                        p = model.provider.lower()
+                        all_tasks.append(
                             self._gated_run(
-                                semaphore=semaphore,
+                                semaphore=provider_semaphores[p],
+                                delay=provider_delays[p],
                                 model=model,
                                 adapter=adapters[model.model_id],
                                 sample=sample,
@@ -465,11 +494,12 @@ class BenchmarkRunner:
                                 rag_enabled=rag_enabled,
                                 repeat_index=repeat_idx,
                                 retrieval_snapshot=snapshot,
+                                progress=progress,
                             )
                         )
 
-                batch = await asyncio.gather(*tasks)
-                records.extend(batch)
+        logger.info("Dispatching %d async calls with per-provider rate limits...", len(all_tasks))
+        records = list(await asyncio.gather(*all_tasks))
 
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
