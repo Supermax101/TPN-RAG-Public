@@ -513,16 +513,32 @@ class BenchmarkRunner:
                 provider_delays[p] = limits["delay"]
 
         records: List[RunRecord] = []
-        retrieval_cache: Dict[Tuple[str, str], RetrievalSnapshot] = {}
+        retrieval_cache_shared: Dict[str, RetrievalSnapshot] = {}
+        retrieval_cache_per_strategy: Dict[Tuple[str, str], RetrievalSnapshot] = {}
         progress = {"done": 0, "total": total_calls}
 
         # Pre-compute retrieval snapshots (sequential — disk I/O)
-        for sample in samples:
-            for strategy, rag_enabled in conditions:
-                if rag_enabled and self.retriever:
-                    key = (sample.sample_id, strategy.value)
-                    if key not in retrieval_cache:
-                        retrieval_cache[key] = self.retriever.retrieve(
+        # When fair_shared_context is enabled, reuse the same snapshot across all
+        # prompt strategies since retrieval is independent of prompting strategy.
+        if self.retriever and self.config.include_rag:
+            if self.config.fair_shared_context:
+                for sample in samples:
+                    if sample.sample_id in retrieval_cache_shared:
+                        continue
+                    retrieval_cache_shared[sample.sample_id] = self.retriever.retrieve(
+                        query=sample.question,
+                        query_id=sample.sample_id,
+                        run_id=uuid.uuid4().hex,
+                    )
+            else:
+                for sample in samples:
+                    for strategy, rag_enabled in conditions:
+                        if not rag_enabled:
+                            continue
+                        key = (sample.sample_id, strategy.value)
+                        if key in retrieval_cache_per_strategy:
+                            continue
+                        retrieval_cache_per_strategy[key] = self.retriever.retrieve(
                             query=sample.question,
                             query_id=sample.sample_id,
                             run_id=uuid.uuid4().hex,
@@ -534,8 +550,11 @@ class BenchmarkRunner:
             for strategy, rag_enabled in conditions:
                 snapshot = None
                 if rag_enabled and self.retriever:
-                    key = (sample.sample_id, strategy.value)
-                    snapshot = retrieval_cache.get(key)
+                    if self.config.fair_shared_context:
+                        snapshot = retrieval_cache_shared.get(sample.sample_id)
+                    else:
+                        key = (sample.sample_id, strategy.value)
+                        snapshot = retrieval_cache_per_strategy.get(key)
 
                 for repeat_idx in range(self.config.repeats):
                     for model in models:
