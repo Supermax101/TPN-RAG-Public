@@ -88,3 +88,9 @@ target-version = ['py311']
 line-length = 100
 target-version = "py311"
 select = ["E", "W", "F", "I"]
+
+[tool.pytest.ini_options]
+# pytest-rerunfailures opens a local TCP socket for coordination which is
+# blocked in some sandboxed environments. Disable the plugin by default so
+# `pytest` works out-of-the-box.
+addopts = "-p no:pytest_rerunfailures -p no:rerunfailures"

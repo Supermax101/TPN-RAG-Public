@@ -37,8 +37,8 @@ class GeminiLLMProvider(LLMProvider):
         self,
         prompt: str,
         model: Optional[str] = None,
-        temperature: float = 0.1,
-        max_tokens: int = 500,
+        temperature: float = 1.0,
+        max_tokens: int = 1024,
         seed: Optional[int] = None,
         system_prompt: Optional[str] = None,
     ) -> str:
@@ -49,11 +49,21 @@ class GeminiLLMProvider(LLMProvider):
             model_name = model_name[7:]
 
         try:
+            # Gemini 3 models require temperature=1.0
+            if "gemini-3" in model_name:
+                temperature = 1.0
+
             config_kwargs: dict = {
                 "temperature": temperature,
                 "max_output_tokens": max_tokens,
-                "top_p": 0.95,
             }
+
+            # Add thinking config for Gemini 3 models (prevents
+            # thinking fragments from consuming the output budget)
+            if "gemini-3" in model_name:
+                config_kwargs["thinking_config"] = types.ThinkingConfig(
+                    thinking_level="low"
+                )
 
             if system_prompt:
                 config_kwargs["system_instruction"] = system_prompt

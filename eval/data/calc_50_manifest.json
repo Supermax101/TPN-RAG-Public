@@ -1,0 +1,471 @@
+{
+  "selection": {
+    "filter": {
+      "question_regex": "\\b(calculate|infusion\\s*rate|gir|dose|meq|mmol|mosm|m\\s*l\\s*/\\s*hr|g\\s*/\\s*kg\\s*/\\s*day|mg\\s*/\\s*kg\\s*/\\s*min)\\b",
+      "require_answer_quantity_regex": "(?P<value>-?\\d+(?:\\.\\d+)?)\\s*(?P<unit>mcg|\u00b5g|ug|mg|g|iu|mmol|meq|mEq|kcal|mosm|mOsm|ml|mL|l|L|dl|dL|%)(?:\\s*/\\s*(?P<per1>kg|day|d|hr|h|min|m|l|L|dl|dL))?(?:\\s*/\\s*(?P<per2>kg|day|d|hr|h|min|m|l|L|dl|dL))?"
+    },
+    "ranking": [
+      "complexity_weight (advanced>intermediate>basic)",
+      "verification_confidence (desc)",
+      "numeric_density (# unique quantities in question+answer, desc)",
+      "sample_id (desc tie-breaker for determinism)"
+    ]
+  },
+  "counts": {
+    "input_records": 200,
+    "eligible_records": 129,
+    "selected_records": 50
+  },
+  "selected": [
+    {
+      "sample_id": "calc_101",
+      "raw_sno": 101,
+      "complexity": "advanced",
+      "verification_confidence": 0.98,
+      "numeric_density": 4,
+      "source_doc": "5PN Components",
+      "question_preview": "Calculate the Glucose Infusion Rate (GIR) for a 5 kg infant receiving a TPN solution with 12.5% dextrose (12.5 g/dL) at an infusion rate of 10 mL/hr."
+    },
+    {
+      "sample_id": "calc_090",
+      "raw_sno": 90,
+      "complexity": "advanced",
+      "verification_confidence": 0.95,
+      "numeric_density": 6,
+      "source_doc": "TPN Considerations",
+      "question_preview": "When a TPN infusion rate is reduced from 41.7 mL/hr to 30.7 mL/hr in a 9 kg patient receiving sodium 140 mEq/L over 12 hours, what is the reduction in sodium delivery (mEq/kg)?"
+    },
+    {
+      "sample_id": "calc_001",
+      "raw_sno": 1,
+      "complexity": "advanced",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "7PN Neonatal PN_part1",
+      "question_preview": "A 4 kg infant requires thiamine supplementation via TPN. Based on the dosing range of 0.35 to 0.5 mg/kg/day, calculate the calculated dose and determine if it exceeds the daily maximum."
+    },
+    {
+      "sample_id": "calc_088",
+      "raw_sno": 88,
+      "complexity": "advanced",
+      "verification_confidence": 0.95,
+      "numeric_density": 3,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "A 0.8 kg extremely preterm infant (24 weeks gestation) requires parenteral nutrition with Smoflipid due to concerns for intestinal failure-associated liver disease (IFALD). What is the minimum daily S"
+    },
+    {
+      "sample_id": "calc_071",
+      "raw_sno": 71,
+      "complexity": "advanced",
+      "verification_confidence": 0.95,
+      "numeric_density": 3,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "A clinician is adjusting a TPN regimen to meet stability requirements for a 3-in-1 admixture. If the current ILE dose is insufficient, what specific dose of ILE is recommended to achieve a final conce"
+    },
+    {
+      "sample_id": "calc_046",
+      "raw_sno": 46,
+      "complexity": "advanced",
+      "verification_confidence": 0.92,
+      "numeric_density": 5,
+      "source_doc": "5PN Components",
+      "question_preview": "A 0.9 kg preterm infant has reached goal TPN. The current intravenous lipid emulsion (ILE) dose is 3 g/kg/day infused over 24 hours. What is the maximum infusion rate that should not be exceeded?"
+    },
+    {
+      "sample_id": "calc_113",
+      "raw_sno": 113,
+      "complexity": "advanced",
+      "verification_confidence": 0.92,
+      "numeric_density": 4,
+      "source_doc": "8PN PN for Specialized Patient_part1",
+      "question_preview": "An 8 kg infant with MSUD in acute crisis is receiving IV dextrose at GIR 10 mg/kg/min. To achieve the total caloric goal of 120-150 kcal/kg/day, what lipid dose should be added?"
+    },
+    {
+      "sample_id": "calc_199",
+      "raw_sno": 199,
+      "complexity": "intermediate",
+      "verification_confidence": 1.0,
+      "numeric_density": 4,
+      "source_doc": "2018 NICU Guide Full_part2",
+      "question_preview": "A premature infant weighing 1.8 kg is being started on TPN. Calculate the recommended daily dose of Pediatric MVI and the required daily Zinc intake for this patient based on the provided guidelines."
+    },
+    {
+      "sample_id": "calc_151",
+      "raw_sno": 151,
+      "complexity": "intermediate",
+      "verification_confidence": 1.0,
+      "numeric_density": 4,
+      "source_doc": "9_ElectrolyteDisorders",
+      "question_preview": "A clinician is calculating the electrolyte contribution of a phosphate bolus. If 10 mmol of potassium phosphate (K\u2083PO\u2084) is administered, how many mEq of potassium (K) are being provided?"
+    },
+    {
+      "sample_id": "calc_147",
+      "raw_sno": 147,
+      "complexity": "intermediate",
+      "verification_confidence": 1.0,
+      "numeric_density": 4,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part4",
+      "question_preview": "A 4 kg neonate requires sodium and potassium in their parenteral nutrition. Based on the provided guidelines, calculate the standard daily mEq range for both electrolytes for this patient."
+    },
+    {
+      "sample_id": "calc_166",
+      "raw_sno": 166,
+      "complexity": "intermediate",
+      "verification_confidence": 1.0,
+      "numeric_density": 3,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "An infant is receiving a combination of enteral feedings and parenteral nutrition. If the enteral feedings provide 36.8 ml/kg and the total caloric intake from all sources is 58.7 Kcal/kg, what is the"
+    },
+    {
+      "sample_id": "calc_103",
+      "raw_sno": 103,
+      "complexity": "intermediate",
+      "verification_confidence": 1.0,
+      "numeric_density": 1,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part3",
+      "question_preview": "Calculate the estimated energy needs for an 8-year-old female weighing 28 kg using the age-specific Schofield calculation."
+    },
+    {
+      "sample_id": "calc_184",
+      "raw_sno": 184,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 6,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "For a 60 kg patient receiving 4 g dextrose/kg/day in TPN, calculate the glucose infusion rate (GIR) in mg/kg/minute."
+    },
+    {
+      "sample_id": "calc_048",
+      "raw_sno": 48,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 5,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "A clinician is preparing a TPN bag for a patient requiring 240 g of Dextrose using a 70% stock dextrose solution. How many milliliters of the 70% stock solution are required to provide this dose?"
+    },
+    {
+      "sample_id": "calc_189",
+      "raw_sno": 189,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 4,
+      "source_doc": "2018 NICU Guide Full_part2",
+      "question_preview": "A 2.5 kg preterm infant is receiving TPN with 12.5% dextrose at 150 mL/kg/day. Calculate the calories from carbohydrate using the dextrose concentration method."
+    },
+    {
+      "sample_id": "calc_168",
+      "raw_sno": 168,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 2,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "A pediatric patient is receiving 120 g of dextrose per day in their current PN. If insulin is indicated based on serum glucose levels, what is the appropriate ratio of insulin to dextrose and the resu"
+    },
+    {
+      "sample_id": "calc_128",
+      "raw_sno": 128,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 2,
+      "source_doc": "Parenteral Nutrition Ordering Guidelines VCH 2024",
+      "question_preview": "A pediatric patient on parenteral nutrition is placed on the 'Renal Protocol' for vitamin supplementation. If the standard VCH protocol for their PN volume would normally require 4 mL of pediatric mul"
+    },
+    {
+      "sample_id": "calc_118",
+      "raw_sno": 118,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 2,
+      "source_doc": "2018 NICU Guide Full_part2",
+      "question_preview": "A 500-gram preterm infant has a peripheral arterial line infusing 1/2 normal saline at 1 mL/hr. Calculate the daily sodium chloride delivery from this line alone in mEq/kg/day."
+    },
+    {
+      "sample_id": "calc_091",
+      "raw_sno": 91,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 1,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part9",
+      "question_preview": "A 12-year-old male pediatric oncology patient weighing 40 kg and measuring 150 cm in height requires a calculation of his basal energy expenditure (BEE). Using the Harris-Benedict equation provided in"
+    },
+    {
+      "sample_id": "calc_055",
+      "raw_sno": 55,
+      "complexity": "intermediate",
+      "verification_confidence": 0.98,
+      "numeric_density": 1,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part3",
+      "question_preview": "A 12-year-old female patient weighs 40 kg and is 150 cm tall. Calculate her basal energy expenditure using the age-specific Schofield formula."
+    },
+    {
+      "sample_id": "calc_110",
+      "raw_sno": 110,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 8,
+      "source_doc": "4_ParenteralNutritionProducts",
+      "question_preview": "A 4 kg neonate on Clinimix-E5/15 requires 1.5 mEq/kg/day of sodium. Clinimix-E5/15 provides 35 mEq sodium per liter. According to the table, what volume of Clinimix-E5/15 (in mL) is required to delive"
+    },
+    {
+      "sample_id": "calc_013",
+      "raw_sno": 13,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 7,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part8",
+      "question_preview": "A 6-month-old infant (weight 7 kg) with severe VLCAD deficiency requires MCT supplementation. Calculate the daily MCT dose range in grams based on weight-based dosing recommendations."
+    },
+    {
+      "sample_id": "calc_143",
+      "raw_sno": 143,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 6,
+      "source_doc": "9_ElectrolyteDisorders",
+      "question_preview": "An adult ICU patient with normal renal function has a serum potassium of 3.3 mEq/L and you want to raise it to 4.2 mEq/L (an increase of 0.9 mEq/L). Using the source's relationship that 30 mmol of pot"
+    },
+    {
+      "sample_id": "calc_140",
+      "raw_sno": 140,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 6,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part4",
+      "question_preview": "A 7-year-old child weighing 22 kg has reached goal TPN. What is the goal protein dose range in grams per day for this patient?"
+    },
+    {
+      "sample_id": "calc_135",
+      "raw_sno": 135,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 5,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part5",
+      "question_preview": "A 0.9 kg preterm neonate is receiving TPN that provides 3 g/kg/day of amino acids. Using the traditional cysteine dosing range of 20\u201340 mg per gram of amino acids, calculate the daily cysteine dose in"
+    },
+    {
+      "sample_id": "calc_127",
+      "raw_sno": 127,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 5,
+      "source_doc": "TPN Considerations",
+      "question_preview": "A TPN bag contains potassium at 61 mEq/L concentration and infuses at 30.7 mL/hr for 12 hours in a 9 kg child. What is the potassium dose in mEq/kg?"
+    },
+    {
+      "sample_id": "calc_116",
+      "raw_sno": 116,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 5,
+      "source_doc": "2_NutritionalRequirements,Part1",
+      "question_preview": "A patient has an external pancreatic fistula draining 0.8 L/day of pancreatic fluid. Using the pancreatic secretion concentrations from the table, how many mEq of bicarbonate and how many mEq of chlor"
+    },
+    {
+      "sample_id": "calc_114",
+      "raw_sno": 114,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 5,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part9",
+      "question_preview": "An 8-month-old infant with progressive familial intrahepatic cholestasis weighs 7 kg. Calculate the target daily energy intake range based on liver disease guidelines."
+    },
+    {
+      "sample_id": "calc_174",
+      "raw_sno": 174,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "A 1.2 kg preterm neonate is being managed for growth. Using the 'Preterm' growth target from the guideline, calculate the daily kcal range (kcal/day) recommended."
+    },
+    {
+      "sample_id": "calc_160",
+      "raw_sno": 160,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "9_ElectrolyteDisorders",
+      "question_preview": "A pharmacist is preparing PN for an adult patient and needs to add calcium gluconate to provide 12 mEq of elemental calcium. How many grams of calcium gluconate are required?"
+    },
+    {
+      "sample_id": "calc_109",
+      "raw_sno": 109,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "8PN PN for Specialized Patient_part1",
+      "question_preview": "A 12 kg neurologically compromised child is on TPN. According to the guideline goal calories for children in this population, calculate the recommended daily calorie range (kcal/day)."
+    },
+    {
+      "sample_id": "calc_092",
+      "raw_sno": 92,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "A 0.87 kg infant is prescribed to receive 99 mls/24 hrs of PN. Calculate the actual mls/kg/day the infant will receive based on this ordered 24-hour volume."
+    },
+    {
+      "sample_id": "calc_089",
+      "raw_sno": 89,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part6",
+      "question_preview": "A 2.5 kg infant is recovering several days after cardiac surgery and no longer in the immediate postoperative reduced-energy phase. The handbook states that as patients recover, energy needs increase "
+    },
+    {
+      "sample_id": "calc_077",
+      "raw_sno": 77,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part9",
+      "question_preview": "A 13-year-old adolescent requiring TPN has a BMR of 1200 kcal/day and weighs 45 kg. Calculate the total daily protein requirement in grams for this patient."
+    },
+    {
+      "sample_id": "calc_024",
+      "raw_sno": 24,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 4,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part3",
+      "question_preview": "A 15 kg child needs maintenance IV fluids. Calculate the total daily fluid requirement using the Holliday-Segar method."
+    },
+    {
+      "sample_id": "calc_175",
+      "raw_sno": 175,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 3,
+      "source_doc": "9_FluidandSodiumDisorders",
+      "question_preview": "According to the electrolyte requirement table, what is the recommended daily phosphorus dose range for a child weighing 60 kg?"
+    },
+    {
+      "sample_id": "calc_075",
+      "raw_sno": 75,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 3,
+      "source_doc": "6PN Complications and Monitoring",
+      "question_preview": "A 1.2 kg preterm infant is receiving parenteral lipids. According to the source guideline, what is the maximum lipid infusion rate in grams per hour and the maximum total grams per day (using the infu"
+    },
+    {
+      "sample_id": "calc_148",
+      "raw_sno": 148,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 2,
+      "source_doc": "SHC TPN Guidelines",
+      "question_preview": "A 15 kg child is receiving intravenous lipid emulsion as part of TPN. To prevent hypertriglyceridemia, what is the maximum infusion rate that should not be exceeded?"
+    },
+    {
+      "sample_id": "calc_126",
+      "raw_sno": 126,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 2,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "For a 0.87 kg infant receiving PN with a dextrose concentration of 16%, calculate the daily dextrose intake in g/kg/day based on the provided clinical data."
+    },
+    {
+      "sample_id": "calc_065",
+      "raw_sno": 65,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 2,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part9",
+      "question_preview": "A 12 kg child with CKD stage 4 has documented iron deficiency anemia and is taking calcium-containing phosphorus binders three times daily with meals. Calculate the daily elemental iron supplementatio"
+    },
+    {
+      "sample_id": "calc_165",
+      "raw_sno": 165,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 1,
+      "source_doc": "9_AcidBaseDisorders",
+      "question_preview": "A 2.5 kg neonate on TPN has a measured serum HCO\u2083\u207b of 12 mEq/L and a primary metabolic acidosis. According to the compensation formula, what is the expected arterial pCO\u2082 (mmHg)? Show the calculation."
+    },
+    {
+      "sample_id": "calc_054",
+      "raw_sno": 54,
+      "complexity": "intermediate",
+      "verification_confidence": 0.95,
+      "numeric_density": 1,
+      "source_doc": "ASPEN Pediatric Neonatal Nutrition Handbook 3rd Edition_part3",
+      "question_preview": "A 15-year-old female patient weighing 45 kg is being evaluated for home parenteral nutrition. Calculate her estimated energy expenditure using the WHO equation to guide TPN prescription."
+    },
+    {
+      "sample_id": "calc_197",
+      "raw_sno": 197,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 7,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "A neonate's TPN formulation has final concentrations of dextrose 5.7%, amino acids 2.9%, and electrolytes totaling 229 mOsm/L. Calculate the total osmolarity of this solution (excluding lipids)."
+    },
+    {
+      "sample_id": "calc_191",
+      "raw_sno": 191,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 6,
+      "source_doc": "8PN PN for Specialized Patient_part1",
+      "question_preview": "A 7-year-old boy weighing 25 kg is on peritoneal dialysis and needs TPN. Calculate his daily protein requirement using the recommended dose."
+    },
+    {
+      "sample_id": "calc_170",
+      "raw_sno": 170,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 6,
+      "source_doc": "fellowtpn_revised_07_08_2022v2_Joanna_Edits_CBedit_part1",
+      "question_preview": "A 25 kg child on TPN develops hypophosphatemia (phosphate 1.8 mg/dL). Calculate the phosphate repletion dose range for this patient."
+    },
+    {
+      "sample_id": "calc_107",
+      "raw_sno": 107,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 5,
+      "source_doc": "TPN Considerations",
+      "question_preview": "A 9 kg patient is receiving TPN at 30.7 mL/hr over 12 hours from a bag with sodium concentration of 190 mEq/L (0.19 mEq/mL). Calculate the total sodium dose delivered and express as mEq/kg."
+    },
+    {
+      "sample_id": "calc_162",
+      "raw_sno": 162,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 4,
+      "source_doc": "2022-NICU New Fellow PN_072022_part1",
+      "question_preview": "A pharmacist is preparing TPN for a 0.8 kg extremely preterm infant following the NICU protocol. What is the copper dose in mcg/day, and what is the selenium dose in mcg/day?"
+    },
+    {
+      "sample_id": "calc_072",
+      "raw_sno": 72,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 4,
+      "source_doc": "SHC TPN Guidelines",
+      "question_preview": "A 15 kg pediatric patient is receiving a 20% fat emulsion infusion as part of TPN therapy. What is the maximum recommended infusion rate in grams per hour for this patient?"
+    },
+    {
+      "sample_id": "calc_041",
+      "raw_sno": 41,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 4,
+      "source_doc": "2018 NICU Guide Full_part9",
+      "question_preview": "Following the loading dose, a 3.5 kg infant with argininosuccinate lyase deficiency requires continuous arginine HCl 10% infusion. What is the continuous infusion rate in ml/hour?"
+    },
+    {
+      "sample_id": "calc_167",
+      "raw_sno": 167,
+      "complexity": "intermediate",
+      "verification_confidence": 0.92,
+      "numeric_density": 3,
+      "source_doc": "2_NutritionalRequirements,Part2",
+      "question_preview": "A 15 kg child on TPN has a urine output of 4 mL/hr over the past 6 hours. Calculate the urine output in mL/kg/hr and determine if this meets the normal range for adequate renal function."
+    }
+  ]
+}

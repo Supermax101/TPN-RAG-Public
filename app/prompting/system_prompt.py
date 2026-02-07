@@ -66,6 +66,59 @@ TPN_RAG_SYSTEM_PROMPT = (
     + _OUTPUT_RULES
 )
 
+# ---------------------------------------------------------------------------
+# Open-ended prompts (calculation + short-form clinical answers)
+# ---------------------------------------------------------------------------
+
+_OPEN_OUTPUT_RULES = (
+    "<output_rules>\n"
+    "1. Provide the final numeric answer(s) with correct units.\n"
+    "2. Show only the minimal calculation steps needed to justify the result.\n"
+    "3. If you make an assumption (e.g., rounding), state it explicitly.\n"
+    "4. Keep the response short and clinically oriented.\n"
+    "</output_rules>"
+)
+
+_OPEN_RAG_CITATION_RULES = (
+    "<citation_rules>\n"
+    "1. When retrieved context is provided, you MUST cite at least one source document.\n"
+    "2. Use square brackets with the document name exactly as shown in the retrieved context.\n"
+    "   Example: [TPN Considerations]\n"
+    "3. Do NOT fabricate citations.\n"
+    "</citation_rules>"
+)
+
+TPN_OPEN_BASE_SYSTEM_PROMPT = (
+    _BASE_ROLE
+    + "\n"
+    + "<grounding_rules>\n"
+    + "1. You may rely on your clinical training and best-practice ASPEN-aligned knowledge.\n"
+    + "2. Use precise clinical units (g/kg/day, mg/kg/min, mEq/L, mOsm/L).\n"
+    + "3. Prefer clinically standard rounding (e.g., 2-3 decimal places) unless otherwise specified.\n"
+    + "</grounding_rules>\n"
+    + "\n"
+    + _OPEN_OUTPUT_RULES
+)
+
+TPN_OPEN_RAG_SYSTEM_PROMPT = (
+    _BASE_ROLE
+    + "\n"
+    + "<grounding_rules>\n"
+    + "1. Treat retrieved context as high-priority evidence, but it may be incomplete.\n"
+    + "2. Prefer numeric values present in the retrieved context when answering.\n"
+    + "3. Never invent an exact numeric value that is absent from the context.\n"
+    + "</grounding_rules>\n"
+    + "\n"
+    + _OPEN_RAG_CITATION_RULES
+    + "\n"
+    + _OPEN_OUTPUT_RULES
+)
+
+
+def get_open_ended_system_prompt(use_rag: bool) -> str:
+    """Return mode-specific system prompt for open-ended evaluation/inference."""
+    return TPN_OPEN_RAG_SYSTEM_PROMPT if use_rag else TPN_OPEN_BASE_SYSTEM_PROMPT
+
 # Backward-compatible alias for modules that do not switch prompts by mode.
 TPN_SYSTEM_PROMPT = TPN_BASE_SYSTEM_PROMPT
 
@@ -79,5 +132,8 @@ __all__ = [
     "TPN_BASE_SYSTEM_PROMPT",
     "TPN_RAG_SYSTEM_PROMPT",
     "TPN_SYSTEM_PROMPT",
+    "TPN_OPEN_BASE_SYSTEM_PROMPT",
+    "TPN_OPEN_RAG_SYSTEM_PROMPT",
     "get_system_prompt",
+    "get_open_ended_system_prompt",
 ]

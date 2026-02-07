@@ -47,6 +47,31 @@ DEFAULT_FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
     },
 ]
 
+OPEN_FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
+    {
+        "question": (
+            "A 1.0 kg neonate is receiving D10W at 3 mL/hr. Calculate the GIR in mg/kg/min."
+        ),
+        "answer": (
+            "Final answer: 5.0 mg/kg/min\n"
+            "Work: D10W = 10 g/100 mL = 100 mg/mL. "
+            "Glucose per minute = 3 mL/hr * 100 mg/mL / 60 = 5 mg/min. "
+            "GIR = 5 mg/min / 1.0 kg = 5.0 mg/kg/min.\n"
+            "Citations: (none)"
+        ),
+    },
+    {
+        "question": (
+            "A 2.0 kg infant needs amino acids at 3 g/kg/day. How many grams per day is this?"
+        ),
+        "answer": (
+            "Final answer: 6 g/day\n"
+            "Work: 3 g/kg/day * 2.0 kg = 6 g/day.\n"
+            "Citations: (none)"
+        ),
+    },
+]
+
 
 def _normalize_strategy(strategy: object) -> str:
     if hasattr(strategy, "value"):
@@ -104,6 +129,7 @@ class PromptRenderer:
     example_pool: Optional[object] = None  # FewShotPool instance (optional)
 
     TEMPLATE_FILES: Dict[str, str] = None  # type: ignore[assignment]
+    OPEN_TEMPLATE_FILES: Dict[str, str] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.TEMPLATE_FILES is None:
@@ -112,6 +138,18 @@ class PromptRenderer:
                 "FEW_SHOT": "few_shot.txt",
                 "COT": "cot.txt",
                 "COT_SC": "cot_sc.txt",
+                "RAP": "rap.txt",
+            }
+        if self.OPEN_TEMPLATE_FILES is None:
+            self.OPEN_TEMPLATE_FILES = {
+                "ZS": "open_zero_shot.txt",
+                "FEW_SHOT": "open_few_shot.txt",
+                "COT": "open_cot.txt",
+                # CoT-SC is MCQ-only, but treat it as standard CoT for open-ended runs
+                # to avoid configuration pitfalls.
+                "COT_SC": "open_cot.txt",
+                # RAP is a RAG-only MCQ template in this repo; treat it as open ZS if requested.
+                "RAP": "open_zero_shot.txt",
             }
         self._cache: Dict[str, str] = {}
 
@@ -126,6 +164,24 @@ class PromptRenderer:
                 raise FileNotFoundError(f"Prompt template not found: {path}")
             self._cache[filename] = path.read_text(encoding="utf-8")
         return self._cache[filename]
+
+    def _load_open_template(self, strategy_value: str) -> str:
+        """
+        Load open-ended prompt templates.
+
+        Note: CoT-SC is MCQ-only and intentionally unsupported for open-ended prompts.
+        """
+        if strategy_value not in self.OPEN_TEMPLATE_FILES:
+            raise ValueError(f"Unsupported open-ended prompt strategy: {strategy_value}")
+
+        filename = self.OPEN_TEMPLATE_FILES[strategy_value]
+        cache_key = f"open::{filename}"
+        if cache_key not in self._cache:
+            path = self.template_dir / filename
+            if not path.exists():
+                raise FileNotFoundError(f"Open-ended prompt template not found: {path}")
+            self._cache[cache_key] = path.read_text(encoding="utf-8")
+        return self._cache[cache_key]
 
     def render(
         self,
@@ -160,6 +216,30 @@ class PromptRenderer:
         ).strip()
         return prompt
 
+    def render_open_ended(
+        self,
+        strategy: object,
+        question: str,
+        context: Optional[str] = None,
+        few_shot_examples: Optional[Iterable[Dict[str, str]]] = None,
+    ) -> str:
+        strategy_value = _normalize_strategy(strategy)
+        template = self._load_open_template(strategy_value)
+
+        effective_examples = few_shot_examples
+        if effective_examples is None and strategy_value == "FEW_SHOT":
+            effective_examples = OPEN_FEW_SHOT_EXAMPLES
+
+        context_block = _format_context(context)
+        few_shots_block = _format_few_shots(effective_examples)
+
+        prompt = template.format(
+            question=question.strip(),
+            context_block=context_block,
+            few_shots_block=few_shots_block,
+        ).strip()
+        return prompt
+
 
 _DEFAULT_RENDERER = PromptRenderer()
 
@@ -185,6 +265,21 @@ def render_prompt(
         strategy=strategy,
         question=question,
         options=options,
+        context=context,
+        few_shot_examples=few_shot_examples,
+    )
+
+
+def render_open_prompt(
+    strategy: object,
+    question: str,
+    context: Optional[str] = None,
+    few_shot_examples: Optional[Iterable[Dict[str, str]]] = None,
+) -> str:
+    """Render an open-ended prompt (no MCQ option formatting)."""
+    return _DEFAULT_RENDERER.render_open_ended(
+        strategy=strategy,
+        question=question,
         context=context,
         few_shot_examples=few_shot_examples,
     )

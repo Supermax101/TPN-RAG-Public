@@ -258,11 +258,15 @@ def benchmark(
 
 @app.command("precompute-retrieval")
 def precompute_retrieval(
-    mcq_dataset: Path = typer.Option(..., help="MCQ JSONL path"),
+    dataset: Path = typer.Option(..., help="Dataset JSONL path"),
+    track: str = typer.Option(
+        "mcq",
+        help="Dataset track: mcq or open_ended",
+    ),
     persist_dir: Path = typer.Option(ROOT / "data", help="Persist dir containing indexes"),
-    out_path: Path = typer.Option(
-        ROOT / "eval/cache/retrieval_snapshots_mcq.jsonl",
-        help="Output JSONL path to write retrieval snapshots",
+    out_path: Optional[Path] = typer.Option(
+        None,
+        help="Output JSONL path to write retrieval snapshots (defaults based on track)",
     ),
     top_k: int = typer.Option(6, help="Top-k chunks in retrieval snapshot"),
     candidate_k: int = typer.Option(40, help="Retrieval candidate pool size"),
@@ -292,7 +296,16 @@ def precompute_retrieval(
         save_retrieval_snapshots,
     )
 
-    samples = load_dataset(mcq_dataset, track=DatasetTrack.MCQ, require_holdout_only=True)
+    track_norm = (track or "").strip().lower()
+    if track_norm in {"open", "open-ended", "open_ended", "openended"}:
+        dataset_track = DatasetTrack.OPEN_ENDED
+    else:
+        dataset_track = DatasetTrack.MCQ
+
+    if out_path is None:
+        out_path = ROOT / f"eval/cache/retrieval_snapshots_{dataset_track.value}.jsonl"
+
+    samples = load_dataset(dataset, track=dataset_track, require_holdout_only=True)
 
     retriever = RetrieverAdapter(
         persist_dir=persist_dir,
@@ -305,6 +318,7 @@ def precompute_retrieval(
     )
 
     retrieval_cfg = {
+        "track": dataset_track.value,
         "top_k": top_k,
         "candidate_k": candidate_k,
         "max_context_chars": max_context_chars,
@@ -342,12 +356,12 @@ def precompute_retrieval(
     except Exception:
         pass
 
-    dataset_fp = file_fingerprint(mcq_dataset)
+    dataset_fp = file_fingerprint(dataset)
     kb_fp = json_fingerprint(kb_meta)
     retrieval_fp = json_fingerprint(retrieval_cfg)
 
     meta = {
-        "dataset_path": str(Path(mcq_dataset).resolve()),
+        "dataset_path": str(Path(dataset).resolve()),
         "dataset_fingerprint": dataset_fp,
         "kb_fingerprint": kb_fp,
         "retrieval_config_fingerprint": retrieval_fp,
@@ -357,7 +371,7 @@ def precompute_retrieval(
 
     snapshots = {}
     total = len(samples)
-    console.print(f"[cyan]Precomputing retrieval snapshots for {total} MCQ samples...[/cyan]")
+    console.print(f"[cyan]Precomputing retrieval snapshots for {total} {dataset_track.value} samples...[/cyan]")
     for idx, sample in enumerate(samples, 1):
         snapshots[sample.sample_id] = retriever.retrieve(
             query=sample.question,

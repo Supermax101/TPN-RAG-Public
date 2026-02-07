@@ -59,6 +59,7 @@ DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
     "gemma3-27b": ModelSpec(model_id="gemma3-27b", provider="huggingface", model_name="google/gemma-3-27b-it", tier=ModelTier.OPEN),
     "phi-4": ModelSpec(model_id="phi-4", provider="huggingface", model_name="microsoft/phi-4", tier=ModelTier.OPEN),
     "glm-4.7-flash": ModelSpec(model_id="glm-4.7-flash", provider="huggingface", model_name="zai-org/GLM-4.7-Flash", tier=ModelTier.OPEN),
+    "deepseek-r1-32b": ModelSpec(model_id="deepseek-r1-32b", provider="huggingface", model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", tier=ModelTier.OPEN),
 }
 
 

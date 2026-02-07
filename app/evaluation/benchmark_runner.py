@@ -29,10 +29,13 @@ from .benchmark_types import (
     RunRecord,
 )
 from ..prompting import get_system_prompt
+from ..prompting import get_open_ended_system_prompt
 from .metrics import AnswerMetrics
 from .prompting import render_prompt
+from .prompting import render_open_prompt
 from .provider_adapter import PROVIDER_RATE_LIMITS, create_provider_adapter
 from .retriever_adapter import RetrieverAdapter
+from .calc_metrics import evaluate_calc_metrics, evaluate_doc_citations
 
 # Number of independent passes for CoT-SC majority voting
 _COT_SC_PASSES = 3
@@ -322,14 +325,22 @@ class BenchmarkRunner:
             if not rag_context_used:
                 context = None
 
-        system_prompt = get_system_prompt(use_rag=(rag_enabled and rag_context_used))
-        prompt = render_prompt(
-            strategy=strategy,
-            question=sample.question,
-            options=sample.options,
-            context=context,
-            example_pool=self._example_pool,
-        )
+        if sample.track == DatasetTrack.MCQ:
+            system_prompt = get_system_prompt(use_rag=(rag_enabled and rag_context_used))
+            prompt = render_prompt(
+                strategy=strategy,
+                question=sample.question,
+                options=sample.options,
+                context=context,
+                example_pool=self._example_pool,
+            )
+        else:
+            system_prompt = get_open_ended_system_prompt(use_rag=(rag_enabled and rag_context_used))
+            prompt = render_open_prompt(
+                strategy=strategy,
+                question=sample.question,
+                context=context,
+            )
 
         started = time.time()
         error = None
@@ -428,12 +439,40 @@ class BenchmarkRunner:
                     ground_truth_source=sample.source_doc,
                     ground_truth_page=sample.page,
                 )
+                calc = evaluate_calc_metrics(
+                    expected_answer=sample.reference_answer or "",
+                    output_answer=response_text,
+                )
+                retrieved_sources = (
+                    [c.source for c in retrieval_snapshot.chunks] if retrieval_snapshot else []
+                )
+                citations = evaluate_doc_citations(
+                    output_answer=response_text,
+                    gold_source_doc=sample.source_doc,
+                    retrieved_sources=retrieved_sources,
+                )
                 metrics.update(
                     {
                         "f1": eval_result.f1_score,
                         "exact_match": eval_result.exact_match,
                         "key_phrase_overlap": eval_result.key_phrase_overlap,
                         "citation_match": float(eval_result.citation_match),
+                        "quantity_recall": calc.quantity_recall,
+                        "quantity_precision": calc.quantity_precision,
+                        "quantity_f1": calc.quantity_f1,
+                        "unit_mismatch_count": calc.unit_mismatch_count,
+                        "expected_quantity_count": calc.expected_quantity_count,
+                        "output_quantity_count": calc.output_quantity_count,
+                        "matched_quantity_count": calc.matched_quantity_count,
+                        "rel_error_mean": calc.rel_error_mean,
+                        "rel_error_p50": calc.rel_error_p50,
+                        "rel_error_p95": calc.rel_error_p95,
+                        "doc_citation_present": float(citations.citation_present),
+                        "doc_cited_doc_count": citations.cited_doc_count,
+                        "doc_cites_gold_source": float(citations.cites_gold_source_doc)
+                        if citations.cites_gold_source_doc is not None
+                        else None,
+                        "doc_cited_in_retrieved_context": float(citations.cited_doc_in_retrieved_context),
                     }
                 )
 
@@ -692,6 +731,30 @@ class BenchmarkRunner:
                 row["f1_mean"] = sum(float(r.metrics.get("f1", 0.0)) for r in valid) / len(valid)
                 row["citation_match_rate"] = (
                     sum(float(r.metrics.get("citation_match", 0.0)) for r in valid) / len(valid)
+                )
+                row["quantity_f1_mean"] = (
+                    sum(float(r.metrics.get("quantity_f1", 0.0)) for r in valid) / len(valid)
+                )
+                row["quantity_recall_mean"] = (
+                    sum(float(r.metrics.get("quantity_recall", 0.0)) for r in valid) / len(valid)
+                )
+                row["quantity_precision_mean"] = (
+                    sum(float(r.metrics.get("quantity_precision", 0.0)) for r in valid) / len(valid)
+                )
+                row["doc_citation_present_rate"] = (
+                    sum(float(r.metrics.get("doc_citation_present", 0.0)) for r in valid) / len(valid)
+                )
+                gold_vals = [
+                    float(v)
+                    for r in valid
+                    for v in [r.metrics.get("doc_cites_gold_source")]
+                    if v is not None
+                ]
+                if gold_vals:
+                    row["doc_cites_gold_source_rate"] = sum(gold_vals) / len(gold_vals)
+                row["doc_cited_in_retrieved_context_rate"] = (
+                    sum(float(r.metrics.get("doc_cited_in_retrieved_context", 0.0)) for r in valid)
+                    / len(valid)
                 )
             table.append(row)
 
