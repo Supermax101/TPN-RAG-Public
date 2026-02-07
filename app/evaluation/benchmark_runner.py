@@ -574,7 +574,10 @@ class BenchmarkRunner:
         for sample in samples:
             for strategy, rag_enabled in conditions:
                 snapshot = None
-                if rag_enabled and self.retriever:
+                # Snapshot selection must not depend on having a live retriever.
+                # When --retrieval-snapshots-in is used, self.retriever is None
+                # but retrieval_cache_* is populated from the precomputed file.
+                if rag_enabled:
                     if self.config.fair_shared_context:
                         snapshot = retrieval_cache_shared.get(sample.sample_id)
                     else:
