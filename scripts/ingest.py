@@ -643,6 +643,22 @@ class IngestionPipeline:
             except Exception:
                 existing_collection = None
 
+        # Migration safety: if we're switching to manifest-based incremental
+        # ingestion but a non-empty collection already exists and no manifest is
+        # present, incremental IDs will not match legacy IDs and would create
+        # duplicates. Force a one-time rebuild in that case.
+        if not rebuild and existing_collection is not None and not (manifest.get("files") if manifest else None):
+            try:
+                if int(existing_collection.count() or 0) > 0:
+                    logger.info(
+                        "No ingestion_manifest.json found but existing Chroma collection is non-empty; "
+                        "forcing a one-time rebuild to avoid duplicate chunks."
+                    )
+                    rebuild = True
+                    existing_collection = None
+            except Exception:
+                pass
+
         if rebuild or existing_collection is None:
             try:
                 self._chroma_client.delete_collection(self.collection_name)
