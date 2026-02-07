@@ -1,0 +1,51 @@
+{
+  "experiment": "gpt5mini_smoke_gated",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 20,
+      "latency_ms_mean": 20426.120841503143,
+      "error_rate": 0.0,
+      "accuracy": 0.8,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 20,
+      "latency_ms_mean": 16632.912492752075,
+      "error_rate": 0.0,
+      "accuracy": 0.75,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 20,
+      "latency_ms_mean": 18618.00252199173,
+      "error_rate": 0.0,
+      "accuracy": 0.6,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 20,
+      "latency_ms_mean": 14929.787480831146,
+      "error_rate": 0.0,
+      "accuracy": 0.65,
+      "partial_rate": 0.0
+    }
+  ]
+}

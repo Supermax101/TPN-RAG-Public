@@ -1,0 +1,106 @@
+{
+  "experiment": "tpn_publishable_benchmark",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 24770.129505793255,
+      "error_rate": 0.0,
+      "accuracy": 0.6,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 21012.556950251263,
+      "error_rate": 0.0,
+      "accuracy": 0.5333333333333333,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "COT_SC",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 68864.87429936726,
+      "error_rate": 0.0,
+      "accuracy": 0.8,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "COT_SC",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 65410.62320073446,
+      "error_rate": 0.0,
+      "accuracy": 0.6,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 22998.948192596436,
+      "error_rate": 0.0,
+      "accuracy": 0.5333333333333333,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 22057.24639892578,
+      "error_rate": 0.0,
+      "accuracy": 0.6666666666666666,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "RAP",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 24400.966628392536,
+      "error_rate": 0.0,
+      "accuracy": 0.6666666666666666,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 19179.23885981242,
+      "error_rate": 0.0,
+      "accuracy": 0.6,
+      "partial_rate": 0.0
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 15,
+      "latency_ms_mean": 19607.520723342896,
+      "error_rate": 0.0,
+      "accuracy": 0.4666666666666667,
+      "partial_rate": 0.0
+    }
+  ]
+}

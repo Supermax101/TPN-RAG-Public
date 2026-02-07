@@ -1,0 +1,6 @@
+{
+  "experiment": "hf_ministral14b_mcq124_zs_few_cot_rap_gated_kb_books",
+  "seed": 42,
+  "repeats": 1,
+  "rows": []
+}

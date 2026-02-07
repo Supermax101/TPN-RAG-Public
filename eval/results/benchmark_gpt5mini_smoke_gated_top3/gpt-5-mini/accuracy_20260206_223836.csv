@@ -1,0 +1,5 @@
+model_id,strategy,rag_mode,track,n,latency_ms_mean,error_rate,accuracy,partial_rate
+gpt-5-mini,FEW_SHOT,no_rag,mcq,20,22266.44673347473,0.0,0.85,0.0
+gpt-5-mini,FEW_SHOT,rag,mcq,20,19635.243785381317,0.0,0.75,0.0
+gpt-5-mini,ZS,no_rag,mcq,20,19892.64954328537,0.0,0.8,0.0
+gpt-5-mini,ZS,rag,mcq,20,17919.06840801239,0.0,0.55,0.0

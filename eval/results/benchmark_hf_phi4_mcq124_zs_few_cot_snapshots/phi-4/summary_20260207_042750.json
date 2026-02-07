@@ -1,0 +1,73 @@
+{
+  "experiment": "tpn_publishable_benchmark",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "phi-4",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 4920.7442172112005,
+      "error_rate": 0.0,
+      "accuracy": 0.5161290322580645,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 4923.338126751684,
+      "error_rate": 0.0,
+      "accuracy": 0.5161290322580645,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2897.9921667806566,
+      "error_rate": 0.0,
+      "accuracy": 0.532258064516129,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2897.6245041816464,
+      "error_rate": 0.0,
+      "accuracy": 0.532258064516129,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 3076.401181759373,
+      "error_rate": 0.0,
+      "accuracy": 0.6532258064516129,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 3061.8034139756232,
+      "error_rate": 0.0,
+      "accuracy": 0.6532258064516129,
+      "partial_rate": 0.008064516129032258
+    }
+  ]
+}

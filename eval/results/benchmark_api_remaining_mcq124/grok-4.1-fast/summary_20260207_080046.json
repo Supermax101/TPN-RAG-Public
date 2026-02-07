@@ -1,0 +1,73 @@
+{
+  "experiment": "tpn_publishable_benchmark",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 10907.967348252574,
+      "error_rate": 0.0,
+      "accuracy": 0.8145161290322581,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 123,
+      "latency_ms_mean": 10152.892521726406,
+      "error_rate": 0.008064516129032258,
+      "accuracy": 0.9024390243902439,
+      "partial_rate": 0.008130081300813009
+    },
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 10118.344872228561,
+      "error_rate": 0.0,
+      "accuracy": 0.8145161290322581,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 7959.743749710821,
+      "error_rate": 0.0,
+      "accuracy": 0.9032258064516129,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 10321.167586311218,
+      "error_rate": 0.0,
+      "accuracy": 0.7983870967741935,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "grok-4.1-fast",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 8385.122533767453,
+      "error_rate": 0.0,
+      "accuracy": 0.8951612903225806,
+      "partial_rate": 0.008064516129032258
+    }
+  ]
+}

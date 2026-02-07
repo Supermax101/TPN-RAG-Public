@@ -1,0 +1,84 @@
+{
+  "experiment": "hf_phi4_mcq124_zs_few_cot_rap_gated_kb_books",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "phi-4",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 3640.7112709937555,
+      "error_rate": 0.0,
+      "accuracy": 0.532258064516129,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 5166.128148955683,
+      "error_rate": 0.0,
+      "accuracy": 0.7258064516129032,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2150.8853858517064,
+      "error_rate": 0.0,
+      "accuracy": 0.5403225806451613,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2281.2359717584427,
+      "error_rate": 0.0,
+      "accuracy": 0.7419354838709677,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "RAP",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 4087.236956242592,
+      "error_rate": 0.0,
+      "accuracy": 0.7258064516129032,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2243.5562456807784,
+      "error_rate": 0.0,
+      "accuracy": 0.6612903225806451,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "phi-4",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 3088.9259019205647,
+      "error_rate": 0.0,
+      "accuracy": 0.75,
+      "partial_rate": 0.008064516129032258
+    }
+  ]
+}

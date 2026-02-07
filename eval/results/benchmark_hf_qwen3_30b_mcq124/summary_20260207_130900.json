@@ -1,0 +1,73 @@
+{
+  "experiment": "tpn_publishable_benchmark",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 22230.502322796852,
+      "error_rate": 0.0,
+      "accuracy": 0.6532258064516129,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 21860.43071939099,
+      "error_rate": 0.0,
+      "accuracy": 0.7661290322580645,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 15014.16741840301,
+      "error_rate": 0.0,
+      "accuracy": 0.6370967741935484,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 15029.01953651059,
+      "error_rate": 0.0,
+      "accuracy": 0.7338709677419355,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 15145.303872323806,
+      "error_rate": 0.0,
+      "accuracy": 0.6935483870967742,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "qwen3-30b-a3b",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 15191.729445611278,
+      "error_rate": 0.0,
+      "accuracy": 0.7661290322580645,
+      "partial_rate": 0.016129032258064516
+    }
+  ]
+}

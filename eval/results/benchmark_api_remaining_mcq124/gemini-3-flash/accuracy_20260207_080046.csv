@@ -1,0 +1,7 @@
+model_id,strategy,rag_mode,track,n,latency_ms_mean,error_rate,accuracy,partial_rate
+gemini-3-flash,COT,no_rag,mcq,124,3503.2204927936677,0.0,0.0,0.0
+gemini-3-flash,COT,rag,mcq,124,3335.579687549222,0.0,0.024193548387096774,0.0
+gemini-3-flash,FEW_SHOT,no_rag,mcq,124,2587.957061106159,0.0,0.016129032258064516,0.0
+gemini-3-flash,FEW_SHOT,rag,mcq,124,2461.7418762176267,0.0,0.016129032258064516,0.0
+gemini-3-flash,ZS,no_rag,mcq,124,2634.186823521891,0.0,0.0,0.0
+gemini-3-flash,ZS,rag,mcq,124,2490.766431054761,0.0,0.024193548387096774,0.0

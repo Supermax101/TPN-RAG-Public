@@ -92,7 +92,7 @@ data/imports/
 data/ingestion_stats.json
 
 # Benchmark results (regenerated on each run)
-eval/results/
+# eval/results/  # unignored — benchmark results are synced via git
 
 # Comparison results
 comparison_results/

@@ -1,0 +1,29 @@
+{
+  "experiment": "gpt5mini_mcq124_zs_gated_kb_books",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 11546.375814945468,
+      "error_rate": 0.0,
+      "accuracy": 0.7903225806451613,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 10139.06781519613,
+      "error_rate": 0.0,
+      "accuracy": 0.8629032258064516,
+      "partial_rate": 0.016129032258064516
+    }
+  ]
+}

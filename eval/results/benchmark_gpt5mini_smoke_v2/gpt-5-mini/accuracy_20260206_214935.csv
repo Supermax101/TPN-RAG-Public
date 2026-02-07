@@ -1,0 +1,10 @@
+model_id,strategy,rag_mode,track,n,latency_ms_mean,error_rate,accuracy,partial_rate
+gpt-5-mini,COT,no_rag,mcq,15,21768.809127807617,0.0,0.7333333333333333,0.0
+gpt-5-mini,COT,rag,mcq,15,27109.0674718221,0.0,0.6,0.0
+gpt-5-mini,COT_SC,no_rag,mcq,15,61964.81019655863,0.0,0.6,0.0
+gpt-5-mini,COT_SC,rag,mcq,15,65022.08741505941,0.0,0.6,0.0
+gpt-5-mini,FEW_SHOT,no_rag,mcq,15,17697.29356765747,0.0,0.8,0.0
+gpt-5-mini,FEW_SHOT,rag,mcq,15,22534.893163045246,0.0,0.6666666666666666,0.0
+gpt-5-mini,RAP,rag,mcq,15,21678.740453720093,0.0,0.6666666666666666,0.0
+gpt-5-mini,ZS,no_rag,mcq,15,18043.419869740803,0.0,0.6,0.0
+gpt-5-mini,ZS,rag,mcq,15,20054.92041905721,0.0,0.4666666666666667,0.0
