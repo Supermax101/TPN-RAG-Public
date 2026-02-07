@@ -1,0 +1,73 @@
+{
+  "experiment": "tpn_publishable_benchmark",
+  "seed": 42,
+  "repeats": 1,
+  "rows": [
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "COT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2513.1296880783575,
+      "error_rate": 0.0,
+      "accuracy": 0.8709677419354839,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "COT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 1660.4948005368633,
+      "error_rate": 0.0,
+      "accuracy": 0.8790322580645161,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2133.6272397348957,
+      "error_rate": 0.0,
+      "accuracy": 0.8225806451612904,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "FEW_SHOT",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 1392.7151753056435,
+      "error_rate": 0.0,
+      "accuracy": 0.9354838709677419,
+      "partial_rate": 0.008064516129032258
+    },
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "ZS",
+      "rag_mode": "no_rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 2171.2434311066904,
+      "error_rate": 0.0,
+      "accuracy": 0.7983870967741935,
+      "partial_rate": 0.016129032258064516
+    },
+    {
+      "model_id": "gemini-3-flash",
+      "strategy": "ZS",
+      "rag_mode": "rag",
+      "track": "mcq",
+      "n": 124,
+      "latency_ms_mean": 1377.8492385341276,
+      "error_rate": 0.0,
+      "accuracy": 0.9032258064516129,
+      "partial_rate": 0.016129032258064516
+    }
+  ]
+}
