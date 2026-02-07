@@ -56,8 +56,10 @@ class OpenAILLMProvider(LLMProvider):
             }
 
             if is_reasoning_model:
-                # GPT-5+ uses max_completion_tokens (not max_tokens)
-                kwargs["max_completion_tokens"] = max(max_tokens, 16000)
+                # Reasoning models use max_completion_tokens (not max_tokens).
+                # Keep it aligned with the benchmark runner's per-strategy budgets
+                # to control cost and latency for MCQ evaluation.
+                kwargs["max_completion_tokens"] = max_tokens
                 # GPT-5 does not accept temperature at all; other reasoning
                 # models (o1/o3) also skip it
                 if not is_gpt5:
@@ -92,17 +94,18 @@ class OpenAILLMProvider(LLMProvider):
         model_name = model or self.default_model
 
         try:
+            is_reasoning_model = any(x in model_name.lower() for x in ['gpt-5', 'o1', 'o3'])
+            is_gpt5 = 'gpt-5' in model_name.lower()
             messages = []
             if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
+                role = "developer" if is_reasoning_model else "system"
+                messages.append({"role": role, "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
 
-            response = await self.client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response_format={
+            kwargs = {
+                "model": model_name,
+                "messages": messages,
+                "response_format": {
                     "type": "json_schema",
                     "json_schema": {
                         "name": "mcq_answer",
@@ -110,8 +113,18 @@ class OpenAILLMProvider(LLMProvider):
                         "schema": schema,
                     },
                 },
-                timeout=120.0,
-            )
+                "timeout": 120.0,
+            }
+            if is_reasoning_model:
+                kwargs["max_completion_tokens"] = max_tokens
+                # GPT-5/o1/o3 reject temperature; omit it.
+                if not is_gpt5:
+                    pass
+            else:
+                kwargs["temperature"] = temperature
+                kwargs["max_tokens"] = max_tokens
+
+            response = await self.client.chat.completions.create(**kwargs)
 
             content = response.choices[0].message.content or ""
             return json.loads(content)

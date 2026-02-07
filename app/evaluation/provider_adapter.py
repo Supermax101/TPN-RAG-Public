@@ -121,12 +121,15 @@ class AsyncProviderWrapper:
         """
         Try provider's native structured output; fall back to text + JSON parse.
         """
+        effective_model = model_id or self.default_model
+        effective_temp = _apply_temperature_override(effective_model, temperature)
+        temp_to_pass = effective_temp if effective_temp is not None else temperature
         try:
             return await self.provider.generate_structured(
                 prompt=prompt,
                 schema=schema,
                 model=model_id or self.default_model,
-                temperature=temperature,
+                temperature=temp_to_pass,
                 max_tokens=max_tokens,
                 system_prompt=system,
             )
@@ -141,7 +144,7 @@ class AsyncProviderWrapper:
             prompt=json_prompt,
             system_prompt=system,
             model=model_id or self.default_model,
-            temperature=temperature,
+            temperature=temp_to_pass,
             max_tokens=max_tokens,
         )
         # Try to extract JSON from the response
