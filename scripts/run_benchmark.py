@@ -58,7 +58,7 @@ DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
     "medgemma-27b": ModelSpec(model_id="medgemma-27b", provider="huggingface", model_name="google/medgemma-27b-text-it", tier=ModelTier.OPEN),
     "gemma3-27b": ModelSpec(model_id="gemma3-27b", provider="huggingface", model_name="google/gemma-3-27b-it", tier=ModelTier.OPEN),
     "phi-4": ModelSpec(model_id="phi-4", provider="huggingface", model_name="microsoft/phi-4", tier=ModelTier.OPEN),
-    "ministral-14b": ModelSpec(model_id="ministral-14b", provider="huggingface", model_name="mistralai/Ministral-3-14B-Instruct-2512", tier=ModelTier.OPEN),
+    "glm-4.7-flash": ModelSpec(model_id="glm-4.7-flash", provider="huggingface", model_name="zai-org/GLM-4.7-Flash", tier=ModelTier.OPEN),
 }
 
 
@@ -129,7 +129,7 @@ def parse_args():
         help="Comma-separated model keys. Use --list-models to inspect.",
     )
     parser.add_argument("--no-rag", action="store_true", help="Disable RAG conditions")
-    parser.add_argument("--include-baseline", action="store_true", help="Include no-RAG baseline (off by default)")
+    parser.add_argument("--no-baseline", action="store_true", help="Disable no-RAG baseline runs")
     parser.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
     parser.add_argument("--list-models", action="store_true", help="List default model keys and exit")
     parser.add_argument("--max-concurrent", type=int, default=5, help="Max concurrent API calls (default: 5)")
@@ -137,6 +137,7 @@ def parse_args():
     parser.add_argument("--agentic-judge-provider", type=str, default="openai", help="Provider for agentic judge (default: openai)")
     parser.add_argument("--agentic-judge-model", type=str, default="gpt-4o-mini", help="Model for agentic judge (default: gpt-4o-mini)")
     parser.add_argument("--dynamic-few-shot", action="store_true", help="Enable embedding-based few-shot example selection")
+    parser.add_argument("--retrieval-snapshots-in", type=str, default="", help="Path to precomputed retrieval snapshots JSONL")
     return parser.parse_args()
 
 
@@ -163,8 +164,6 @@ def main():
         PromptStrategy.ZS,
         PromptStrategy.FEW_SHOT,
         PromptStrategy.COT,
-        PromptStrategy.COT_SC,
-        PromptStrategy.RAP,
     ]
 
     config = ExperimentConfig(
@@ -180,7 +179,7 @@ def main():
         rag_min_top_score=args.rag_min_top_score,
         rag_min_returned_chunks=args.rag_min_returned_chunks,
         rag_min_context_chars=args.rag_min_context_chars,
-        include_no_rag=args.include_baseline,
+        include_no_rag=not args.no_baseline,
         include_rag=not args.no_rag,
         prompt_strategies=prompt_strategies,
         models=models,
@@ -197,7 +196,15 @@ def main():
     )
 
     retriever = None
-    if config.include_rag:
+    precomputed_snapshots = None
+    if args.retrieval_snapshots_in:
+        from app.evaluation.retrieval_snapshot_io import load_retrieval_snapshots
+
+        precomputed_snapshots, meta = load_retrieval_snapshots(args.retrieval_snapshots_in)
+        logging.info("Loaded %d precomputed retrieval snapshots", len(precomputed_snapshots))
+        if meta:
+            logging.info("Retrieval snapshot meta: %s", meta)
+    elif config.include_rag:
         retriever = RetrieverAdapter(
             persist_dir=args.persist_dir,
             top_k=config.top_k,
@@ -208,7 +215,7 @@ def main():
             max_query_decompositions=config.max_query_decompositions,
         )
 
-    runner = BenchmarkRunner(config=config, retriever=retriever)
+    runner = BenchmarkRunner(config=config, retriever=retriever, precomputed_snapshots=precomputed_snapshots)
     result = asyncio.run(runner.run())
     print("\n" + "=" * 60)
     print("BENCHMARK COMPLETE")

@@ -192,14 +192,27 @@ class HuggingFaceProvider(SyncLLMProvider):
             if "qwen3" in self.model_name.lower():
                 template_kwargs["enable_thinking"] = False
 
-            text = self._tokenizer.apply_chat_template(
-                messages, **template_kwargs,
-            )
+            try:
+                text = self._tokenizer.apply_chat_template(
+                    messages, **template_kwargs,
+                )
+            except Exception:
+                # Some tokenizers ship without a chat template (or with a template
+                # that rejects our kwargs). Fall back to a plain-text prompt.
+                parts: List[str] = []
+                if system_prompt:
+                    parts.append(system_prompt.strip())
+                parts.append(prompt.strip())
+                text = "\n\n".join([p for p in parts if p]).strip()
+                # Give the model an explicit assistant prefix when no chat
+                # template is available.
+                text = f"{text}\n\nAssistant:"
             # Use model's actual device (respects device_map="auto" placement)
             target_device = next(self._model.parameters()).device
             inputs = self._tokenizer(text, return_tensors="pt").to(target_device)
             input_length = inputs.input_ids.shape[1]
 
+            pad_token_id = self._tokenizer.pad_token_id or self._tokenizer.eos_token_id
             with torch.no_grad():
                 outputs = self._model.generate(
                     **inputs,
@@ -207,7 +220,7 @@ class HuggingFaceProvider(SyncLLMProvider):
                     temperature=self.config.temperature if self.config.temperature > 0 else None,
                     top_p=self.config.top_p,
                     do_sample=self.config.temperature > 0,
-                    pad_token_id=self._tokenizer.eos_token_id,
+                    pad_token_id=pad_token_id,
                 )
 
             answer = self._tokenizer.decode(

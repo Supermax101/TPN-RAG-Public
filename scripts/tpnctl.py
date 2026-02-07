@@ -194,12 +194,21 @@ def benchmark(
         help="Comma-separated model keys",
     ),
     no_rag: bool = typer.Option(False, "--no-rag", help="Disable RAG conditions"),
-    include_baseline: bool = typer.Option(False, "--include-baseline", help="Include no-RAG baseline (off by default)"),
+    include_baseline: bool = typer.Option(
+        True,
+        "--include-baseline/--no-baseline",
+        help="Include/disable no-RAG baseline runs (default: include baseline).",
+    ),
     max_concurrent: int = typer.Option(5, "--max-concurrent", help="Max concurrent API calls"),
     agentic_retrieval: bool = typer.Option(False, "--agentic-retrieval", help="Enable LLM relevance judging"),
     agentic_judge_provider: str = typer.Option("openai", "--agentic-judge-provider", help="Provider for agentic judge"),
     agentic_judge_model: str = typer.Option("gpt-4o-mini", "--agentic-judge-model", help="Model for agentic judge"),
     dynamic_few_shot: bool = typer.Option(False, "--dynamic-few-shot", help="Enable embedding-based few-shot selection"),
+    retrieval_snapshots_in: Optional[Path] = typer.Option(
+        None,
+        "--retrieval-snapshots-in",
+        help="Path to precomputed retrieval snapshots JSONL (skips retrieval + query embeddings).",
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print command only"),
 ) -> None:
     """Run full benchmark matrix."""
@@ -235,14 +244,131 @@ def benchmark(
         cmd.extend(["--open-dataset", str(open_dataset)])
     if no_rag:
         cmd.append("--no-rag")
-    if include_baseline:
-        cmd.append("--include-baseline")
+    if not include_baseline:
+        cmd.append("--no-baseline")
     if agentic_retrieval:
         cmd.extend(["--agentic-retrieval", "--agentic-judge-provider", agentic_judge_provider, "--agentic-judge-model", agentic_judge_model])
     if dynamic_few_shot:
         cmd.append("--dynamic-few-shot")
+    if retrieval_snapshots_in:
+        cmd.extend(["--retrieval-snapshots-in", str(retrieval_snapshots_in)])
     code = _run(cmd, dry_run=dry_run)
     raise typer.Exit(code=code)
+
+
+@app.command("precompute-retrieval")
+def precompute_retrieval(
+    mcq_dataset: Path = typer.Option(..., help="MCQ JSONL path"),
+    persist_dir: Path = typer.Option(ROOT / "data", help="Persist dir containing indexes"),
+    out_path: Path = typer.Option(
+        ROOT / "eval/cache/retrieval_snapshots_mcq.jsonl",
+        help="Output JSONL path to write retrieval snapshots",
+    ),
+    top_k: int = typer.Option(6, help="Top-k chunks in retrieval snapshot"),
+    candidate_k: int = typer.Option(40, help="Retrieval candidate pool size"),
+    max_context_chars: int = typer.Option(6000, help="Maximum retrieved context length in snapshot"),
+    retrieval_iterations: int = typer.Option(2, help="Iterative retrieval passes"),
+    max_decompositions: int = typer.Option(3, help="Max decomposition queries"),
+    disable_iterative_retrieval: bool = typer.Option(
+        False,
+        "--disable-iterative-retrieval",
+        help="Disable decomposition + iterative retrieval loop",
+    ),
+) -> None:
+    """
+    Precompute deterministic retrieval snapshots for a dataset and persist to disk.
+
+    This is the key cost-control lever: after snapshots exist, benchmarks can run
+    with --retrieval-snapshots-in and will not call embedding APIs for retrieval.
+    """
+    import uuid
+    from app.config import settings
+    from app.evaluation.benchmark_runner import load_dataset
+    from app.evaluation.benchmark_types import DatasetTrack
+    from app.evaluation.retriever_adapter import RetrieverAdapter
+    from app.evaluation.retrieval_snapshot_io import (
+        file_fingerprint,
+        json_fingerprint,
+        save_retrieval_snapshots,
+    )
+
+    samples = load_dataset(mcq_dataset, track=DatasetTrack.MCQ, require_holdout_only=True)
+
+    retriever = RetrieverAdapter(
+        persist_dir=persist_dir,
+        top_k=top_k,
+        candidate_k=candidate_k,
+        max_context_chars=max_context_chars,
+        iterative_retrieval=not disable_iterative_retrieval,
+        retrieval_iterations=retrieval_iterations,
+        max_query_decompositions=max_decompositions,
+    )
+
+    retrieval_cfg = {
+        "top_k": top_k,
+        "candidate_k": candidate_k,
+        "max_context_chars": max_context_chars,
+        "iterative_retrieval": not disable_iterative_retrieval,
+        "retrieval_iterations": retrieval_iterations,
+        "max_decompositions": max_decompositions,
+        "embedding_provider": settings.embedding_provider,
+        "embedding_model": settings.embedding_model,
+        "chroma_collection_name": settings.chroma_collection_name,
+    }
+
+    kb_meta = {
+        "persist_dir": str(Path(persist_dir).resolve()),
+        "embedding_provider": settings.embedding_provider,
+        "embedding_model": settings.embedding_model,
+        "chroma_collection_name": settings.chroma_collection_name,
+    }
+
+    # Best-effort: capture index sizes for sanity.
+    try:
+        import chromadb
+        from chromadb.config import Settings as ChromaSettings
+
+        chroma_path = Path(persist_dir) / "chromadb"
+        client = chromadb.PersistentClient(path=str(chroma_path), settings=ChromaSettings(anonymized_telemetry=False))
+        col = client.get_collection(settings.chroma_collection_name)
+        kb_meta["chroma_count"] = col.count()
+    except Exception:
+        pass
+
+    try:
+        corpus_path = Path(persist_dir) / "bm25" / "corpus.json"
+        if corpus_path.exists():
+            kb_meta["bm25_docs"] = len(json.loads(corpus_path.read_text(encoding="utf-8")))
+    except Exception:
+        pass
+
+    dataset_fp = file_fingerprint(mcq_dataset)
+    kb_fp = json_fingerprint(kb_meta)
+    retrieval_fp = json_fingerprint(retrieval_cfg)
+
+    meta = {
+        "dataset_path": str(Path(mcq_dataset).resolve()),
+        "dataset_fingerprint": dataset_fp,
+        "kb_fingerprint": kb_fp,
+        "retrieval_config_fingerprint": retrieval_fp,
+        "retrieval_config": retrieval_cfg,
+        "kb_meta": kb_meta,
+    }
+
+    snapshots = {}
+    total = len(samples)
+    console.print(f"[cyan]Precomputing retrieval snapshots for {total} MCQ samples...[/cyan]")
+    for idx, sample in enumerate(samples, 1):
+        snapshots[sample.sample_id] = retriever.retrieve(
+            query=sample.question,
+            query_id=sample.sample_id,
+            run_id=uuid.uuid4().hex,
+        )
+        if idx % 10 == 0 or idx == total:
+            console.print(f"[dim]{idx}/{total}[/dim]")
+
+    out = save_retrieval_snapshots(out_path, snapshots=snapshots, meta=meta)
+    console.print(f"[green]Saved snapshots:[/green] {out}")
 
 
 @app.command("analyze")

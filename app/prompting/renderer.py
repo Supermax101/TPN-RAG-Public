@@ -112,7 +112,6 @@ class PromptRenderer:
                 "FEW_SHOT": "few_shot.txt",
                 "COT": "cot.txt",
                 "COT_SC": "cot_sc.txt",
-                "RAP": "rap.txt",
             }
         self._cache: Dict[str, str] = {}
 

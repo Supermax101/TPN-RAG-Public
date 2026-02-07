@@ -5,7 +5,6 @@ set -euo pipefail
 # Expected cwd: repo root, venv active, .env configured.
 
 MCQ_DATASET="${MCQ_DATASET:-eval/data/benchmark_2026-02-05/mcq_holdout.jsonl}"
-OPEN_DATASET="${OPEN_DATASET:-eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl}"
 PERSIST_DIR="${PERSIST_DIR:-./data}"
 OUTPUT_DIR="${OUTPUT_DIR:-eval/results/benchmark_gpt5mini}"
 REPEATS="${REPEATS:-3}"
@@ -34,7 +33,6 @@ GATING_FLAGS+=(--rag-min-context-chars "$RAG_MIN_CONTEXT_CHARS")
 
 python scripts/run_benchmark.py \
   --mcq-dataset "$MCQ_DATASET" \
-  --open-dataset "$OPEN_DATASET" \
   --persist-dir "$PERSIST_DIR" \
   --output-dir "$OUTPUT_DIR" \
   --repeats "$REPEATS" \
@@ -45,7 +43,6 @@ python scripts/run_benchmark.py \
   --max-decompositions "$MAX_DECOMPOSITIONS" \
   "${GATING_FLAGS[@]}" \
   --models "$MODELS" \
-  --include-baseline \
   --max-concurrent "$MAX_CONCURRENT"
 
 echo "==> Latest artifacts"

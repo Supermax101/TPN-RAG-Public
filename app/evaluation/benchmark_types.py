@@ -24,6 +24,8 @@ class PromptStrategy(str, Enum):
     FEW_SHOT = "FEW_SHOT"
     COT = "COT"
     COT_SC = "COT_SC"
+    # RAP is retained for backward compatibility with old run ledgers, but
+    # is intentionally excluded from current benchmark defaults.
     RAP = "RAP"
 
 
@@ -74,6 +76,33 @@ class ExperimentConfig(BaseModel):
     retrieval_iterations: int = Field(default=2, ge=1, le=4)
     max_query_decompositions: int = Field(default=3, ge=1, le=8)
     max_context_chars: int = Field(default=6000, ge=1000)
+    # ---------------------------------------------------------------------
+    # MCQ generation token budgets (speed control)
+    # ---------------------------------------------------------------------
+    mcq_max_tokens_zs: int = Field(
+        default=256,
+        ge=32,
+        le=4096,
+        description="Max tokens for MCQ zero-shot generations.",
+    )
+    mcq_max_tokens_few_shot: int = Field(
+        default=256,
+        ge=32,
+        le=4096,
+        description="Max tokens for MCQ few-shot generations.",
+    )
+    mcq_max_tokens_cot: int = Field(
+        default=384,
+        ge=32,
+        le=4096,
+        description="Max tokens for MCQ chain-of-thought generations.",
+    )
+    mcq_max_tokens_retry: int = Field(
+        default=256,
+        ge=32,
+        le=4096,
+        description="Max tokens for MCQ retries/structured-output rescue.",
+    )
     rag_gating_enabled: bool = Field(
         default=True,
         description="When true, only inject RAG context when retrieval confidence is high; otherwise fall back to baseline.",
@@ -103,8 +132,9 @@ class ExperimentConfig(BaseModel):
             PromptStrategy.ZS,
             PromptStrategy.FEW_SHOT,
             PromptStrategy.COT,
-            PromptStrategy.COT_SC,
-            PromptStrategy.RAP,
+            # Intentionally exclude COT_SC and RAP from the default matrix:
+            # - COT_SC is expensive (3 passes per sample)
+            # - RAP is RAG-only and tends to confound baseline comparisons
         ]
     )
     models: List[ModelSpec] = Field(default_factory=list)

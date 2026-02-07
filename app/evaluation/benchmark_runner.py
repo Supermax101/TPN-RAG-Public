@@ -125,9 +125,11 @@ class BenchmarkRunner:
         self,
         config: ExperimentConfig,
         retriever: Optional[RetrieverAdapter] = None,
+        precomputed_snapshots: Optional[Dict[str, RetrievalSnapshot]] = None,
     ):
         self.config = config
         self.answer_metrics = AnswerMetrics()
+        self._precomputed_snapshots = precomputed_snapshots or None
 
         # Optionally wrap retriever with agentic relevance judging
         if retriever and config.agentic_retrieval:
@@ -148,6 +150,18 @@ class BenchmarkRunner:
             from ..prompting.example_pool import FewShotPool
 
             self._example_pool = FewShotPool(TPN_EXAMPLE_POOL)
+
+    def _mcq_max_tokens_for_strategy(self, strategy: PromptStrategy) -> int:
+        if strategy == PromptStrategy.ZS:
+            return int(self.config.mcq_max_tokens_zs)
+        if strategy == PromptStrategy.FEW_SHOT:
+            return int(self.config.mcq_max_tokens_few_shot)
+        if strategy == PromptStrategy.COT:
+            return int(self.config.mcq_max_tokens_cot)
+        if strategy == PromptStrategy.COT_SC:
+            return int(self.config.mcq_max_tokens_cot)
+        # RAP is intentionally unsupported in current benchmark runs.
+        return int(self.config.mcq_max_tokens_retry)
 
     def _should_use_rag_context(self, snapshot: Optional[RetrievalSnapshot]) -> tuple[bool, str, float]:
         """
@@ -184,6 +198,9 @@ class BenchmarkRunner:
     def _condition_grid(self) -> List[Tuple[PromptStrategy, bool]]:
         conditions: List[Tuple[PromptStrategy, bool]] = []
         for strategy in self.config.prompt_strategies:
+            # RAP is explicitly excluded from the current benchmark plan.
+            if strategy == PromptStrategy.RAP:
+                continue
             if self.config.include_no_rag and strategy != PromptStrategy.RAP:
                 conditions.append((strategy, False))
             if self.config.include_rag:
@@ -221,13 +238,14 @@ class BenchmarkRunner:
         system_prompt: str,
         temperature: float = 0.0,
         seed: Optional[int] = None,
+        max_tokens: int = 800,
     ):
         """Make a single LLM call."""
         return await adapter.generate(
             prompt=prompt,
             system=system_prompt,
             temperature=temperature,
-            max_tokens=1000,
+            max_tokens=max_tokens,
             model_id=model.model_name,
             run_id=run_id,
             seed=seed,
@@ -257,7 +275,7 @@ class BenchmarkRunner:
                 prompt=prompt,
                 system=system_prompt,
                 temperature=0.7,
-                max_tokens=1000,
+                max_tokens=self._mcq_max_tokens_for_strategy(PromptStrategy.COT_SC),
                 model_id=model.model_name,
                 run_id=f"{run_id}_sc{i}",
             )
@@ -318,6 +336,7 @@ class BenchmarkRunner:
         response_text = ""
         tokens_used = 0
         latency_ms = 0.0
+        max_tokens = self._mcq_max_tokens_for_strategy(strategy) if sample.track == DatasetTrack.MCQ else 1000
 
         try:
             if strategy == PromptStrategy.COT_SC and sample.track == DatasetTrack.MCQ:
@@ -329,6 +348,7 @@ class BenchmarkRunner:
             else:
                 result = await self._generate_single(
                     adapter, prompt, model, run_id, system_prompt, seed=self.config.seed,
+                    max_tokens=max_tokens,
                 )
                 response_text = result.text
                 tokens_used = result.tokens_used
@@ -361,6 +381,7 @@ class BenchmarkRunner:
                                 adapter, prompt, model, f"{run_id}_retry{retry_i}",
                                 system_prompt,
                                 seed=None,  # vary output
+                                max_tokens=int(self.config.mcq_max_tokens_retry),
                             )
                             retry_answer, _, _ = parse_mcq_response(
                                 retry_result.text, is_multi_answer=True,
@@ -381,7 +402,7 @@ class BenchmarkRunner:
                             schema=_MCQ_SCHEMA,
                             system=system_prompt,
                             temperature=0.0,
-                            max_tokens=1000,
+                            max_tokens=int(self.config.mcq_max_tokens_retry),
                             model_id=model.model_name,
                         )
                         parsed_answer = normalize_answer(structured.get("answer", ""))
@@ -516,6 +537,10 @@ class BenchmarkRunner:
         retrieval_cache_shared: Dict[str, RetrievalSnapshot] = {}
         retrieval_cache_per_strategy: Dict[Tuple[str, str], RetrievalSnapshot] = {}
         progress = {"done": 0, "total": total_calls}
+
+        # If snapshots were precomputed offline, load them and skip retrieval.
+        if self._precomputed_snapshots is not None and self.config.include_rag:
+            retrieval_cache_shared = dict(self._precomputed_snapshots)
 
         # Pre-compute retrieval snapshots (sequential — disk I/O)
         # When fair_shared_context is enabled, reuse the same snapshot across all

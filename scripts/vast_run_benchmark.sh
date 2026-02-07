@@ -5,7 +5,6 @@ set -euo pipefail
 # Expected cwd: repo root, venv active, .env configured.
 
 MCQ_DATASET="${MCQ_DATASET:-eval/data/benchmark_2026-02-05/mcq_holdout.jsonl}"
-OPEN_DATASET="${OPEN_DATASET:-eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl}"
 PERSIST_DIR="${PERSIST_DIR:-./data}"
 OUTPUT_DIR="${OUTPUT_DIR:-eval/results/benchmark}"
 REPEATS="${REPEATS:-5}"
@@ -15,23 +14,27 @@ MAX_DECOMPOSITIONS="${MAX_DECOMPOSITIONS:-4}"
 MODELS="${MODELS:-gpt-4o,claude-sonnet,gemini-2.5-pro,grok-4,kimi-k2}"
 EMBEDDING_PROVIDER="${EMBEDDING_PROVIDER:-openai}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-text-embedding-3-large}"
+RUN_INGEST="${RUN_INGEST:-0}"
 
 echo "==> Git commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 
 echo "==> Step 0: Convert Excel to JSONL"
 python scripts/convert_eval_xlsx.py --out-dir "$(dirname "$MCQ_DATASET")"
 
-echo "==> Step 1: Build indexes"
-python scripts/tpnctl.py ingest \
-  --docs-dir data/documents \
-  --persist-dir "$PERSIST_DIR" \
-  --embedding-provider "$EMBEDDING_PROVIDER" \
-  --embedding-model "$EMBEDDING_MODEL"
+if [[ "$RUN_INGEST" == "1" ]]; then
+  echo "==> Step 1: Build/update indexes (RUN_INGEST=1)"
+  python scripts/tpnctl.py ingest \
+    --docs-dir data/documents \
+    --persist-dir "$PERSIST_DIR" \
+    --embedding-provider "$EMBEDDING_PROVIDER" \
+    --embedding-model "$EMBEDDING_MODEL"
+else
+  echo "==> Step 1: Skipping index build (set RUN_INGEST=1 to rebuild/update)"
+fi
 
 echo "==> Step 2: Run benchmark matrix"
 python scripts/tpnctl.py benchmark \
   --mcq-dataset "$MCQ_DATASET" \
-  --open-dataset "$OPEN_DATASET" \
   --persist-dir "$PERSIST_DIR" \
   --output-dir "$OUTPUT_DIR" \
   --repeats "$REPEATS" \

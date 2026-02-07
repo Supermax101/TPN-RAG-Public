@@ -31,6 +31,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import os
@@ -451,18 +452,43 @@ class IngestionPipeline:
         logger.info(f"Discovered {len(md_files)} markdown files")
         return sorted(md_files)
 
-    def process_file(self, file_path: Path) -> tuple[List[Chunk], CleaningStats]:
-        with open(file_path, "r", encoding="utf-8") as f:
-            raw_text = f.read()
+    @staticmethod
+    def _sha256_text(text: str) -> str:
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    def process_file(self, file_path: Path) -> tuple[List[Chunk], CleaningStats, str]:
+        raw_text = file_path.read_text(encoding="utf-8")
+        file_sha256 = self._sha256_text(raw_text)
         cleaned_text, clean_stats = self.cleaner.clean(raw_text, source_name=file_path.name)
         chunks = self.chunker.chunk(cleaned_text, source=file_path.name, additional_metadata={"file_path": str(file_path)})
-        return chunks, clean_stats
+        return chunks, clean_stats, file_sha256
+
+    def _manifest_path(self) -> Optional[Path]:
+        if not self.persist_dir:
+            return None
+        return self.persist_dir / "ingestion_manifest.json"
+
+    def _load_manifest(self) -> Dict[str, Any]:
+        path = self._manifest_path()
+        if not path or not path.exists():
+            return {}
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    def _save_manifest(self, manifest: Dict[str, Any]) -> None:
+        path = self._manifest_path()
+        if not path:
+            return
+        path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     def run(
         self,
         create_vector_store: bool = True,
         create_bm25_index: bool = True,
         save_stats: bool = True,
+        rebuild_vector_store: bool = False,
     ) -> IngestionStats:
         stats = IngestionStats()
 
@@ -478,10 +504,36 @@ class IngestionPipeline:
 
         all_chunks: List[Chunk] = []
         chunk_sizes: List[int] = []
+        per_file_chunks: Dict[str, List[Chunk]] = {}
+        per_file_hash: Dict[str, str] = {}
+        per_file_chunk_count: Dict[str, int] = {}
+
+        manifest: Dict[str, Any] = {}
+        force_rebuild = bool(rebuild_vector_store)
+        changed_files: set[str] = set()
+
+        if create_vector_store and self.persist_dir:
+            manifest = self._load_manifest()
+            # If manifest exists but config changed, force rebuild for correctness.
+            if manifest:
+                expected = {
+                    "collection_name": self.collection_name,
+                    "chunk_size": self.chunker.chunk_size,
+                    "chunk_overlap": self.chunker.chunk_overlap,
+                    "embedding_provider": self.embedding_provider,
+                    "embedding_model": self.embedding_model,
+                }
+                for k, v in expected.items():
+                    if manifest.get(k) != v:
+                        logger.info("Ingestion config changed (%s). Forcing vector store rebuild.", k)
+                        force_rebuild = True
+                        break
 
         for file_path in md_files:
             try:
-                chunks, clean_stats = self.process_file(file_path)
+                chunks, clean_stats, file_sha256 = self.process_file(file_path)
+                per_file_hash[file_path.name] = file_sha256
+                per_file_chunk_count[file_path.name] = len(chunks)
 
                 stats.files_processed += 1
                 stats.total_original_chars += clean_stats.original_length
@@ -500,6 +552,16 @@ class IngestionPipeline:
 
                 all_chunks.extend(chunks)
 
+                # Track per-file chunks for incremental vector updates.
+                per_file_chunks[file_path.name] = chunks
+                if create_vector_store and self.persist_dir:
+                    if force_rebuild:
+                        changed_files.add(file_path.name)
+                    else:
+                        prev = (manifest.get("files") or {}).get(file_path.name) if manifest else None
+                        if not prev or prev.get("sha256") != file_sha256:
+                            changed_files.add(file_path.name)
+
             except Exception as e:
                 stats.files_failed += 1
                 stats.errors.append(f"Failed to process {file_path.name}: {e}")
@@ -513,7 +575,15 @@ class IngestionPipeline:
 
         if create_vector_store and all_chunks:
             try:
-                self._create_vector_store(all_chunks)
+                self._create_vector_store(
+                    all_chunks,
+                    per_file_chunks=per_file_chunks,
+                    per_file_hash=per_file_hash,
+                    per_file_chunk_count=per_file_chunk_count,
+                    manifest=manifest,
+                    changed_files=changed_files,
+                    rebuild=force_rebuild,
+                )
                 stats.vector_store_created = True
                 logger.info("Vector store created successfully")
             except Exception as e:
@@ -534,7 +604,16 @@ class IngestionPipeline:
 
         return stats
 
-    def _create_vector_store(self, chunks: List[Chunk]) -> None:
+    def _create_vector_store(
+        self,
+        chunks: List[Chunk],
+        per_file_chunks: Dict[str, List[Chunk]],
+        per_file_hash: Dict[str, str],
+        per_file_chunk_count: Dict[str, int],
+        manifest: Dict[str, Any],
+        changed_files: set[str],
+        rebuild: bool,
+    ) -> None:
         try:
             import chromadb
             from chromadb.config import Settings
@@ -553,32 +632,102 @@ class IngestionPipeline:
 
         embedding_fn = self._create_embedding_function()
 
-        try:
-            self._chroma_client.delete_collection(self.collection_name)
-        except Exception:
-            pass
+        # Resolve existing collection (for incremental update) unless forced rebuild.
+        existing_collection = None
+        if not rebuild:
+            try:
+                existing_collection = self._chroma_client.get_collection(
+                    name=self.collection_name,
+                    embedding_function=embedding_fn,
+                )
+            except Exception:
+                existing_collection = None
 
-        self._collection = self._chroma_client.create_collection(
-            name=self.collection_name,
-            embedding_function=embedding_fn,
-            metadata={"hnsw:space": "cosine"},
-        )
-
-        documents = [c.content for c in chunks]
-        metadatas = [{**c.metadata, "is_table": c.is_table, "chunk_length": c.length} for c in chunks]
-        ids = [f"chunk_{i}" for i in range(len(chunks))]
-
-        batch_size = 100
-        for i in range(0, len(documents), batch_size):
-            end_idx = min(i + batch_size, len(documents))
-            self._collection.add(
-                documents=documents[i:end_idx],
-                metadatas=metadatas[i:end_idx],
-                ids=ids[i:end_idx],
+        if rebuild or existing_collection is None:
+            try:
+                self._chroma_client.delete_collection(self.collection_name)
+            except Exception:
+                pass
+            self._collection = self._chroma_client.create_collection(
+                name=self.collection_name,
+                embedding_function=embedding_fn,
+                metadata={"hnsw:space": "cosine"},
             )
-            logger.debug(f"Added chunks {i} to {end_idx}")
+            # Full rebuild: treat all files as changed.
+            changed_files = set(per_file_chunks.keys())
+            manifest = {}
+        else:
+            self._collection = existing_collection
 
-        logger.info(f"Created vector store with {len(documents)} chunks")
+        # Incremental strategy:
+        # - delete chunks for changed/removed files
+        # - add chunks for changed/new files
+        manifest_files = dict((manifest.get("files") or {}) if manifest else {})
+        current_files = set(per_file_chunks.keys())
+
+        removed_files = set(manifest_files.keys()) - current_files
+        for fname in sorted(removed_files):
+            prior = manifest_files.get(fname) or {}
+            prior_count = int(prior.get("chunk_count") or 0)
+            if prior_count > 0:
+                ids = [f"{fname}::chunk_{i}" for i in range(prior_count)]
+                try:
+                    self._collection.delete(ids=ids)
+                except Exception:
+                    pass
+            manifest_files.pop(fname, None)
+
+        for fname in sorted(changed_files):
+            new_chunks = per_file_chunks.get(fname) or []
+
+            # Delete prior chunks for this file (if any).
+            prior = manifest_files.get(fname) or {}
+            prior_count = int(prior.get("chunk_count") or 0)
+            if prior_count > 0:
+                ids = [f"{fname}::chunk_{i}" for i in range(prior_count)]
+                try:
+                    self._collection.delete(ids=ids)
+                except Exception:
+                    pass
+
+            documents = [c.content for c in new_chunks]
+            metadatas = [{**c.metadata, "is_table": c.is_table, "chunk_length": c.length} for c in new_chunks]
+            ids = [
+                f"{fname}::chunk_{int(c.metadata.get('chunk_index', i))}"
+                for i, c in enumerate(new_chunks)
+            ]
+
+            batch_size = 100
+            for i in range(0, len(documents), batch_size):
+                end_idx = min(i + batch_size, len(documents))
+                self._collection.add(
+                    documents=documents[i:end_idx],
+                    metadatas=metadatas[i:end_idx],
+                    ids=ids[i:end_idx],
+                )
+            manifest_files[fname] = {
+                "sha256": per_file_hash.get(fname, ""),
+                "chunk_count": int(per_file_chunk_count.get(fname, len(new_chunks))),
+            }
+
+        # Persist manifest so future ingests can skip unchanged docs.
+        new_manifest = {
+            "version": 1,
+            "collection_name": self.collection_name,
+            "chunk_size": self.chunker.chunk_size,
+            "chunk_overlap": self.chunker.chunk_overlap,
+            "embedding_provider": self.embedding_provider,
+            "embedding_model": self.embedding_model,
+            "files": manifest_files,
+        }
+        self._save_manifest(new_manifest)
+
+        logger.info(
+            "Vector store update complete: %d changed, %d removed, %d total files",
+            len(changed_files),
+            len(removed_files),
+            len(new_manifest["files"]),
+        )
 
     def _create_embedding_function(self):
         """Create embedding function for ChromaDB."""
@@ -721,6 +870,11 @@ def main():
         help="Skip vector store creation",
     )
     parser.add_argument(
+        "--rebuild-vector-store",
+        action="store_true",
+        help="Force a full rebuild of the vector store (re-embeds all docs).",
+    )
+    parser.add_argument(
         "--no-bm25",
         action="store_true",
         help="Skip BM25 index creation",
@@ -746,6 +900,7 @@ def main():
     print(f"Embedding provider: {args.embedding_provider}")
     print(f"Embedding model: {args.embedding_model}")
     print(f"Vector store: {'disabled' if args.no_vector_store else 'enabled'}")
+    print(f"Vector rebuild: {'yes' if args.rebuild_vector_store else 'no (incremental)'}")
     print(f"BM25 index: {'disabled' if args.no_bm25 else 'enabled'}")
     print()
 
@@ -763,6 +918,7 @@ def main():
         create_vector_store=not args.no_vector_store,
         create_bm25_index=not args.no_bm25,
         save_stats=True,
+        rebuild_vector_store=bool(args.rebuild_vector_store),
     )
 
     print("\n" + "=" * 60)

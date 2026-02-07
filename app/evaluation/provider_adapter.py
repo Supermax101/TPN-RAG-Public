@@ -57,6 +57,9 @@ PROVIDER_RATE_LIMITS = {
     "gemini":    {"max_concurrent": 2, "delay": 2.0},
     "xai":       {"max_concurrent": 5, "delay": 0.2},
     "kimi":      {"max_concurrent": 3, "delay": 1.0},
+    # Local GPU inference: keep strictly sequential unless we explicitly
+    # build a batching server (vLLM/TGI). Parallel calls can OOM or thrash.
+    "huggingface": {"max_concurrent": 1, "delay": 0.0},
 }
 
 
@@ -179,11 +182,23 @@ class SyncModelWrapper:
     ) -> GenerationResult:
         self._ensure_init()
         start = time.time()
-        response = await asyncio.to_thread(
-            self.provider._generate_impl,
-            prompt=prompt,
-            system_prompt=system,
-        )
+        # HuggingFaceProvider uses self.config.* inside generate_local(). We set
+        # per-call budgets here so the benchmark runner's max_tokens is honored.
+        prior_max = getattr(self.provider.config, "max_tokens", None)
+        prior_temp = getattr(self.provider.config, "temperature", None)
+        try:
+            self.provider.config.max_tokens = max_tokens
+            self.provider.config.temperature = temperature
+            response = await asyncio.to_thread(
+                self.provider._generate_impl,
+                prompt=prompt,
+                system_prompt=system,
+            )
+        finally:
+            if prior_max is not None:
+                self.provider.config.max_tokens = prior_max
+            if prior_temp is not None:
+                self.provider.config.temperature = prior_temp
         text = response.answer if hasattr(response, "answer") else str(response)
         tokens = getattr(response, "tokens_used", 0)
         latency = getattr(response, "latency_ms", (time.time() - start) * 1000)
