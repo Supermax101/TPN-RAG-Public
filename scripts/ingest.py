@@ -684,9 +684,12 @@ class IngestionPipeline:
         # Migration safety:
         # - If a non-empty collection exists but no ingestion_manifest.json is present, we might
         #   be dealing with legacy IDs. Adding our new deterministic IDs would create duplicates.
-        # - However, if the existing collection already uses the new deterministic ID scheme
-        #   (<filename>::chunk_<n>), we can safely proceed without a rebuild and write a manifest.
-        if not rebuild and existing_collection is not None and not (manifest.get("files") if manifest else None):
+        # - If the existing collection already uses the new deterministic ID scheme
+        #   (<filename>::chunk_<n>), we can safely proceed without a rebuild.
+        # - In the common "manifest missing due to a prior crash" case, we can bootstrap the
+        #   manifest without touching the vector store (no re-embedding).
+        manifest_has_files = bool((manifest.get("files") if isinstance(manifest, dict) else None) or {})
+        if not rebuild and existing_collection is not None and not manifest_has_files:
             try:
                 existing_count = int(existing_collection.count() or 0)
             except Exception:
@@ -714,6 +717,36 @@ class IngestionPipeline:
                     )
                     rebuild = True
                     existing_collection = None
+                else:
+                    # Manifest bootstrap: if the existing collection size matches our current
+                    # chunk plan, write a manifest and keep the vector store untouched.
+                    expected_total = sum(int(v or 0) for v in per_file_chunk_count.values())
+                    if expected_total > 0 and existing_count == expected_total:
+                        manifest_files = {
+                            fname: {
+                                "sha256": per_file_hash.get(fname, ""),
+                                "chunk_count": int(per_file_chunk_count.get(fname) or 0),
+                            }
+                            for fname in sorted(per_file_chunks.keys())
+                        }
+                        new_manifest = {
+                            "version": 1,
+                            "collection_name": self.collection_name,
+                            "chunk_size": self.chunker.chunk_size,
+                            "chunk_overlap": self.chunker.chunk_overlap,
+                            "embedding_provider": self.embedding_provider,
+                            "embedding_model": self.embedding_model,
+                            "kb_manifest_sha256": kb_manifest_sha256,
+                            "files": manifest_files,
+                        }
+                        self._save_manifest(new_manifest)
+                        logger.info(
+                            "Wrote ingestion_manifest.json for existing Chroma collection (%d chunks) without re-embedding.",
+                            existing_count,
+                        )
+                        # Keep existing collection as-is.
+                        self._collection = existing_collection
+                        return
 
         if rebuild or existing_collection is None:
             try:
