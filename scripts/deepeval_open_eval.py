@@ -556,12 +556,24 @@ def main() -> int:
 
         result_rag = None
         if judge_rag_cases:
-            result_rag = evaluate(
-                test_cases=judge_rag_cases,
-                metrics=[faithfulness, c_precision, c_recall, c_relevancy],
-                async_config=async_cfg,
-                display_config=display_cfg,
-            )
+            try:
+                result_rag = evaluate(
+                    test_cases=judge_rag_cases,
+                    metrics=[faithfulness, c_precision, c_recall, c_relevancy],
+                    async_config=async_cfg,
+                    display_config=display_cfg,
+                )
+            except Exception as e:
+                if judge == primary:
+                    raise
+                print(
+                    f"[WARN] RAG grounding metrics failed for secondary judge {judge_id}: {e}",
+                    file=sys.stderr,
+                )
+                print(
+                    f"[INFO] Continuing with base metrics only for {judge_id}.",
+                    file=sys.stderr,
+                )
 
         base_rows = _test_results(result_base)
         rag_rows = _test_results(result_rag)
