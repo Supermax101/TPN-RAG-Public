@@ -407,7 +407,12 @@ class IngestionPipeline:
 
                 def __call__(self, input: List[str]) -> List[List[float]]:
                     model = self._load_model()
-                    embeddings = model.encode(input, prompt_name="document", show_progress_bar=False)
+                    # Prefer document/passage encoding when available. Avoid requiring a specific
+                    # prompt name like "document" which not all models define.
+                    if hasattr(model, "encode_document"):
+                        embeddings = model.encode_document(input, show_progress_bar=False)
+                    else:
+                        embeddings = model.encode(input, show_progress_bar=False)
                     return embeddings.tolist()
 
             return HuggingFaceEmbedding(model_name=self.embedding_model)
