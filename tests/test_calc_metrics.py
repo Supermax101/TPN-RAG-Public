@@ -1,8 +1,10 @@
 import pytest
 
 from app.evaluation.calc_metrics import (
+    analyze_reference_targets,
     evaluate_calc_metrics,
     evaluate_doc_citations,
+    extract_final_answer_text,
     extract_quantities,
 )
 
@@ -34,6 +36,34 @@ def test_calc_metrics_unit_mismatch():
     )
     assert r.quantity_recall == 0.0
     assert r.unit_mismatch_count >= 1
+
+
+def test_extract_quantities_concentration_per_ml():
+    qs = extract_quantities("Multrys contains 0.06 mg/mL of copper.")
+    assert len(qs) == 1
+    q = qs[0]
+    assert q.family == "mass_mg"
+    assert q.per_units == ("ml",)
+
+
+def test_key_metrics_tolerate_multi_target_reference():
+    r = evaluate_calc_metrics(
+        expected_answer="0.183 mL/hr (rounded to 0.2 mL/hr).",
+        output_answer="0.2 mL/hr",
+    )
+    assert r.key_recall == 1.0
+    assert r.key_precision == 1.0
+    assert r.key_f1 == 1.0
+
+
+def test_extract_final_answer_text_block():
+    text = "Final answer: 5 mg/kg/min\nWork: 300 mg/hr / 60 = 5 mg/min\nCitations: (none)"
+    assert extract_final_answer_text(text) == "5 mg/kg/min"
+
+
+def test_analyze_reference_targets_single_target():
+    ref = analyze_reference_targets("GIR is 5 mg/kg/min.")
+    assert ref.is_single_target is True
 
 
 def test_doc_citations_match_gold_and_context():

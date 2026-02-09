@@ -423,6 +423,7 @@ class IngestionPipeline:
     def __init__(
         self,
         docs_dir: str | Path,
+        kb_manifest: Optional[str | Path] = None,
         persist_dir: Optional[str | Path] = None,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
@@ -431,6 +432,7 @@ class IngestionPipeline:
         collection_name: str = "tpn_documents",
     ):
         self.docs_dir = Path(docs_dir)
+        self.kb_manifest_path = Path(kb_manifest) if kb_manifest else None
         self.persist_dir = Path(persist_dir) if persist_dir else None
         self.embedding_provider = embedding_provider.lower()
         self.embedding_model = embedding_model
@@ -445,9 +447,41 @@ class IngestionPipeline:
         self._bm25_corpus = []
         self._bm25_metadata = []
 
+    def _kb_manifest_sha256(self) -> str:
+        if not self.kb_manifest_path:
+            return ""
+        try:
+            raw = self.kb_manifest_path.read_bytes()
+        except Exception:
+            return ""
+        return hashlib.sha256(raw).hexdigest()
+
+    def _load_kb_manifest(self) -> Dict[str, Any]:
+        if not self.kb_manifest_path:
+            return {}
+        try:
+            return json.loads(self.kb_manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
     def discover_files(self) -> List[Path]:
         if not self.docs_dir.exists():
             raise FileNotFoundError(f"Source directory not found: {self.docs_dir}")
+        if self.kb_manifest_path:
+            manifest = self._load_kb_manifest()
+            included = manifest.get("included_files") or []
+            md_files: List[Path] = []
+            for rel in included:
+                p = (self.docs_dir / str(rel)).resolve()
+                if p.exists() and p.is_file() and p.suffix.lower() == ".md":
+                    md_files.append(p)
+            logger.info(
+                "Discovered %d markdown files (KB manifest: %s)",
+                len(md_files),
+                str(self.kb_manifest_path),
+            )
+            return sorted(md_files)
+
         md_files = list(self.docs_dir.glob("*.md"))
         logger.info(f"Discovered {len(md_files)} markdown files")
         return sorted(md_files)
@@ -511,6 +545,7 @@ class IngestionPipeline:
         manifest: Dict[str, Any] = {}
         force_rebuild = bool(rebuild_vector_store)
         changed_files: set[str] = set()
+        kb_manifest_sha256 = self._kb_manifest_sha256()
 
         if create_vector_store and self.persist_dir:
             manifest = self._load_manifest()
@@ -522,6 +557,7 @@ class IngestionPipeline:
                     "chunk_overlap": self.chunker.chunk_overlap,
                     "embedding_provider": self.embedding_provider,
                     "embedding_model": self.embedding_model,
+                    "kb_manifest_sha256": kb_manifest_sha256,
                 }
                 for k, v in expected.items():
                     if manifest.get(k) != v:
@@ -734,6 +770,7 @@ class IngestionPipeline:
             "chunk_overlap": self.chunker.chunk_overlap,
             "embedding_provider": self.embedding_provider,
             "embedding_model": self.embedding_model,
+            "kb_manifest_sha256": kb_manifest_sha256,
             "files": manifest_files,
         }
         self._save_manifest(new_manifest)
@@ -848,6 +885,11 @@ def main():
         help="Path to markdown files (default: %(default)s)",
     )
     parser.add_argument(
+        "--kb-manifest",
+        default="",
+        help="Optional KB manifest JSON (data/kb_manifests/kb_clean.json, kb_max.json). When set, only listed .md files are ingested.",
+    )
+    parser.add_argument(
         "--persist-dir",
         default="./data",
         help="Path to persist vector store and index (default: %(default)s)",
@@ -911,6 +953,8 @@ def main():
     print("TPN RAG Document Ingestion")
     print("=" * 60)
     print(f"\nSource: {args.docs_dir}")
+    if args.kb_manifest:
+        print(f"KB manifest: {args.kb_manifest}")
     print(f"Persist: {args.persist_dir}")
     print(f"Chunk size: {args.chunk_size}, overlap: {args.chunk_overlap}")
     print(f"Embedding provider: {args.embedding_provider}")
@@ -922,6 +966,7 @@ def main():
 
     pipeline = IngestionPipeline(
         docs_dir=args.docs_dir,
+        kb_manifest=(args.kb_manifest or None),
         persist_dir=args.persist_dir,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,

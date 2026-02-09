@@ -12,6 +12,60 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 
 
+def wilson_ci(k: int, n: int, alpha: float = 0.05) -> Dict[str, float]:
+    """
+    Wilson score interval for a binomial proportion.
+
+    Returns dict with:
+    - p_hat
+    - ci_low
+    - ci_high
+    """
+    if n <= 0:
+        return {"p_hat": 0.0, "ci_low": 0.0, "ci_high": 0.0}
+    k = max(0, min(int(k), int(n)))
+    p = k / n
+
+    # z for two-sided alpha
+    try:
+        from scipy.stats import norm
+
+        z = float(norm.ppf(1 - alpha / 2))
+    except Exception:
+        # Good approximation for 95% CI when scipy is unavailable.
+        z = 1.959963984540054
+
+    denom = 1 + (z * z) / n
+    center = (p + (z * z) / (2 * n)) / denom
+    half = (z * math.sqrt((p * (1 - p) + (z * z) / (4 * n)) / n)) / denom
+    return {"p_hat": float(p), "ci_low": float(max(0.0, center - half)), "ci_high": float(min(1.0, center + half))}
+
+
+def mcnemar_exact(b: int, c: int) -> float:
+    """
+    Exact two-sided McNemar test p-value (binomial test on discordant pairs).
+
+    b = count(no_rag=1, rag=0)
+    c = count(no_rag=0, rag=1)
+    """
+    b = int(max(0, b))
+    c = int(max(0, c))
+    n = b + c
+    if n == 0:
+        return 1.0
+
+    # Two-sided exact binomial p-value with p=0.5.
+    k = min(b, c)
+    # Compute tail probability sum_{i=0..k} C(n,i) / 2^n
+    # Use math.comb to avoid scipy dependency.
+    tail = 0.0
+    for i in range(0, k + 1):
+        tail += math.comb(n, i)
+    p_one = tail / (2**n)
+    p_two = min(1.0, 2.0 * p_one)
+    return float(p_two)
+
+
 def cohen_kappa(a: Sequence[str], b: Sequence[str]) -> float:
     """Compute Cohen's kappa for two categorical raters."""
     if len(a) != len(b) or not a:
@@ -155,4 +209,3 @@ def holm_bonferroni(pvalues: Dict[str, float], alpha: float = 0.05) -> Dict[str,
             # stop rule for Holm
             break
     return decisions
-

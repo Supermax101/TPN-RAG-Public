@@ -107,9 +107,42 @@ def check_leakage(
     raise typer.Exit(code=code)
 
 
+@app.command("audit-kb-leakage")
+def audit_kb_leakage(
+    dataset: Path = typer.Option(..., help="Eval dataset JSONL path"),
+    persist_dir: Path = typer.Option(ROOT / "data", help="Persist dir containing bm25/ corpus artifacts"),
+    topk: int = typer.Option(50, help="BM25 top-k candidates to consider per question"),
+    fuzzy_threshold: float = typer.Option(0.75, help="Flag as suspected leak if fuzzy similarity >= threshold"),
+    out: Optional[Path] = typer.Option(None, help="Output JSON path (default: eval/results/leakage_audit_*.json)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print command only"),
+) -> None:
+    """Audit leakage of eval questions against KB chunk text (BM25 corpus)."""
+    cmd = [
+        sys.executable,
+        "scripts/audit_kb_leakage.py",
+        "--dataset",
+        str(dataset),
+        "--persist-dir",
+        str(persist_dir),
+        "--topk",
+        str(topk),
+        "--fuzzy-threshold",
+        str(fuzzy_threshold),
+    ]
+    if out is not None:
+        cmd.extend(["--out", str(out)])
+    code = _run(cmd, dry_run=dry_run)
+    raise typer.Exit(code=code)
+
+
 @app.command("ingest")
 def ingest(
     docs_dir: Path = typer.Option(ROOT / "data/documents", help="Source markdown docs"),
+    kb_manifest: Optional[Path] = typer.Option(
+        None,
+        "--kb-manifest",
+        help="Optional KB manifest JSON (e.g., data/kb_manifests/kb_clean.json). When set, only listed .md files are ingested.",
+    ),
     persist_dir: Path = typer.Option(ROOT / "data", help="Persist path for indexes"),
     no_vector_store: bool = typer.Option(False, "--no-vector-store", help="Build BM25 only"),
     chunk_size: int = typer.Option(1000, help="Chunk size"),
@@ -145,6 +178,8 @@ def ingest(
         "--embedding-model",
         embedding_model,
     ]
+    if kb_manifest is not None:
+        cmd.extend(["--kb-manifest", str(kb_manifest)])
     if no_vector_store:
         cmd.append("--no-vector-store")
     code = _run(cmd, dry_run=dry_run)
@@ -174,7 +209,7 @@ def preview_prompts(
 
 @app.command("benchmark")
 def benchmark(
-    mcq_dataset: Path = typer.Option(..., help="MCQ JSONL path"),
+    mcq_dataset: Optional[Path] = typer.Option(None, help="MCQ JSONL path (optional)"),
     open_dataset: Optional[Path] = typer.Option(None, help="Open-ended JSONL path"),
     persist_dir: Path = typer.Option(ROOT / "data", help="Persist dir containing indexes"),
     output_dir: Path = typer.Option(ROOT / "eval/results/benchmark", help="Benchmark output folder"),
@@ -209,14 +244,19 @@ def benchmark(
         "--retrieval-snapshots-in",
         help="Path to precomputed retrieval snapshots JSONL (skips retrieval + query embeddings).",
     ),
+    strategies: str = typer.Option(
+        "ZS,FEW_SHOT,COT",
+        "--strategies",
+        help="Comma-separated prompt strategies: ZS, FEW_SHOT, COT, COT_SC, RAP (default: ZS,FEW_SHOT,COT)",
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print command only"),
 ) -> None:
     """Run full benchmark matrix."""
+    if mcq_dataset is None and open_dataset is None:
+        raise typer.BadParameter("Provide at least one of --mcq-dataset or --open-dataset.")
     cmd = [
         sys.executable,
         "scripts/run_benchmark.py",
-        "--mcq-dataset",
-        str(mcq_dataset),
         "--persist-dir",
         str(persist_dir),
         "--output-dir",
@@ -237,7 +277,11 @@ def benchmark(
         models,
         "--max-concurrent",
         str(max_concurrent),
+        "--strategies",
+        strategies,
     ]
+    if mcq_dataset is not None:
+        cmd.extend(["--mcq-dataset", str(mcq_dataset)])
     if disable_iterative_retrieval:
         cmd.append("--disable-iterative-retrieval")
     if open_dataset:
@@ -336,6 +380,16 @@ def precompute_retrieval(
         "embedding_model": settings.embedding_model,
         "chroma_collection_name": settings.chroma_collection_name,
     }
+
+    # If present, include ingestion manifest fingerprint so KB-clean vs KB-max
+    # are distinguishable even when embedding params are identical.
+    try:
+        ingestion_manifest = Path(persist_dir) / "ingestion_manifest.json"
+        if ingestion_manifest.exists():
+            kb_meta["ingestion_manifest_sha256"] = file_fingerprint(ingestion_manifest)
+            kb_meta["ingestion_manifest_path"] = str(ingestion_manifest.resolve())
+    except Exception:
+        pass
 
     # Best-effort: capture index sizes for sanity.
     try:

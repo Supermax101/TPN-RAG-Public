@@ -35,7 +35,12 @@ from .prompting import render_prompt
 from .prompting import render_open_prompt
 from .provider_adapter import PROVIDER_RATE_LIMITS, create_provider_adapter
 from .retriever_adapter import RetrieverAdapter
-from .calc_metrics import evaluate_calc_metrics, evaluate_doc_citations
+from .calc_metrics import (
+    analyze_reference_targets,
+    evaluate_calc_metrics,
+    evaluate_doc_citations,
+    extract_final_answer_text,
+)
 
 # Number of independent passes for CoT-SC majority voting
 _COT_SC_PASSES = 3
@@ -439,10 +444,16 @@ class BenchmarkRunner:
                     ground_truth_source=sample.source_doc,
                     ground_truth_page=sample.page,
                 )
-                calc = evaluate_calc_metrics(
+                calc_full = evaluate_calc_metrics(
                     expected_answer=sample.reference_answer or "",
                     output_answer=response_text,
                 )
+                final_text = extract_final_answer_text(response_text)
+                calc_final = evaluate_calc_metrics(
+                    expected_answer=sample.reference_answer or "",
+                    output_answer=final_text,
+                )
+                ref = analyze_reference_targets(sample.reference_answer or "")
                 retrieved_sources = (
                     [c.source for c in retrieval_snapshot.chunks] if retrieval_snapshot else []
                 )
@@ -457,16 +468,39 @@ class BenchmarkRunner:
                         "exact_match": eval_result.exact_match,
                         "key_phrase_overlap": eval_result.key_phrase_overlap,
                         "citation_match": float(eval_result.citation_match),
-                        "quantity_recall": calc.quantity_recall,
-                        "quantity_precision": calc.quantity_precision,
-                        "quantity_f1": calc.quantity_f1,
-                        "unit_mismatch_count": calc.unit_mismatch_count,
-                        "expected_quantity_count": calc.expected_quantity_count,
-                        "output_quantity_count": calc.output_quantity_count,
-                        "matched_quantity_count": calc.matched_quantity_count,
-                        "rel_error_mean": calc.rel_error_mean,
-                        "rel_error_p50": calc.rel_error_p50,
-                        "rel_error_p95": calc.rel_error_p95,
+                        # Deterministic calc metrics (full output).
+                        "quantity_recall": calc_full.quantity_recall,
+                        "quantity_precision": calc_full.quantity_precision,
+                        "quantity_f1": calc_full.quantity_f1,
+                        "key_recall": calc_full.key_recall,
+                        "key_precision": calc_full.key_precision,
+                        "key_f1": calc_full.key_f1,
+                        "unit_mismatch_count": calc_full.unit_mismatch_count,
+                        "expected_quantity_count": calc_full.expected_quantity_count,
+                        "output_quantity_count": calc_full.output_quantity_count,
+                        "matched_quantity_count": calc_full.matched_quantity_count,
+                        "expected_key_count": calc_full.expected_key_count,
+                        "output_key_count": calc_full.output_key_count,
+                        "matched_key_count": calc_full.matched_key_count,
+                        "rel_error_mean": calc_full.rel_error_mean,
+                        "rel_error_p50": calc_full.rel_error_p50,
+                        "rel_error_p95": calc_full.rel_error_p95,
+                        # Deterministic calc metrics (Final answer block only).
+                        "final_quantity_recall": calc_final.quantity_recall,
+                        "final_quantity_precision": calc_final.quantity_precision,
+                        "final_quantity_f1": calc_final.quantity_f1,
+                        "final_key_recall": calc_final.key_recall,
+                        "final_key_precision": calc_final.key_precision,
+                        "final_key_f1": calc_final.key_f1,
+                        "final_unit_mismatch_count": calc_final.unit_mismatch_count,
+                        "final_output_quantity_count": calc_final.output_quantity_count,
+                        "final_output_key_count": calc_final.output_key_count,
+                        "final_rel_error_mean": calc_final.rel_error_mean,
+                        "final_rel_error_p50": calc_final.rel_error_p50,
+                        "final_rel_error_p95": calc_final.rel_error_p95,
+                        # Reference "single-target" indicators (silver-label robustness reporting).
+                        "ref_multi_value_key_count": ref.multi_value_key_count,
+                        "ref_is_single_target": float(ref.is_single_target),
                         "doc_citation_present": float(citations.citation_present),
                         "doc_cited_doc_count": citations.cited_doc_count,
                         "doc_cites_gold_source": float(citations.cites_gold_source_doc)
@@ -722,11 +756,26 @@ class BenchmarkRunner:
                 "latency_ms_mean": sum(r.latency_ms for r in valid) / len(valid),
                 "error_rate": (len(rows) - len(valid)) / len(rows),
             }
+            row["rag_context_used_rate"] = (
+                sum(float(r.metrics.get("rag_context_used", 0.0)) for r in valid) / len(valid)
+            )
+            if rag_mode == "rag":
+                used = [r for r in valid if bool(r.metrics.get("rag_context_used"))]
+                not_used = [r for r in valid if not bool(r.metrics.get("rag_context_used"))]
+                row["n_ctx_used"] = len(used)
+                row["n_ctx_not_used"] = len(not_used)
             if track == DatasetTrack.MCQ.value:
                 row["accuracy"] = sum(1 for r in valid if r.correct) / len(valid)
                 row["partial_rate"] = (
                     sum(float(r.metrics.get("partial_match", 0.0)) for r in valid) / len(valid)
                 )
+                if rag_mode == "rag":
+                    used = [r for r in valid if bool(r.metrics.get("rag_context_used"))]
+                    not_used = [r for r in valid if not bool(r.metrics.get("rag_context_used"))]
+                    if used:
+                        row["accuracy_ctx_used"] = sum(1 for r in used if r.correct) / len(used)
+                    if not_used:
+                        row["accuracy_ctx_not_used"] = sum(1 for r in not_used if r.correct) / len(not_used)
             else:
                 row["f1_mean"] = sum(float(r.metrics.get("f1", 0.0)) for r in valid) / len(valid)
                 row["citation_match_rate"] = (
@@ -741,6 +790,43 @@ class BenchmarkRunner:
                 row["quantity_precision_mean"] = (
                     sum(float(r.metrics.get("quantity_precision", 0.0)) for r in valid) / len(valid)
                 )
+                row["key_f1_mean"] = (
+                    sum(float(r.metrics.get("key_f1", 0.0)) for r in valid) / len(valid)
+                )
+                row["key_recall_mean"] = (
+                    sum(float(r.metrics.get("key_recall", 0.0)) for r in valid) / len(valid)
+                )
+                row["key_precision_mean"] = (
+                    sum(float(r.metrics.get("key_precision", 0.0)) for r in valid) / len(valid)
+                )
+                row["final_quantity_f1_mean"] = (
+                    sum(float(r.metrics.get("final_quantity_f1", 0.0)) for r in valid) / len(valid)
+                )
+                row["final_key_f1_mean"] = (
+                    sum(float(r.metrics.get("final_key_f1", 0.0)) for r in valid) / len(valid)
+                )
+                row["ref_single_target_rate"] = (
+                    sum(float(r.metrics.get("ref_is_single_target", 0.0)) for r in valid) / len(valid)
+                )
+                single = [r for r in valid if float(r.metrics.get("ref_is_single_target", 0.0) or 0.0) >= 0.5]
+                if single:
+                    row["final_key_f1_mean_single_target"] = (
+                        sum(float(r.metrics.get("final_key_f1", 0.0)) for r in single) / len(single)
+                    )
+                    row["final_quantity_f1_mean_single_target"] = (
+                        sum(float(r.metrics.get("final_quantity_f1", 0.0)) for r in single) / len(single)
+                    )
+                if rag_mode == "rag":
+                    used = [r for r in valid if bool(r.metrics.get("rag_context_used"))]
+                    not_used = [r for r in valid if not bool(r.metrics.get("rag_context_used"))]
+                    if used:
+                        row["final_key_f1_mean_ctx_used"] = (
+                            sum(float(r.metrics.get("final_key_f1", 0.0)) for r in used) / len(used)
+                        )
+                    if not_used:
+                        row["final_key_f1_mean_ctx_not_used"] = (
+                            sum(float(r.metrics.get("final_key_f1", 0.0)) for r in not_used) / len(not_used)
+                        )
                 row["doc_citation_present_rate"] = (
                     sum(float(r.metrics.get("doc_citation_present", 0.0)) for r in valid) / len(valid)
                 )

@@ -110,3 +110,77 @@ def test_select_calc_50_filters_and_ranks(tmp_path):
     # Ensure manifest is JSON-serializable.
     json.dumps(manifest)
 
+
+def test_select_calc_50_stratified_mode(tmp_path):
+    csv_path = tmp_path / "calc.csv"
+    _write_csv(
+        csv_path,
+        [
+            {
+                "S.No": "10",
+                "Provider": "openai",
+                "Question": "Calculate dose: 2 g/kg/day for 2 kg.",
+                "Answer": "Dose is 4 g/day.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "advanced",
+                "Source Document": "DocA",
+                "Verification Confidence": "0.95",
+            },
+            {
+                "S.No": "11",
+                "Provider": "openai",
+                "Question": "Calculate GIR for 1 kg at 3 mL/hr D10.",
+                "Answer": "GIR is 5 mg/kg/min.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "advanced",
+                "Source Document": "DocB",
+                "Verification Confidence": "0.94",
+            },
+            {
+                "S.No": "12",
+                "Provider": "openai",
+                "Question": "Calculate infusion rate for a PN bag over 24 hours.",
+                "Answer": "Initial 0.1 mL/hr, then advance to 0.2 mL/hr as tolerated.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "intermediate",
+                "Source Document": "DocC",
+                "Verification Confidence": "0.90",
+            },
+            {
+                "S.No": "13",
+                "Provider": "openai",
+                "Question": "Calculate infusion rate for 12 mL over 24 hours.",
+                "Answer": "0.5 mL/hr.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "intermediate",
+                "Source Document": "DocD",
+                "Verification Confidence": "0.70",
+            },
+            {
+                "S.No": "14",
+                "Provider": "openai",
+                "Question": "Calculate recommended fluids.",
+                "Answer": "Recommended fluids: 100-120 mL/kg/day.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "basic",
+                "Source Document": "DocE",
+                "Verification Confidence": "0.98",
+            },
+            {
+                "S.No": "15",
+                "Provider": "openai",
+                "Question": "Calculate GIR.",
+                "Answer": "5 mg/kg/min.",
+                "Reasoning (Chain of Thought)": "x",
+                "Complexity": "basic",
+                "Source Document": "DocF",
+                "Verification Confidence": "0.99",
+            },
+        ],
+    )
+    rows = read_calc_csv(csv_path)
+    records, _ = convert_calc_rows(rows, split="holdout")
+    selected, manifest = select_calc_50(records, mode="stratified", total_n=4, high_n=2)
+    assert manifest["selection"]["mode"] == "stratified"
+    assert len(selected) == 4
+    assert [r["sample_id"] for r in selected] == ["calc_010", "calc_011", "calc_012", "calc_013"]

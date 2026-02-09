@@ -87,6 +87,15 @@ data/chromadb/
 data/bm25/
 *.png
 
+# Visualization outputs (regenerate from eval/results)
+data_viz/figures/
+
+# Paper/index artifacts (not committed by default)
+persist/
+eval/cache/
+eval/paper_runs/
+!eval/paper_runs/README.md
+
 # OCR import sources (large, not needed in repo)
 data/imports/
 data/ingestion_stats.json

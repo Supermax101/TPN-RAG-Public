@@ -1,10 +1,10 @@
 {
-  "input_csv": "/Users/chandra/Documents/TPN-RAG-Public/data/eval/TPN_Calculation_QA_200.csv",
+  "input_csv": "data/eval/TPN_Calculation_QA_200.csv",
   "split": "holdout",
   "outputs": {
-    "calc_200": "/Users/chandra/Documents/TPN-RAG-Public/eval/data/calc_200_holdout.jsonl",
-    "calc_50": "/Users/chandra/Documents/TPN-RAG-Public/eval/data/calc_50_holdout.jsonl",
-    "calc_50_manifest": "/Users/chandra/Documents/TPN-RAG-Public/eval/data/calc_50_manifest.json"
+    "calc_200": "eval/data/calc_200_holdout.jsonl",
+    "calc_50": "eval/data/calc_50_holdout.jsonl",
+    "calc_50_manifest": "eval/data/calc_50_manifest.json"
   },
   "stats": {
     "input_rows": 200,

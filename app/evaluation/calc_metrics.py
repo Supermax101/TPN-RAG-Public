@@ -12,7 +12,7 @@ import math
 import re
 from dataclasses import dataclass
 from statistics import mean
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
 _VALUE_RE = r"-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?"
@@ -20,8 +20,8 @@ _VALUE_RE = r"-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?"
 # Matches single quantities like "4.175 mg/kg/min" or "0.2 mL/hr" or "42 µg/L".
 _QUANTITY_RE = re.compile(
     rf"(?P<value>{_VALUE_RE})\s*(?P<unit>mcg|µg|ug|mg|g|iu|mmol|mEq|meq|kcal|mOsm|mosm|mL|ml|L|l|dL|dl|%)"
-    r"(?:\s*/\s*(?P<per1>kg|day|d|hr|h|min|m|L|l|dL|dl))?"
-    r"(?:\s*/\s*(?P<per2>kg|day|d|hr|h|min|m|L|l|dL|dl))?",
+    r"(?:\s*/\s*(?P<per1>kg|day|d|hr|h|min|ml|m|L|l|dL|dl))?"
+    r"(?:\s*/\s*(?P<per2>kg|day|d|hr|h|min|ml|m|L|l|dL|dl))?",
     re.IGNORECASE,
 )
 
@@ -29,12 +29,16 @@ _QUANTITY_RE = re.compile(
 _RANGE_RE = re.compile(
     rf"(?P<v1>{_VALUE_RE})\s*(?:to|–|-)\s*(?P<v2>{_VALUE_RE})\s*"
     r"(?P<unit>mcg|µg|ug|mg|g|iu|mmol|mEq|meq|kcal|mOsm|mosm|mL|ml|L|l|dL|dl|%)"
-    r"(?:\s*/\s*(?P<per1>kg|day|d|hr|h|min|m|L|l|dL|dl))?"
-    r"(?:\s*/\s*(?P<per2>kg|day|d|hr|h|min|m|L|l|dL|dl))?",
+    r"(?:\s*/\s*(?P<per1>kg|day|d|hr|h|min|ml|m|L|l|dL|dl))?"
+    r"(?:\s*/\s*(?P<per2>kg|day|d|hr|h|min|ml|m|L|l|dL|dl))?",
     re.IGNORECASE,
 )
 
-_PER_ORDER = {"kg": 0, "day": 1, "hr": 2, "min": 3, "l": 4, "dl": 5}
+_PER_ORDER = {"kg": 0, "day": 1, "hr": 2, "min": 3, "ml": 4, "l": 5, "dl": 6}
+
+_FINAL_ANSWER_RE = re.compile(
+    r"(?is)final\s*answer\s*:\s*(?P<final>.+?)(?:\n\s*(?:work|citations|sources)\s*:|$)"
+)
 
 
 def _normalize_unit(unit: str) -> str:
@@ -67,6 +71,8 @@ def _normalize_per(per: Optional[str]) -> str:
         return "day"
     if p == "m":
         return "min"
+    if p == "ml":
+        return "ml"
     if p == "l":
         return "l"
     if p == "dl":
@@ -203,10 +209,16 @@ class CalcMetricResult:
     quantity_recall: float
     quantity_precision: float
     quantity_f1: float
+    key_recall: float
+    key_precision: float
+    key_f1: float
     unit_mismatch_count: int
     expected_quantity_count: int
     output_quantity_count: int
     matched_quantity_count: int
+    expected_key_count: int
+    output_key_count: int
+    matched_key_count: int
     rel_error_mean: Optional[float]
     rel_error_p50: Optional[float]
     rel_error_p95: Optional[float]
@@ -234,6 +246,66 @@ def _within_tolerance(expected: float, actual: float, rel_tol: float, abs_floor:
     return abs(actual - expected) <= tol
 
 
+def extract_final_answer_text(text: str) -> str:
+    """
+    Extract the portion of an open-ended response intended to be the final answer.
+
+    This avoids unfairly penalizing CoT "Work:" intermediate numbers.
+    If no "Final answer:" header is present, the full text is returned.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    m = _FINAL_ANSWER_RE.search(raw)
+    if not m:
+        return raw
+    final = (m.group("final") or "").strip()
+    return final or raw
+
+
+@dataclass
+class ReferenceTargetingResult:
+    expected_quantity_count: int
+    expected_key_count: int
+    multi_value_key_count: int
+    is_single_target: bool
+
+
+def analyze_reference_targets(
+    expected_answer: str,
+    rel_tol: float = 0.02,
+    abs_floor: float = 0.01,
+) -> ReferenceTargetingResult:
+    """
+    Characterize whether a reference answer is "single-target" (one value per dimension key).
+
+    For silver labels, multi-target references (e.g., unrounded + rounded values, stepwise titration)
+    are harder to score fairly; we report metrics on all samples and on the single-target subset.
+    """
+    expected = extract_quantities(expected_answer)
+    grouped: Dict[Tuple[str, Tuple[str, ...]], List[Quantity]] = {}
+    for q in expected:
+        grouped.setdefault(q.key, []).append(q)
+
+    multi_value_keys = 0
+    for qs in grouped.values():
+        reps: List[float] = []
+        for q in qs:
+            v = float(q.value_base)
+            if any(_within_tolerance(r, v, rel_tol=rel_tol, abs_floor=abs_floor) for r in reps):
+                continue
+            reps.append(v)
+        if len(reps) > 1:
+            multi_value_keys += 1
+
+    return ReferenceTargetingResult(
+        expected_quantity_count=len(expected),
+        expected_key_count=len(grouped),
+        multi_value_key_count=int(multi_value_keys),
+        is_single_target=(multi_value_keys == 0),
+    )
+
+
 def evaluate_calc_metrics(
     expected_answer: str,
     output_answer: str,
@@ -251,10 +323,16 @@ def evaluate_calc_metrics(
             quantity_recall=1.0,
             quantity_precision=1.0,
             quantity_f1=1.0,
+            key_recall=1.0,
+            key_precision=1.0,
+            key_f1=1.0,
             unit_mismatch_count=0,
             expected_quantity_count=0,
             output_quantity_count=0,
             matched_quantity_count=0,
+            expected_key_count=0,
+            output_key_count=0,
+            matched_key_count=0,
             rel_error_mean=None,
             rel_error_p50=None,
             rel_error_p95=None,
@@ -315,14 +393,48 @@ def evaluate_calc_metrics(
             "p95": _percentile(rel_errors, 0.95),
         }
 
+    # Key-level scoring: treat each (unit-family, per-units) as a single target dimension.
+    expected_by_key: Dict[Tuple[str, Tuple[str, ...]], List[Quantity]] = {}
+    for e in expected:
+        expected_by_key.setdefault(e.key, []).append(e)
+    output_by_key: Dict[Tuple[str, Tuple[str, ...]], List[Quantity]] = {}
+    for a in output:
+        output_by_key.setdefault(a.key, []).append(a)
+
+    matched_keys = 0
+    for k, exp_qs in expected_by_key.items():
+        out_qs = output_by_key.get(k) or []
+        ok = False
+        for a in out_qs:
+            for e in exp_qs:
+                if _within_tolerance(e.value_base, a.value_base, rel_tol=rel_tol, abs_floor=abs_floor):
+                    ok = True
+                    break
+            if ok:
+                break
+        if ok:
+            matched_keys += 1
+
+    expected_key_count = len(expected_by_key)
+    output_key_count = len(output_by_key)
+    key_precision = (matched_keys / output_key_count) if output_key_count else (1.0 if expected_key_count == 0 else 0.0)
+    key_recall = (matched_keys / expected_key_count) if expected_key_count else (1.0 if output_key_count == 0 else 0.0)
+    key_f1 = (2 * key_precision * key_recall / (key_precision + key_recall)) if (key_precision + key_recall) > 0 else 0.0
+
     return CalcMetricResult(
         quantity_recall=round(recall, 4),
         quantity_precision=round(precision, 4),
         quantity_f1=round(f1, 4),
+        key_recall=round(key_recall, 4),
+        key_precision=round(key_precision, 4),
+        key_f1=round(key_f1, 4),
         unit_mismatch_count=int(unit_mismatch),
         expected_quantity_count=int(expected_n),
         output_quantity_count=int(output_n),
         matched_quantity_count=int(matched_expected),
+        expected_key_count=int(expected_key_count),
+        output_key_count=int(output_key_count),
+        matched_key_count=int(matched_keys),
         rel_error_mean=round(stats["mean"], 6) if stats else None,
         rel_error_p50=round(stats["p50"], 6) if stats else None,
         rel_error_p95=round(stats["p95"], 6) if stats else None,
@@ -397,4 +509,3 @@ def evaluate_doc_citations(
         cites_gold_source_doc=cites_gold,
         cited_doc_in_retrieved_context=cited_in_context,
     )
-

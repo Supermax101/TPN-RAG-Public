@@ -12,9 +12,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
+import json
 import logging
 import random
+import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Dict, List
 
@@ -40,6 +44,38 @@ from app.evaluation import (
     PromptStrategy,
     RetrieverAdapter,
 )
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _git_head_sha(root: Path) -> str:
+    try:
+        out = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=str(root))
+        return out.decode("utf-8").strip()
+    except Exception:
+        return ""
+
+
+def _fingerprint_prompt_templates(template_dir: Path) -> str:
+    """
+    Fingerprint the full prompt template set used by the benchmark.
+
+    We hash filenames + contents to detect any prompt drift between runs.
+    """
+    h = hashlib.sha256()
+    files = sorted([p for p in template_dir.glob("*.txt") if p.is_file()])
+    for p in files:
+        h.update(p.name.encode("utf-8"))
+        h.update(b"\n")
+        h.update(p.read_bytes())
+        h.update(b"\n")
+    return h.hexdigest()
 
 
 DEFAULT_MODEL_MATRIX: Dict[str, ModelSpec] = {
@@ -139,7 +175,46 @@ def parse_args():
     parser.add_argument("--agentic-judge-model", type=str, default="gpt-4o-mini", help="Model for agentic judge (default: gpt-4o-mini)")
     parser.add_argument("--dynamic-few-shot", action="store_true", help="Enable embedding-based few-shot example selection")
     parser.add_argument("--retrieval-snapshots-in", type=str, default="", help="Path to precomputed retrieval snapshots JSONL")
+    parser.add_argument(
+        "--strategies",
+        type=str,
+        default="ZS,FEW_SHOT,COT",
+        help="Comma-separated prompt strategies: ZS, FEW_SHOT, COT, COT_SC, RAP (default: ZS,FEW_SHOT,COT)",
+    )
     return parser.parse_args()
+
+
+def _parse_strategies_arg(value: str) -> List[PromptStrategy]:
+    raw = (value or "").strip()
+    if not raw or raw.lower() in {"default"}:
+        return [PromptStrategy.ZS, PromptStrategy.FEW_SHOT, PromptStrategy.COT]
+    if raw.lower() in {"all"}:
+        return [PromptStrategy.ZS, PromptStrategy.FEW_SHOT, PromptStrategy.COT, PromptStrategy.COT_SC, PromptStrategy.RAP]
+
+    mapping = {s.value: s for s in PromptStrategy}
+    out: List[PromptStrategy] = []
+    seen = set()
+
+    for part in [p.strip() for p in raw.split(",") if p.strip()]:
+        norm = part.replace("-", "_").upper()
+        norm = {
+            "ZERO_SHOT": "ZS",
+            "ZEROSHOT": "ZS",
+            "FEWSHOT": "FEW_SHOT",
+            "FEW": "FEW_SHOT",
+            "CHAIN_OF_THOUGHT": "COT",
+            "COTSC": "COT_SC",
+        }.get(norm, norm)
+        if norm not in mapping:
+            raise SystemExit(f"Unknown strategy '{part}'. Use --strategies ZS,FEW_SHOT,COT (or 'all').")
+        s = mapping[norm]
+        if s.value not in seen:
+            seen.add(s.value)
+            out.append(s)
+
+    if not out:
+        raise SystemExit("No strategies selected. Provide a comma-separated list or 'default'.")
+    return out
 
 
 def main():
@@ -161,11 +236,7 @@ def main():
     random.seed(args.seed)
 
     models = [DEFAULT_MODEL_MATRIX[k] for k in selected_keys]
-    prompt_strategies = [
-        PromptStrategy.ZS,
-        PromptStrategy.FEW_SHOT,
-        PromptStrategy.COT,
-    ]
+    prompt_strategies = _parse_strategies_arg(args.strategies)
 
     config = ExperimentConfig(
         name="tpn_publishable_benchmark",
@@ -198,6 +269,7 @@ def main():
 
     retriever = None
     precomputed_snapshots = None
+    meta = None
     if args.retrieval_snapshots_in:
         from app.evaluation.retrieval_snapshot_io import load_retrieval_snapshots
 
@@ -234,14 +306,90 @@ def main():
     summary = result.get("summary", {})
     rows = summary.get("rows", [])
     if rows:
-        print(f"\n{'Model':<20} {'Strategy':<10} {'RAG':<8} {'N':>4} {'Accuracy':>10} {'Latency(ms)':>12}")
-        print("-" * 70)
+        print(f"\n{'Model':<20} {'Strategy':<10} {'Track':<10} {'RAG':<8} {'N':>4} {'Score':>10} {'Latency(ms)':>12}")
+        print("-" * 84)
         for row in rows:
-            acc = row.get("accuracy", row.get("f1_mean", 0))
+            track = row.get("track", "")
+            if track == "mcq":
+                score = row.get("accuracy", 0)
+            else:
+                score = (
+                    row.get("final_key_f1_mean")
+                    or row.get("key_f1_mean")
+                    or row.get("quantity_f1_mean")
+                    or row.get("f1_mean", 0)
+                )
             print(
-                f"{row['model_id']:<20} {row['strategy']:<10} {row['rag_mode']:<8} "
-                f"{row['n']:>4} {acc:>9.1%} {row['latency_ms_mean']:>11.0f}"
+                f"{row['model_id']:<20} {row['strategy']:<10} {track:<10} {row['rag_mode']:<8} "
+                f"{row['n']:>4} {score:>9.1%} {row['latency_ms_mean']:>11.0f}"
             )
+
+    # ------------------------------------------------------------------
+    # Write a run manifest for provenance (paper-grade reproducibility)
+    # ------------------------------------------------------------------
+    try:
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        summary_path = Path(result["summary_path"])
+        stamp = summary_path.stem.split("_", 1)[-1] if "_" in summary_path.stem else time.strftime("%Y%m%d_%H%M%S")
+        manifest_path = output_dir / f"run_manifest_{stamp}.json"
+
+        datasets = {}
+        if args.mcq_dataset:
+            p = Path(args.mcq_dataset)
+            if not p.is_absolute():
+                p = project_root / p
+            datasets["mcq"] = {"path": str(p.resolve()), "sha256": _sha256_file(p)}
+        if args.open_dataset:
+            p = Path(args.open_dataset)
+            if not p.is_absolute():
+                p = project_root / p
+            datasets["open_ended"] = {"path": str(p.resolve()), "sha256": _sha256_file(p)}
+
+        ingestion_manifest = Path(args.persist_dir) / "ingestion_manifest.json"
+        if not ingestion_manifest.is_absolute():
+            ingestion_manifest = (project_root / ingestion_manifest).resolve()
+        kb = {
+            "persist_dir": str(Path(args.persist_dir).resolve()),
+            "ingestion_manifest_path": str(ingestion_manifest.resolve()),
+            "ingestion_manifest_sha256": _sha256_file(ingestion_manifest) if ingestion_manifest.exists() else "",
+        }
+
+        snapshots = {}
+        if args.retrieval_snapshots_in:
+            p = Path(args.retrieval_snapshots_in)
+            if not p.is_absolute():
+                p = project_root / p
+            snapshots = {
+                "path": str(p.resolve()),
+                "sha256": _sha256_file(p),
+                "meta": meta or {},
+            }
+
+        rag_policy = "disabled"
+        if config.include_rag:
+            rag_policy = "gated" if config.rag_gating_enabled else "always"
+
+        manifest = {
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "git_commit": _git_head_sha(project_root),
+            "experiment": config.model_dump(),
+            "datasets": datasets,
+            "kb": kb,
+            "retrieval_snapshots": snapshots,
+            "prompt_templates_sha256": _fingerprint_prompt_templates(project_root / "app/prompting/templates"),
+            "rag_policy": rag_policy,
+            "notes": {
+                "baseline_included": bool(config.include_no_rag),
+                "rag_included": bool(config.include_rag),
+            },
+        }
+
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        print(f"\n  Run manifest:     {manifest_path}")
+    except Exception as e:
+        print(f"\n[WARN] Failed to write run manifest: {e}")
 
 
 if __name__ == "__main__":

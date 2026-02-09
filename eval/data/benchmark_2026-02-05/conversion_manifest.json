@@ -1,0 +1,43 @@
+{
+  "mcq_xlsx": "data/eval/MCQ_Evaluation_Set_Final.xlsx",
+  "open_xlsx": "data/eval/QandA_Evaluation_Set.xlsx",
+  "split": "holdout",
+  "sample_id_scheme": {
+    "mcq": "mcq_<id>",
+    "open_ended": "open_<id>"
+  },
+  "outputs": {
+    "mcq": "eval/data/benchmark_2026-02-05/mcq_holdout.jsonl",
+    "open_ended": "eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl"
+  },
+  "hashes": {
+    "mcq_xlsx_sha256": "a3fbd6e12d9848fcd893b3c0d491e41fad479668a46a84b582afb595fd0a8170",
+    "open_xlsx_sha256": "d8f397acfb1be6abe5ba5e635a31942bc1f59f2584f8c9c8e65a7caf1fd73731",
+    "mcq_jsonl_sha256": "18f0806b69932ade19b6cf627897aa8ea4d8e856ee37cd1764dd26e4cdb9d312",
+    "open_jsonl_sha256": "22269be8fd0f0250666a6b3b37f1c56ecd3dd3a211edc5ee31c0867eb84d5514"
+  },
+  "stats": {
+    "mcq": {
+      "input_rows": 124,
+      "kept_rows": 124,
+      "skipped_rows": 0
+    },
+    "open_ended": {
+      "input_rows": 21,
+      "kept_rows": 20,
+      "skipped_rows": 1
+    }
+  },
+  "skipped": {
+    "mcq": [],
+    "open_ended": [
+      {
+        "id": "10",
+        "reason": "missing_required_fields",
+        "has_question": "True",
+        "has_expected_answer": "False",
+        "question_preview": "Case context:\nIn the past 48 hours, BGJ has received an increase in her enteral nutrition, which consists of mother\u2019s breast milk (MBM) with"
+      }
+    ]
+  }
+}

@@ -6,8 +6,12 @@ Question:
 Retrieved clinical context (use as evidence when provided):
 {context_block}
 
+Output format:
+Final answer: <concise final numeric result(s) with units>
+Work: <minimal steps and formulas>
+Citations: <one or more bracket citations if context was used>
+
 Instructions:
 - Provide the final numeric answer(s) with correct units.
 - Show only the minimal calculation steps needed to justify the result.
 - If you used retrieved context, cite the source document(s) in square brackets, e.g. [TPN Considerations].
-

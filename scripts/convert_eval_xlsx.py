@@ -14,6 +14,7 @@ Outputs:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import zipfile
@@ -91,6 +92,14 @@ def _cell_value(cell: ET.Element, shared: List[str]) -> str:
     return v_node.text
 
 
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def read_xlsx_rows(path: Path) -> List[Dict[str, str]]:
     """
     Read first worksheet from XLSX and return list of row dicts keyed by header.
@@ -159,10 +168,11 @@ def _build_question(case_context: str, question: str) -> str:
     return question
 
 
-def convert_mcq(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, object]], ConversionStats]:
+def convert_mcq(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, object]], ConversionStats, List[Dict[str, str]]]:
     option_cols = ["option_a", "option_b", "option_c", "option_d", "option_e", "option_f"]
     converted: List[Dict[str, object]] = []
     stats = ConversionStats(total_rows=len(rows))
+    skipped: List[Dict[str, str]] = []
 
     for row in rows:
         options = [_normalize_text(row.get(col, "")) for col in option_cols]
@@ -175,6 +185,16 @@ def convert_mcq(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, 
 
         if not question or len(options) < 2 or not answer_key:
             stats.skipped_rows += 1
+            raw_id = _get(row, "id") or str(stats.kept_rows + 1)
+            skipped.append(
+                {
+                    "id": raw_id,
+                    "reason": "missing_required_fields",
+                    "has_question": str(bool(question)),
+                    "options_count": str(len(options)),
+                    "has_answer_key": str(bool(answer_key)),
+                }
+            )
             continue
 
         raw_id = _get(row, "id") or str(stats.kept_rows + 1)
@@ -204,12 +224,13 @@ def convert_mcq(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, 
         )
         stats.kept_rows += 1
 
-    return converted, stats
+    return converted, stats, skipped
 
 
-def convert_open_ended(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, object]], ConversionStats]:
+def convert_open_ended(rows: List[Dict[str, str]], split: str) -> tuple[List[Dict[str, object]], ConversionStats, List[Dict[str, str]]]:
     converted: List[Dict[str, object]] = []
     stats = ConversionStats(total_rows=len(rows))
+    skipped: List[Dict[str, str]] = []
 
     for row in rows:
         question = _build_question(
@@ -220,6 +241,16 @@ def convert_open_ended(rows: List[Dict[str, str]], split: str) -> tuple[List[Dic
 
         if not question or not expected:
             stats.skipped_rows += 1
+            raw_id = _get(row, "id") or str(stats.kept_rows + 1)
+            skipped.append(
+                {
+                    "id": raw_id,
+                    "reason": "missing_required_fields",
+                    "has_question": str(bool(question)),
+                    "has_expected_answer": str(bool(expected)),
+                    "question_preview": (question or "")[:140],
+                }
+            )
             continue
 
         raw_id = _get(row, "id") or str(stats.kept_rows + 1)
@@ -246,7 +277,7 @@ def convert_open_ended(rows: List[Dict[str, str]], split: str) -> tuple[List[Dic
         )
         stats.kept_rows += 1
 
-    return converted, stats
+    return converted, stats, skipped
 
 
 def write_jsonl(records: List[Dict[str, object]], path: Path) -> None:
@@ -298,8 +329,8 @@ def main() -> int:
     mcq_rows = read_xlsx_rows(args.mcq_xlsx)
     open_rows = read_xlsx_rows(args.open_xlsx)
 
-    mcq_records, mcq_stats = convert_mcq(mcq_rows, split=args.split)
-    open_records, open_stats = convert_open_ended(open_rows, split=args.split)
+    mcq_records, mcq_stats, mcq_skipped = convert_mcq(mcq_rows, split=args.split)
+    open_records, open_stats, open_skipped = convert_open_ended(open_rows, split=args.split)
 
     mcq_path = args.out_dir / "mcq_holdout.jsonl"
     open_path = args.out_dir / "open_ended_holdout.jsonl"
@@ -312,9 +343,19 @@ def main() -> int:
         "mcq_xlsx": str(args.mcq_xlsx),
         "open_xlsx": str(args.open_xlsx),
         "split": args.split,
+        "sample_id_scheme": {
+            "mcq": "mcq_<id>",
+            "open_ended": "open_<id>",
+        },
         "outputs": {
             "mcq": str(mcq_path),
             "open_ended": str(open_path),
+        },
+        "hashes": {
+            "mcq_xlsx_sha256": _sha256_file(args.mcq_xlsx),
+            "open_xlsx_sha256": _sha256_file(args.open_xlsx),
+            "mcq_jsonl_sha256": _sha256_file(mcq_path),
+            "open_jsonl_sha256": _sha256_file(open_path),
         },
         "stats": {
             "mcq": {
@@ -327,6 +368,10 @@ def main() -> int:
                 "kept_rows": open_stats.kept_rows,
                 "skipped_rows": open_stats.skipped_rows,
             },
+        },
+        "skipped": {
+            "mcq": mcq_skipped,
+            "open_ended": open_skipped,
         },
     }
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")

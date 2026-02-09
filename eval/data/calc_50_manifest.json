@@ -1,8 +1,11 @@
 {
   "selection": {
+    "mode": "max_calcness",
+    "total_n": 50,
+    "high_n": null,
     "filter": {
       "question_regex": "\\b(calculate|infusion\\s*rate|gir|dose|meq|mmol|mosm|m\\s*l\\s*/\\s*hr|g\\s*/\\s*kg\\s*/\\s*day|mg\\s*/\\s*kg\\s*/\\s*min)\\b",
-      "require_answer_quantity_regex": "(?P<value>-?\\d+(?:\\.\\d+)?)\\s*(?P<unit>mcg|\u00b5g|ug|mg|g|iu|mmol|meq|mEq|kcal|mosm|mOsm|ml|mL|l|L|dl|dL|%)(?:\\s*/\\s*(?P<per1>kg|day|d|hr|h|min|m|l|L|dl|dL))?(?:\\s*/\\s*(?P<per2>kg|day|d|hr|h|min|m|l|L|dl|dL))?"
+      "require_answer_quantity_regex": "(?P<value>-?\\d+(?:\\.\\d+)?)\\s*(?P<unit>mcg|\u00b5g|ug|mg|g|iu|mmol|meq|mEq|kcal|mosm|mOsm|ml|mL|l|L|dl|dL|%)(?:\\s*/\\s*(?P<per1>kg|day|d|hr|h|min|ml|m|l|L|dl|dL))?(?:\\s*/\\s*(?P<per2>kg|day|d|hr|h|min|ml|m|l|L|dl|dL))?"
     },
     "ranking": [
       "complexity_weight (advanced>intermediate>basic)",
