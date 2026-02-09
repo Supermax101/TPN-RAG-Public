@@ -619,6 +619,7 @@ class IngestionPipeline:
                     manifest=manifest,
                     changed_files=changed_files,
                     rebuild=force_rebuild,
+                    kb_manifest_sha256=kb_manifest_sha256,
                 )
                 stats.vector_store_created = True
                 logger.info("Vector store created successfully")
@@ -649,6 +650,7 @@ class IngestionPipeline:
         manifest: Dict[str, Any],
         changed_files: set[str],
         rebuild: bool,
+        kb_manifest_sha256: str,
     ) -> None:
         try:
             import chromadb
@@ -679,21 +681,39 @@ class IngestionPipeline:
             except Exception:
                 existing_collection = None
 
-        # Migration safety: if we're switching to manifest-based incremental
-        # ingestion but a non-empty collection already exists and no manifest is
-        # present, incremental IDs will not match legacy IDs and would create
-        # duplicates. Force a one-time rebuild in that case.
+        # Migration safety:
+        # - If a non-empty collection exists but no ingestion_manifest.json is present, we might
+        #   be dealing with legacy IDs. Adding our new deterministic IDs would create duplicates.
+        # - However, if the existing collection already uses the new deterministic ID scheme
+        #   (<filename>::chunk_<n>), we can safely proceed without a rebuild and write a manifest.
         if not rebuild and existing_collection is not None and not (manifest.get("files") if manifest else None):
             try:
-                if int(existing_collection.count() or 0) > 0:
+                existing_count = int(existing_collection.count() or 0)
+            except Exception:
+                existing_count = 0
+
+            if existing_count > 0:
+                uses_new_ids = False
+                try:
+                    # Peek a few ids to detect the ID scheme.
+                    sample = existing_collection.get(limit=5, include=[])
+                    ids = list(sample.get("ids") or [])
+                    for _id in ids:
+                        s = str(_id)
+                        if "::chunk_" in s:
+                            uses_new_ids = True
+                            break
+                except Exception:
+                    # If we can't inspect ids, be conservative.
+                    uses_new_ids = False
+
+                if not uses_new_ids:
                     logger.info(
                         "No ingestion_manifest.json found but existing Chroma collection is non-empty; "
-                        "forcing a one-time rebuild to avoid duplicate chunks."
+                        "forcing a one-time rebuild to avoid duplicate legacy chunk IDs."
                     )
                     rebuild = True
                     existing_collection = None
-            except Exception:
-                pass
 
         if rebuild or existing_collection is None:
             try:

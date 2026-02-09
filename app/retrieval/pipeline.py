@@ -381,6 +381,21 @@ class RetrievalPipeline:
         persist_dir = Path(persist_dir)
         config = config or RetrievalConfig()
 
+        # Prefer persisted ingestion manifest (when present) over environment
+        # variables to avoid mismatches (e.g. CHROMA_COLLECTION_NAME drift
+        # between ingestion vs retrieval).
+        ingestion_manifest: Dict[str, Any] = {}
+        manifest_path = persist_dir / "ingestion_manifest.json"
+        if manifest_path.exists():
+            try:
+                ingestion_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except Exception:
+                ingestion_manifest = {}
+
+        manifest_collection = str(ingestion_manifest.get("collection_name") or "").strip() or None
+        manifest_embedding_provider = str(ingestion_manifest.get("embedding_provider") or "").strip().lower() or None
+        manifest_embedding_model = str(ingestion_manifest.get("embedding_model") or "").strip() or None
+
         # Load ChromaDB
         vector_collection = None
         chroma_path = persist_dir / "chromadb"
@@ -397,9 +412,13 @@ class RetrievalPipeline:
                     settings=ChromaSettings(anonymized_telemetry=False),
                 )
 
-                # Use the same embedding function that was used at ingestion
+                # Use the same embedding function that was used at ingestion.
+                # If the manifest is missing, fall back to settings.*.
                 embedding_fn = None
-                if settings.embedding_provider == "openai":
+                embedding_provider = manifest_embedding_provider or str(settings.embedding_provider or "").lower()
+                embedding_model = manifest_embedding_model or str(settings.embedding_model or "")
+
+                if embedding_provider == "openai":
                     import os
                     from dotenv import load_dotenv
                     load_dotenv()
@@ -408,11 +427,34 @@ class RetrievalPipeline:
                     if api_key:
                         embedding_fn = OpenAIEmbeddingFunction(
                             api_key=api_key,
-                            model_name=settings.embedding_model,
+                            model_name=embedding_model,
                         )
+                elif embedding_provider in {"huggingface", "hf"}:
+                    from chromadb.utils import embedding_functions
+                    from sentence_transformers import SentenceTransformer
 
+                    class HuggingFaceEmbedding(embedding_functions.EmbeddingFunction):
+                        def __init__(self, model_name: str):
+                            self.model_name = model_name
+                            self._model = None
+
+                        def _load_model(self):
+                            if self._model is None:
+                                logger.info("Loading embedding model: %s", self.model_name)
+                                self._model = SentenceTransformer(self.model_name, trust_remote_code=True)
+                            return self._model
+
+                        def __call__(self, input: List[str]) -> List[List[float]]:
+                            model = self._load_model()
+                            if hasattr(model, "encode_document"):
+                                embeddings = model.encode_document(input, show_progress_bar=False)
+                            else:
+                                embeddings = model.encode(input, show_progress_bar=False)
+                            return embeddings.tolist()
+
+                collection_name = manifest_collection or settings.chroma_collection_name
                 vector_collection = client.get_collection(
-                    settings.chroma_collection_name,
+                    collection_name,
                     embedding_function=embedding_fn,
                 )
                 logger.info(f"Loaded ChromaDB collection with {vector_collection.count()} documents")
