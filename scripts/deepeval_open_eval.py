@@ -547,12 +547,25 @@ def main() -> int:
         c_recall = ContextualRecallMetric(model=llm, threshold=0.6, async_mode=True)
         c_relevancy = ContextualRelevancyMetric(model=llm, threshold=0.6, async_mode=True)
 
-        result_base = evaluate(
-            test_cases=judge_cases,
-            metrics=[correctness, relevancy],
-            async_config=async_cfg,
-            display_config=display_cfg,
-        )
+        try:
+            result_base = evaluate(
+                test_cases=judge_cases,
+                metrics=[correctness, relevancy],
+                async_config=async_cfg,
+                display_config=display_cfg,
+            )
+        except Exception as e:
+            if judge == primary:
+                raise
+            print(
+                f"[WARN] Base metrics failed for secondary judge {judge_id}: {e}",
+                file=sys.stderr,
+            )
+            print(
+                f"[INFO] Skipping secondary judge {judge_id} entirely.",
+                file=sys.stderr,
+            )
+            continue
 
         result_rag = None
         if judge_rag_cases:
