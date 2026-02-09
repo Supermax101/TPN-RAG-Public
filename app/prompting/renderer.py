@@ -70,6 +70,18 @@ OPEN_FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
             "Citations: (none)"
         ),
     },
+    {
+        "question": (
+            "A patient on long-term parenteral nutrition develops cholestasis. "
+            "What is one recommended clinical strategy to reduce PN-associated cholestasis?"
+        ),
+        "answer": (
+            "Final answer: Advance enteral feeding as tolerated (even small amounts) and avoid overfeeding.\n"
+            "Work: Enteral stimulation and avoiding excessive dextrose/lipid can reduce cholestasis risk; "
+            "tailor to clinical status.\n"
+            "Citations: (none)"
+        ),
+    },
 ]
 
 

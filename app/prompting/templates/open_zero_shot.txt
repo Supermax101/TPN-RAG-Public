@@ -1,4 +1,4 @@
-You are answering a clinical TPN calculation question.
+You are answering a clinical TPN / nutrition question.
 
 Question:
 {question}
@@ -7,11 +7,11 @@ Retrieved clinical context (use as evidence when provided):
 {context_block}
 
 Output format:
-Final answer: <concise final numeric result(s) with units>
-Work: <minimal steps and formulas>
+Final answer: <concise answer; include numeric result(s) with units when applicable>
+Work: <minimal steps and/or brief clinical rationale>
 Citations: <one or more bracket citations if context was used>
 
 Instructions:
-- Provide the final numeric answer(s) with correct units.
-- Show only the minimal calculation steps needed to justify the result.
+- Provide the final answer(s) clearly. If numeric values are asked for, include them with correct units.
+- Show only the minimal steps needed to justify the result (calculations or brief rationale).
 - If you used retrieved context, cite the source document(s) in square brackets, e.g. [TPN Considerations].

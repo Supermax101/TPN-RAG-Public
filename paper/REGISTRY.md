@@ -4,7 +4,7 @@ This document freezes the *canonical* experimental definitions used for the pape
 Any benchmark/figure/table claimed as a paper result must reference this registry
 and the associated run manifests.
 
-Last updated: 2026-02-08
+Last updated: 2026-02-09
 
 ## 1) Datasets (Frozen)
 
@@ -15,25 +15,17 @@ Last updated: 2026-02-08
 - Expected N: 124
 - Track: `mcq`
 
-### Open-Ended QandA21 (clinical workflow tasks)
+### Open-Ended QandA20 (clinical workflow tasks)
 - Source: `data/eval/QandA_Evaluation_Set.xlsx`
 - Canonical JSONL: `eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl`
 - Split: `holdout`
 - Expected N: 20 (1 row skipped in conversion: id=10 missing expected_answer)
 - Track: `open_ended`
 
-### Calc-50 (primary open-ended calc endpoint)
-- Source: `data/eval/TPN_Calculation_QA_200.csv`
-- Canonical JSONL: `eval/data/calc_50_holdout.jsonl`
-- Manifest: `eval/data/calc_50_manifest.json`
-- Split: `holdout`
-- Expected N: 50
-- Track: `open_ended`
-
-### Calc-200 (supplemental)
-- Source: `data/eval/TPN_Calculation_QA_200.csv`
-- Canonical JSONL: `eval/data/calc_200_holdout.jsonl`
-- Conversion manifest: `eval/data/calc_conversion_manifest.json`
+### Takeoff41-200 (nutrition QA, mixed)
+- Source: `data/eval/takeoff41_200_tpn_nutrition_qa.jsonl`
+- Canonical JSONL: `eval/data/benchmark_2026-02-05/takeoff41_200_holdout.jsonl`
+- Conversion manifest: `eval/data/benchmark_2026-02-05/takeoff41_200_conversion_manifest.json`
 - Split: `holdout`
 - Expected N: 200
 - Track: `open_ended`
@@ -95,13 +87,9 @@ Canonical gating thresholds (unless overridden in run manifest):
 - Output constraint: final line must be `Answer: <letter(s)>`
 - RAP is excluded from paper runs.
 
-### Calc-50 / Calc-200
-- Primary: `ZS`
-- Diagnostic: `COT` (minimal work, not verbose)
-
-### QandA21
-- Primary: `ZS`
-- The dataset question field includes the case context (converter embeds it).
+### Open-ended (QandA20 + Takeoff41-200)
+- Paper main: `ZS` only
+- The dataset question field includes the case context when available (converter embeds it).
 
 ## 6) Repeats / Randomness Policy
 
@@ -119,14 +107,16 @@ Temperature policy:
 - Secondary: latency, error rate, and (for gated RAG) context-used rate
 
 ### Open-ended
-- Calc: deterministic numeric/unit metrics (primary) + LLM-judge metrics (secondary)
-- QandA21: hybrid (deterministic extraction where applicable + LLM-judge correctness)
+- Primary: LLM-judge correctness (reference-based, paraphrase-tolerant)
+- Secondary: deterministic extraction metrics (F1, key phrase overlap, numeric/unit extraction where applicable)
 - RAG-only: faithfulness + contextual precision/recall + citation compliance
 
 ## 8) Judge Policy (Open-Ended)
 
-- Primary judge: `gpt-5-mini`
-- Secondary judge: `gemini-3-flash` on a stratified 30% subset (agreement reporting)
+- Primary judge (full coverage): `gpt-5-mini-2025-08-07`
+- Secondary judges (agreement/sensitivity reporting):
+  - `claude-haiku-4-5-20251001`
+  - a Gemini judge model supported by the DeepEval Gemini wrapper (default: `gemini-3-pro-preview`)
 
 Judge prompts/rubrics must be versioned and included in supplemental materials.
 

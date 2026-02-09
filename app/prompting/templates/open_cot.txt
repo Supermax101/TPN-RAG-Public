@@ -1,4 +1,4 @@
-Solve the clinical TPN calculation step by step, then provide the final answer.
+Think step by step about the clinical reasoning (and any calculations), then provide the final answer.
 
 Question:
 {question}
@@ -7,7 +7,6 @@ Retrieved clinical context (use as evidence when provided):
 {context_block}
 
 Output format:
-Final answer: <concise final numeric result(s) with units>
-Work: <minimal steps and formulas>
+Final answer: <concise answer; include numeric result(s) with units when applicable>
+Work: <minimal steps and/or brief clinical rationale>
 Citations: <one or more bracket citations if context was used>
-

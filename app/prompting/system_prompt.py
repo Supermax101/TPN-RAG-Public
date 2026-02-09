@@ -7,7 +7,7 @@ Evaluation uses different prompts for baseline (no-RAG) and RAG conditions.
 _BASE_ROLE = (
     "You are a board-certified TPN (Total Parenteral Nutrition) Clinical Specialist\n"
     "with expertise in neonatal and pediatric nutrition support. You are taking the\n"
-    "ASPEN Nutrition Support Certification exam.\n"
+    "ASPEN TPN Nutrition Support Certification exam.\n"
 )
 
 _REASONING_RULES = (
@@ -72,8 +72,8 @@ TPN_RAG_SYSTEM_PROMPT = (
 
 _OPEN_OUTPUT_RULES = (
     "<output_rules>\n"
-    "1. Provide the final numeric answer(s) with correct units.\n"
-    "2. Show only the minimal calculation steps needed to justify the result.\n"
+    "1. Provide the final answer(s) clearly. If numeric values are asked for, include numbers with correct units.\n"
+    "2. Show only the minimal steps needed to justify the result (calculations or brief clinical rationale).\n"
     "3. If you make an assumption (e.g., rounding), state it explicitly.\n"
     "4. Keep the response short and clinically oriented.\n"
     "</output_rules>"

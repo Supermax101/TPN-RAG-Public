@@ -1,0 +1,37 @@
+{
+  "input": {
+    "path": "/Users/chandra/Documents/TPN-RAG-Public/data/eval/takeoff41_200_tpn_nutrition_qa.jsonl",
+    "sha256": "dbf5ba4c380b8667286daaf469a626fb37a2ad405693412382565cd286a62906",
+    "row_count": 200
+  },
+  "output": {
+    "jsonl_path": "/Users/chandra/Documents/TPN-RAG-Public/eval/data/benchmark_2026-02-05/takeoff41_200_holdout.jsonl",
+    "jsonl_sha256": "401ac045a01a06aedad79a7e112cd1cbd81f7e10f522e9ec051692d20704561e",
+    "split": "holdout",
+    "track": "open_ended",
+    "domain": "tpn"
+  },
+  "sample_id_scheme": "takeoff41_{id:03d}",
+  "distributions": {
+    "question_type": {
+      "calculation": 100,
+      "open_ended": 100
+    },
+    "book_title": {
+      "ASPEN Parenteral Nutrition Handbook": 37,
+      "ASPEN_Fluids_Electrolytes": 26,
+      "ASPEN_Pediatric_Nutrition": 48,
+      "Handbook": 24,
+      "NBNSC Book parsed": 13,
+      "PEDIATRIC NUTRITION": 52
+    },
+    "source_file": {
+      "ASPEN_Fluids_Electrolytes.md": 26,
+      "ASPEN_Parenteral_Nutrition.md": 37,
+      "ASPEN_Pediatric_Neonatal_Handbook.md": 24,
+      "ASPEN_Pediatric_Nutrition.md": 48,
+      "Childrens_Health_Pediatric.md": 52,
+      "NBNSC_Book.md": 13
+    }
+  }
+}
