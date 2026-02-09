@@ -52,6 +52,9 @@ dependencies = [
     "ragas>=0.2.10",
     "deepeval>=2.0.0",
     "datasets>=3.2.0",
+    # Visualization (paper figures)
+    "plotly>=6.0.0",
+    "kaleido>=0.2.1",
 
     # Metrics (BLEU, ROUGE)
     "rouge-score>=0.1.2",
