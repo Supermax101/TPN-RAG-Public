@@ -13,6 +13,8 @@ import json
 import os
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -38,6 +40,33 @@ def _run(cmd: list[str], cwd: Optional[Path] = None, dry_run: bool = False) -> i
         return 0
     result = subprocess.run(cmd, cwd=str(location))
     return result.returncode
+
+
+def _run_logged(cmd: list[str], log_path: Path, cwd: Optional[Path] = None, env: Optional[dict] = None) -> int:
+    """
+    Run a subprocess, teeing stdout/stderr to a log file and the console.
+
+    This is intended for long-running VM sessions where we want persistent logs
+    under eval/paper_runs/<run_set_id>/logs/.
+    """
+    location = cwd or ROOT
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    console.print(f"[cyan]$ {' '.join(cmd)}[/cyan]")
+    with log_path.open("w", encoding="utf-8") as f:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(location),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=env,
+        )
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            f.write(line)
+            f.flush()
+            console.print(line.rstrip("\n"))
+        return proc.wait()
 
 
 @app.command("status")
@@ -298,6 +327,240 @@ def benchmark(
         cmd.extend(["--retrieval-snapshots-in", str(retrieval_snapshots_in)])
     code = _run(cmd, dry_run=dry_run)
     raise typer.Exit(code=code)
+
+
+@app.command("paper-open-qanda20")
+def paper_open_qanda20(
+    run_set_id: Optional[str] = typer.Option(
+        None,
+        "--run-set-id",
+        help="Run set id (default: open_qanda20_v2_<timestamp>)",
+    ),
+    dataset: Path = typer.Option(
+        ROOT / "eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl",
+        "--dataset",
+        help="QandA20 open-ended dataset JSONL path",
+    ),
+    snapshots: Path = typer.Option(
+        ROOT / "eval/cache/retrieval_snapshots_kbclean_qanda20.jsonl",
+        "--snapshots",
+        help="Precomputed retrieval snapshots JSONL (KB-clean)",
+    ),
+    persist_dir: Path = typer.Option(
+        ROOT / "persist/kb_clean",
+        "--persist-dir",
+        help="Persist dir containing KB-clean indexes (for provenance; retrieval is snapshot-based)",
+    ),
+    hf_models: str = typer.Option(
+        "phi-4,gpt-oss-20b,qwen3-30b-a3b,medgemma-27b,gemma3-27b",
+        "--hf-models",
+        help="Comma-separated HuggingFace model keys (see: scripts/run_benchmark.py --list-models)",
+    ),
+    api_models: str = typer.Option(
+        "gpt-5-mini,gpt-5.2,claude-sonnet,gemini-3-flash,grok-4.1-fast,kimi-k2.5",
+        "--api-models",
+        help="Comma-separated API model keys (see: scripts/run_benchmark.py --list-models)",
+    ),
+    run_api: bool = typer.Option(
+        True,
+        "--run-api/--no-run-api",
+        help="Run API model generation in parallel with HF generation (same VM).",
+    ),
+    max_concurrent: int = typer.Option(5, "--max-concurrent", help="Max concurrent generation calls per provider"),
+    deepeval_max_concurrent: int = typer.Option(5, "--deepeval-max-concurrent", help="Max concurrent judge calls"),
+    python_gen: Optional[Path] = typer.Option(
+        None,
+        "--python-gen",
+        help="Python interpreter for generation (default: current interpreter)",
+    ),
+    python_deepeval: Optional[Path] = typer.Option(
+        None,
+        "--python-deepeval",
+        help="Python interpreter for DeepEval (default: .venv-deepeval/bin/python if present)",
+    ),
+    skip_generation: bool = typer.Option(False, "--skip-generation", help="Skip generation (use existing artifacts)"),
+    skip_deepeval: bool = typer.Option(False, "--skip-deepeval", help="Skip DeepEval scoring"),
+    skip_report: bool = typer.Option(False, "--skip-report", help="Skip report generation (CSVs + charts)"),
+    continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue queue even if one job fails"),
+) -> None:
+    """
+    Paper-grade QandA20 open-ended benchmark v2:
+    - ZS only
+    - no_rag / rag_gated / rag_always
+    - HF models sequential (GPU-safe), API models optionally in parallel
+    - tri-judge DeepEval/GEval (OpenAI + Claude + Gemini)
+    - single dedicated run folder under eval/paper_runs/<run_set_id>/
+    """
+    try:
+        from dotenv import load_dotenv
+    except Exception:
+        load_dotenv = None  # type: ignore[assignment]
+    if load_dotenv is not None:
+        load_dotenv(ROOT / ".env")
+
+    if run_set_id is None:
+        run_set_id = f"open_qanda20_v2_{time.strftime('%Y%m%d_%H%M%S')}"
+
+    run_root = ROOT / "eval/paper_runs" / run_set_id
+    logs_dir = run_root / "logs"
+    open_root = run_root / "open" / "qanda20"
+    deepeval_root = run_root / "deepeval" / "open" / "qanda20"
+    reports_root = run_root / "reports" / "open" / "qanda20"
+    for p in [logs_dir, open_root, deepeval_root, reports_root]:
+        p.mkdir(parents=True, exist_ok=True)
+
+    def _split_models(value: str) -> list[str]:
+        return [x.strip() for x in (value or "").split(",") if x.strip()]
+
+    hf_model_keys = _split_models(hf_models)
+    api_model_keys = _split_models(api_models)
+    conditions = ["no_rag", "rag_gated", "rag_always"]
+
+    py_gen = str(python_gen) if python_gen is not None else sys.executable
+    if python_deepeval is not None:
+        py_deepeval = str(python_deepeval)
+    else:
+        cand = ROOT / ".venv-deepeval" / "bin" / "python"
+        py_deepeval = str(cand) if cand.exists() else py_gen
+
+    console.print(f"[bold]Run set:[/bold] {run_set_id}")
+    console.print(f"[bold]Run root:[/bold] {run_root}")
+    console.print(f"[bold]Dataset:[/bold] {dataset}")
+    console.print(f"[bold]Snapshots:[/bold] {snapshots}")
+    console.print(f"[bold]HF models:[/bold] {', '.join(hf_model_keys) if hf_model_keys else '<none>'}")
+    console.print(f"[bold]API models:[/bold] {', '.join(api_model_keys) if api_model_keys else '<none>'}")
+
+    def _bench_cmd(model_key: str, condition: str, out_dir: Path) -> list[str]:
+        cmd = [
+            py_gen,
+            "scripts/run_benchmark.py",
+            "--open-dataset",
+            str(dataset),
+            "--persist-dir",
+            str(persist_dir),
+            "--output-dir",
+            str(out_dir),
+            "--models",
+            model_key,
+            "--strategies",
+            "ZS",
+            "--repeats",
+            "1",
+            "--max-concurrent",
+            str(max_concurrent),
+        ]
+        if condition == "no_rag":
+            cmd.append("--no-rag")
+        else:
+            cmd.extend(["--no-baseline", "--retrieval-snapshots-in", str(snapshots)])
+            if condition == "rag_always":
+                cmd.append("--disable-rag-gating")
+        return cmd
+
+    def _latest_run_records(dir_path: Path) -> Path:
+        files = sorted(dir_path.glob("run_records_*.jsonl"))
+        if not files:
+            raise FileNotFoundError(f"No run_records_*.jsonl found under {dir_path}")
+        return files[-1]
+
+    # --- Generation ---
+    api_thread_err: dict = {"rc": 0}
+
+    def _run_api_generation() -> None:
+        for model_key in api_model_keys:
+            for condition in conditions:
+                out_dir = open_root / model_key / condition
+                out_dir.mkdir(parents=True, exist_ok=True)
+                log_path = logs_dir / f"gen_api_{model_key}_{condition}.log"
+                rc = _run_logged(_bench_cmd(model_key, condition, out_dir), log_path=log_path)
+                if rc != 0:
+                    api_thread_err["rc"] = rc
+                    if not continue_on_error:
+                        return
+
+    api_thread: Optional[threading.Thread] = None
+    if run_api and api_model_keys and not skip_generation:
+        api_thread = threading.Thread(target=_run_api_generation, daemon=True)
+        api_thread.start()
+
+    if not skip_generation:
+        for model_key in hf_model_keys:
+            for condition in conditions:
+                out_dir = open_root / model_key / condition
+                out_dir.mkdir(parents=True, exist_ok=True)
+                log_path = logs_dir / f"gen_hf_{model_key}_{condition}.log"
+                rc = _run_logged(_bench_cmd(model_key, condition, out_dir), log_path=log_path)
+                if rc != 0 and not continue_on_error:
+                    raise typer.Exit(code=rc)
+
+    if api_thread is not None:
+        api_thread.join()
+        if api_thread_err["rc"] != 0 and not continue_on_error:
+            raise typer.Exit(code=int(api_thread_err["rc"]))
+
+    # --- DeepEval / GEval scoring ---
+    if not skip_deepeval:
+        env = os.environ.copy()
+        env.setdefault("PYTHONUNBUFFERED", "1")
+        env.setdefault("DEEPEVAL_DISABLE_TIMEOUTS", "1")
+        env.setdefault("DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS", "300")
+        env.setdefault("OPENAI_TIMEOUT", "600")
+
+        all_models = hf_model_keys + api_model_keys
+        for model_key in all_models:
+            for condition in conditions:
+                gen_dir = open_root / model_key / condition
+                if not gen_dir.exists():
+                    continue
+                records_path = _latest_run_records(gen_dir)
+                out_dir = deepeval_root / model_key / condition
+                out_dir.mkdir(parents=True, exist_ok=True)
+                log_path = logs_dir / f"deepeval_{model_key}_{condition}.log"
+
+                cmd = [
+                    py_deepeval,
+                    "scripts/deepeval_open_eval.py",
+                    "--rubric",
+                    "qanda20",
+                    "--dataset",
+                    str(dataset),
+                    "--records",
+                    str(records_path),
+                    "--out-dir",
+                    str(out_dir),
+                    "--primary-judge",
+                    "openai:gpt-4.1-mini-2025-04-14",
+                    "--secondary-judge",
+                    "anthropic:claude-haiku-4-5-20251001",
+                    "--secondary-judge",
+                    "gemini:gemini-2.5-flash-lite",
+                    "--secondary-subset-size",
+                    "0",
+                    "--require-all-judges",
+                    "--max-concurrent",
+                    str(deepeval_max_concurrent),
+                ]
+                if condition != "no_rag":
+                    cmd.extend(["--snapshots", str(snapshots), "--rag-only-when-context-used"])
+
+                rc = _run_logged(cmd, log_path=log_path, env=env)
+                if rc != 0 and not continue_on_error:
+                    raise typer.Exit(code=rc)
+
+    # --- Reporting (CSVs + charts) ---
+    if not skip_report:
+        report_script = ROOT / "data_viz" / "open_qanda20_v2_report.py"
+        if report_script.exists():
+            log_path = logs_dir / "report_qanda20_v2.log"
+            cmd = [py_gen, str(report_script), "--run-dir", str(run_root)]
+            rc = _run_logged(cmd, log_path=log_path)
+            if rc != 0 and not continue_on_error:
+                raise typer.Exit(code=rc)
+        else:
+            console.print(f"[yellow]Report script missing:[/yellow] {report_script}")
+
+    console.print("[green]Paper open-ended QandA20 run complete.[/green]")
+    console.print(f"[bold]Artifacts:[/bold] {run_root}")
 
 
 @app.command("precompute-retrieval")

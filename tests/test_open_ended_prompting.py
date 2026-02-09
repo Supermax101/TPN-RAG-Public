@@ -10,10 +10,11 @@ def test_open_prompt_does_not_contain_mcq_output_rules():
     )
     assert "ONLY the letter" not in prompt
     assert "Answer: <ONLY the letter" not in prompt
+    assert "Final answer:" in prompt
+    assert "STRICT output rules" in prompt
 
 
-def test_open_rag_system_prompt_requires_citations():
+def test_open_rag_system_prompt_forbids_citations():
     sp = get_open_ended_system_prompt(use_rag=True)
-    assert "citation_rules" in sp
-    assert "MUST cite" in sp
-
+    assert "citation_rules" not in sp
+    assert "Do NOT cite" in sp

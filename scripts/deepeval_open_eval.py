@@ -23,9 +23,9 @@ Tri-judge (secondary judges on a subset):
     --records <path/to/run_records_*.jsonl> \
     --snapshots eval/cache/retrieval_snapshots_kbclean_takeoff41_200.jsonl \
     --out-dir eval/results/deepeval/open/takeoff41_200 \
-    --primary-judge openai:gpt-5-mini-2025-08-07 \
+    --primary-judge openai:gpt-4.1-mini-2025-04-14 \
     --secondary-judge anthropic:claude-haiku-4-5-20251001 \
-    --secondary-judge gemini:gemini-3-flash-preview \
+    --secondary-judge gemini:gemini-2.5-flash-lite \
     --secondary-subset-size 50
 """
 
@@ -254,7 +254,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--primary-judge",
         type=str,
-        default="openai:gpt-5-mini-2025-08-07",
+        default="openai:gpt-4.1-mini-2025-04-14",
         help="Primary judge in provider:model form (full coverage).",
     )
     p.add_argument(
@@ -262,7 +262,10 @@ def parse_args() -> argparse.Namespace:
         type=str,
         action="append",
         default=[],
-        help="Secondary judge(s) in provider:model form (optional). Can be passed multiple times.",
+        help=(
+            "Secondary judge(s) in provider:model form (optional). Can be passed multiple times. "
+            "If omitted for rubric=qanda20, defaults to Claude Haiku 4.5 + Gemini 2.5 Flash Lite."
+        ),
     )
     p.add_argument(
         "--secondary-subset-size",
@@ -281,6 +284,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=10,
         help="Max concurrent judge calls (DeepEval AsyncConfig).",
+    )
+    p.add_argument(
+        "--require-all-judges",
+        action="store_true",
+        help="Fail fast if any judge cannot be initialized or errors during scoring.",
     )
     p.add_argument(
         "--rag-only-when-context-used",
@@ -370,6 +378,13 @@ def _test_results(er) -> List[dict]:
 def main() -> int:
     args = parse_args()
     _maybe_load_dotenv()
+
+    # Paper default: tri-judge on QandA20 unless the caller explicitly provides judges.
+    if (not args.secondary_judge) and str(args.rubric).strip().lower() == "qanda20":
+        args.secondary_judge = [
+            "anthropic:claude-haiku-4-5-20251001",
+            "gemini:gemini-2.5-flash-lite",
+        ]
 
     dataset_path = (PROJECT_ROOT / args.dataset).resolve() if not Path(args.dataset).is_absolute() else Path(args.dataset)
     records_path = (
@@ -520,7 +535,7 @@ def main() -> int:
             llm = _judge_llm(judge)
         except Exception as e:
             # Primary judge must work; secondary can be skipped (e.g. missing GEMINI_API_KEY).
-            if judge == primary:
+            if args.require_all_judges or judge == primary:
                 raise
             print(f"[WARN] Skipping judge {judge_id}: {e}", file=sys.stderr)
             continue
@@ -540,7 +555,7 @@ def main() -> int:
             verbose_mode=False,
             _include_g_eval_suffix=False,
         )
-        relevancy = AnswerRelevancyMetric(model=llm, threshold=0.6, async_mode=True)
+        relevancy = AnswerRelevancyMetric(model=llm, threshold=0.8, async_mode=True)
 
         faithfulness = FaithfulnessMetric(model=llm, threshold=0.8, async_mode=True)
         c_precision = ContextualPrecisionMetric(model=llm, threshold=0.6, async_mode=True)
@@ -555,7 +570,7 @@ def main() -> int:
                 display_config=display_cfg,
             )
         except Exception as e:
-            if judge == primary:
+            if args.require_all_judges or judge == primary:
                 raise
             print(
                 f"[WARN] Base metrics failed for secondary judge {judge_id}: {e}",
@@ -577,7 +592,7 @@ def main() -> int:
                     display_config=display_cfg,
                 )
             except Exception as e:
-                if judge == primary:
+                if args.require_all_judges or judge == primary:
                     raise
                 print(
                     f"[WARN] RAG grounding metrics failed for secondary judge {judge_id}: {e}",
@@ -592,7 +607,9 @@ def main() -> int:
         rag_rows = _test_results(result_rag)
 
         # --- Serialize per-testcase results ---
-        judge_out_dir = out_dir / judge_id.replace("/", "_")
+        # Make output dirs portable across filesystems (macOS disallows ':' in filenames).
+        judge_dirname = judge_id.replace("/", "_").replace(":", "__")
+        judge_out_dir = out_dir / judge_dirname
         judge_out_dir.mkdir(parents=True, exist_ok=True)
         out_records_path = judge_out_dir / f"deepeval_records_{stamp}.jsonl"
         out_summary_path = judge_out_dir / f"deepeval_summary_{stamp}.json"

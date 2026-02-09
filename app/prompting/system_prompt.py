@@ -72,20 +72,13 @@ TPN_RAG_SYSTEM_PROMPT = (
 
 _OPEN_OUTPUT_RULES = (
     "<output_rules>\n"
-    "1. Provide the final answer(s) clearly. If numeric values are asked for, include numbers with correct units.\n"
-    "2. Show only the minimal steps needed to justify the result (calculations or brief clinical rationale).\n"
-    "3. If you make an assumption (e.g., rounding), state it explicitly.\n"
-    "4. Keep the response short and clinically oriented.\n"
+    "1. Think through the clinical reasoning internally, but do NOT reveal chain-of-thought.\n"
+    "2. Output ONLY the final answer, starting with exactly: Final answer:\n"
+    "3. Do NOT include analysis, reasoning, work, step-by-step calculations, or any extra sections/headers.\n"
+    "4. Do NOT include citations, sources, brackets, or document names.\n"
+    "5. If numeric values are asked for, include numbers with correct units.\n"
+    "6. Keep the response short and clinically oriented.\n"
     "</output_rules>"
-)
-
-_OPEN_RAG_CITATION_RULES = (
-    "<citation_rules>\n"
-    "1. When retrieved context is provided, you MUST cite at least one source document.\n"
-    "2. Use square brackets with the document name exactly as shown in the retrieved context.\n"
-    "   Example: [TPN Considerations]\n"
-    "3. Do NOT fabricate citations.\n"
-    "</citation_rules>"
 )
 
 TPN_OPEN_BASE_SYSTEM_PROMPT = (
@@ -107,9 +100,8 @@ TPN_OPEN_RAG_SYSTEM_PROMPT = (
     + "1. Treat retrieved context as high-priority evidence, but it may be incomplete.\n"
     + "2. Prefer numeric values present in the retrieved context when answering.\n"
     + "3. Never invent an exact numeric value that is absent from the context.\n"
+    + "4. Do NOT cite or mention source documents.\n"
     + "</grounding_rules>\n"
-    + "\n"
-    + _OPEN_RAG_CITATION_RULES
     + "\n"
     + _OPEN_OUTPUT_RULES
 )

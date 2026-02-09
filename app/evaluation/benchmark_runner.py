@@ -437,6 +437,56 @@ class BenchmarkRunner:
                     }
                 )
             else:
+                # Enforce a strict output contract for open-ended benchmarks:
+                # - final answer only (no reasoning/work)
+                # - no citations/sources
+                #
+                # This keeps DeepEval/GEval scoring clean and makes downstream
+                # benchmarking artifacts easier to audit. If the model violates
+                # the contract, do a single retry with an explicit correction.
+                from .format_metrics import validate_open_final_answer
+
+                fmt = validate_open_final_answer(response_text)
+                metrics.update(
+                    {
+                        "format_ok": bool(fmt.ok),
+                        "format_retry_used": False,
+                        "format_violation_reason": fmt.reason,
+                    }
+                )
+
+                if not fmt.ok:
+                    prompt_retry = (
+                        prompt.rstrip()
+                        + "\n\nIMPORTANT: Your previous response violated the STRICT output rules. "
+                        + "Output ONLY the final answer starting with exactly 'Final answer:' and nothing else. "
+                        + "Do NOT include citations, sources, brackets, analysis, reasoning, work, or extra headers.\n"
+                        + "Final answer:"
+                    )
+                    try:
+                        retry = await self._generate_single(
+                            adapter=adapter,
+                            prompt=prompt_retry,
+                            model=model,
+                            run_id=f"{run_id}_format_retry",
+                            system_prompt=system_prompt,
+                            seed=None,  # vary output; some models ignore seed at temp=0
+                            max_tokens=max_tokens,
+                        )
+                        response_text = retry.text
+                        tokens_used += int(retry.tokens_used or 0)
+                        latency_ms += float(retry.latency_ms or 0.0)
+                        prompt = prompt_retry
+                        metrics["format_retry_used"] = True
+
+                        fmt2 = validate_open_final_answer(response_text)
+                        metrics["format_ok"] = bool(fmt2.ok)
+                        if not fmt2.ok:
+                            metrics["format_violation_reason_after_retry"] = fmt2.reason
+                    except Exception as e:
+                        metrics["format_retry_used"] = True
+                        metrics["format_retry_error"] = str(e)
+
                 eval_result = self.answer_metrics.evaluate_single(
                     question=sample.question,
                     generated=response_text,

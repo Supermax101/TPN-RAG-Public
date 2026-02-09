@@ -3,15 +3,15 @@ You are answering a clinical TPN / nutrition question.
 Question:
 {question}
 
-Retrieved clinical context (use as evidence when provided):
+Retrieved clinical context (use when provided; do NOT cite it):
 {context_block}
 
-Output format:
-Final answer: <concise answer; include numeric result(s) with units when applicable>
-Work: <minimal steps and/or brief clinical rationale>
-Citations: <one or more bracket citations if context was used>
+STRICT output rules:
+- Think through the problem step-by-step internally, but do NOT show your reasoning.
+- Output ONLY the final answer, starting with exactly: Final answer:
+- Do NOT include analysis, reasoning, work, step-by-step calculations, or any extra sections/headers.
+- Do NOT include citations, sources, brackets, or document names.
+- If numeric values are requested, include the numbers with correct units.
+- If multiple items are requested, list them clearly (short lines are ok) but do not add new headers.
 
-Instructions:
-- Provide the final answer(s) clearly. If numeric values are asked for, include them with correct units.
-- Show only the minimal steps needed to justify the result (calculations or brief rationale).
-- If you used retrieved context, cite the source document(s) in square brackets, e.g. [TPN Considerations].
+Final answer:
