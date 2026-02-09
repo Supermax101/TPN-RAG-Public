@@ -227,7 +227,8 @@ def create_provider_adapter(provider: str, model_name: str, api_key_env: Optiona
     if provider == "gemini":
         from ..providers.gemini import GeminiLLMProvider
 
-        key = os.getenv(api_key_env) if api_key_env else settings.gemini_api_key
+        # Support environments that still use GOOGLE_API_KEY for Gemini.
+        key = os.getenv(api_key_env) if api_key_env else (settings.gemini_api_key or os.getenv("GOOGLE_API_KEY"))
         return AsyncProviderWrapper(GeminiLLMProvider(api_key=key, default_model=model_name), model_name)
 
     if provider == "kimi":

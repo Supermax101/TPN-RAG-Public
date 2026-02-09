@@ -203,9 +203,10 @@ def _judge_llm(judge: JudgeSpec):
         return AnthropicModel(model=judge.model, api_key=api_key, temperature=0.0)
 
     if judge.provider == "gemini":
-        api_key = os.getenv("GEMINI_API_KEY")
+        # Some environments store Gemini keys as GOOGLE_API_KEY; accept either.
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            raise ValueError("GEMINI_API_KEY is required for gemini judge.")
+            raise ValueError("GEMINI_API_KEY (or GOOGLE_API_KEY) is required for gemini judge.")
         return GeminiModel(model=judge.model, api_key=api_key, temperature=0.0)
 
     raise ValueError(f"Unsupported judge provider: {judge.provider}")
@@ -728,4 +729,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

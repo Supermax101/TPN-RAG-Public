@@ -6,6 +6,7 @@ support, async generation, and seed-based reproducibility.
 """
 import json
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from google import genai
@@ -21,7 +22,8 @@ class GeminiLLMProvider(LLMProvider):
     """Google Gemini-based LLM provider (Gemini 2.5 Pro, Flash, etc.)."""
 
     def __init__(self, api_key: Optional[str] = None, default_model: str = "gemini-2.5-flash"):
-        self.api_key = api_key or settings.gemini_api_key
+        # Support environments that still use GOOGLE_API_KEY for Gemini.
+        self.api_key = api_key or settings.gemini_api_key or os.getenv("GOOGLE_API_KEY")
         self.default_model = default_model
 
         if not self.api_key:
