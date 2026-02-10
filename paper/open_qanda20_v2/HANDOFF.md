@@ -168,6 +168,41 @@ cd /Users/chandra/Documents/TPN-RAG-Public
   --run-dir eval/paper_runs/open_qanda20_v2_20260209_200737
 ```
 
+## 7.1) How To Re-Run Generation + DeepEval (New VM)
+
+The original Vast.ai VM used for v2 was destroyed, but the repo now has a
+first-class orchestrator command that replaces ad-hoc queue scripts:
+
+- Orchestrator CLI: `/Users/chandra/Documents/TPN-RAG-Public/scripts/tpnctl.py`
+- Command: `paper-open-qanda20`
+
+High-level behavior:
+
+- HF models run **sequentially** (GPU-safe; avoids loading multiple large HF models at once).
+- API models can run **in parallel** (CPU-bound; optional).
+- DeepEval scoring runs after generation and writes into the same run folder.
+
+Example (run everything, write into a fresh run folder):
+
+```bash
+cd /root/TPN-RAG-Public
+source .venv/bin/activate
+source .env  # must contain OPENAI_API_KEY, ANTHROPIC_API_KEY, (optional GEMINI_API_KEY), HF_TOKEN, etc.
+
+python3 scripts/tpnctl.py paper-open-qanda20 \
+  --run-set-id open_qanda20_v2_<timestamp> \
+  --no-gemini \
+  --run-api \
+  --max-concurrent 5 \
+  --deepeval-max-concurrent 5
+```
+
+Notes:
+
+- If you want Gemini as a judge, remove `--no-gemini`, but expect occasional schema/JSON failures unless DeepEval prompting/parsing is hardened.
+- RAG determinism requires the snapshot file to exist on the VM:
+  - `eval/cache/retrieval_snapshots_kbclean_qanda20.jsonl`
+
 ## 8) What Needs Polish / Known Issues
 
 1. **RAG lift is small on QandA20 overall** (`~+0.016` correctness mean on OpenAI judge). This is not necessarily “bad”, but it means the deck narrative must emphasize:
@@ -186,4 +221,3 @@ cd /Users/chandra/Documents/TPN-RAG-Public
 ## 9) VM
 
 The Vast.ai VM used for generation/scoring was destroyed after completion. All needed artifacts are local.
-
