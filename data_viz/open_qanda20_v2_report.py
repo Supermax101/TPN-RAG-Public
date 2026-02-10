@@ -274,6 +274,12 @@ def parse_args() -> argparse.Namespace:
         default=str(PROJECT_ROOT / "eval/data/benchmark_2026-02-05/open_ended_holdout.jsonl"),
         help="QandA20 dataset JSONL (default: repo canonical path)",
     )
+    p.add_argument(
+        "--judges",
+        type=str,
+        default="",
+        help="Comma-separated judge providers to include (e.g. openai,anthropic,gemini). Default: include all found.",
+    )
     return p.parse_args()
 
 
@@ -281,6 +287,7 @@ def main() -> int:
     args = parse_args()
     run_dir = Path(args.run_dir).resolve()
     dataset_path = Path(args.dataset).resolve()
+    judge_filter = {x.strip() for x in str(getattr(args, "judges", "") or "").split(",") if x.strip()}
 
     open_root = run_dir / "open" / "qanda20"
     deepeval_root = run_dir / "deepeval" / "open" / "qanda20"
@@ -356,6 +363,9 @@ def main() -> int:
             for cond_dir in sorted([p for p in model_dir.iterdir() if p.is_dir()]):
                 for judge_dir in sorted([p for p in cond_dir.iterdir() if p.is_dir()]):
                     judge_key = judge_dir.name
+                    provider, _model, _judge_id = _parse_judge_dirname(judge_key)
+                    if judge_filter and provider not in judge_filter:
+                        continue
                     records_path = _latest_file(judge_dir, "deepeval_records_*.jsonl")
                     if records_path is None:
                         continue
@@ -667,6 +677,18 @@ def main() -> int:
     fig_md = "\n".join(fig_md_lines) + "\n\n"
 
     # Narrative: concise, boss-friendly.
+    judge_titles = {"openai": "OpenAI", "anthropic": "Anthropic", "gemini": "Gemini"}
+    judge_lines: List[str] = []
+    for p in ["openai", "anthropic", "gemini"]:
+        col = f"{p}_judge_id"
+        if col not in gen_df.columns:
+            continue
+        s = gen_df[col].dropna()
+        if not s.empty:
+            judge_lines.append(f"- {judge_titles.get(p, p)}: `{s.iloc[0]}`")
+    if not judge_lines:
+        judge_lines = ["_(no judge outputs found yet)_"]
+
     report_md = "\n".join(
         [
             "# QandA20 Open‑Ended Benchmark v2 (Paper‑Grade)",
@@ -695,11 +717,11 @@ def main() -> int:
             "- `format_ok`: output contract compliance (plus one automatic retry).",
             "- `final_key_f1`, `final_quantity_f1`, `final_unit_mismatch_count`: lightweight checks for calculation‑like items.",
             "",
-            "## Judges (Tri‑Judge)",
+            "## Judges",
             "",
-            "- OpenAI: `gpt-4.1-mini-2025-04-14`",
-            "- Anthropic: `claude-haiku-4-5-20251001`",
-            "- Gemini: `gemini-2.5-flash-lite`",
+            "Judges included in this report run:",
+            "",
+            *judge_lines,
             "",
             "## Pass / Fail Policy (paper-facing)",
             "",

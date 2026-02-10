@@ -366,6 +366,11 @@ def paper_open_qanda20(
         "--run-api/--no-run-api",
         help="Run API model generation in parallel with HF generation (same VM).",
     ),
+    use_gemini: bool = typer.Option(
+        True,
+        "--use-gemini/--no-gemini",
+        help="Include Gemini as a secondary judge for DeepEval (can be less stable).",
+    ),
     max_concurrent: int = typer.Option(5, "--max-concurrent", help="Max concurrent generation calls per provider"),
     deepeval_max_concurrent: int = typer.Option(5, "--deepeval-max-concurrent", help="Max concurrent judge calls"),
     python_gen: Optional[Path] = typer.Option(
@@ -381,6 +386,11 @@ def paper_open_qanda20(
     skip_generation: bool = typer.Option(False, "--skip-generation", help="Skip generation (use existing artifacts)"),
     skip_deepeval: bool = typer.Option(False, "--skip-deepeval", help="Skip DeepEval scoring"),
     skip_report: bool = typer.Option(False, "--skip-report", help="Skip report generation (CSVs + charts)"),
+    resume_deepeval: bool = typer.Option(
+        True,
+        "--resume-deepeval/--no-resume-deepeval",
+        help="If enabled, skip DeepEval for a model/condition when required judge outputs already exist.",
+    ),
     continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue queue even if one job fails"),
 ) -> None:
     """
@@ -507,6 +517,12 @@ def paper_open_qanda20(
         env.setdefault("OPENAI_TIMEOUT", "600")
 
         all_models = hf_model_keys + api_model_keys
+        required_judges = [
+            "openai__gpt-4.1-mini-2025-04-14",
+            "anthropic__claude-haiku-4-5-20251001",
+        ]
+        if use_gemini:
+            required_judges.append("gemini__gemini-2.5-flash-lite")
         for model_key in all_models:
             for condition in conditions:
                 gen_dir = open_root / model_key / condition
@@ -516,6 +532,17 @@ def paper_open_qanda20(
                 out_dir = deepeval_root / model_key / condition
                 out_dir.mkdir(parents=True, exist_ok=True)
                 log_path = logs_dir / f"deepeval_{model_key}_{condition}.log"
+
+                if resume_deepeval:
+                    # Consider a model/condition "done" if all required judge dirs have at least one summary.
+                    done = True
+                    for jd in required_judges:
+                        if not list((out_dir / jd).glob("deepeval_summary_*.json")):
+                            done = False
+                            break
+                    if done:
+                        console.print(f"[green]Skipping DeepEval (already scored):[/green] {model_key}/{condition}")
+                        continue
 
                 cmd = [
                     py_deepeval,
@@ -532,14 +559,14 @@ def paper_open_qanda20(
                     "openai:gpt-4.1-mini-2025-04-14",
                     "--secondary-judge",
                     "anthropic:claude-haiku-4-5-20251001",
-                    "--secondary-judge",
-                    "gemini:gemini-2.5-flash-lite",
                     "--secondary-subset-size",
                     "0",
                     "--require-all-judges",
                     "--max-concurrent",
                     str(deepeval_max_concurrent),
                 ]
+                if use_gemini:
+                    cmd.extend(["--secondary-judge", "gemini:gemini-2.5-flash-lite"])
                 if condition != "no_rag":
                     cmd.extend(["--snapshots", str(snapshots), "--rag-only-when-context-used"])
 
@@ -552,7 +579,15 @@ def paper_open_qanda20(
         report_script = ROOT / "data_viz" / "open_qanda20_v2_report.py"
         if report_script.exists():
             log_path = logs_dir / "report_qanda20_v2.log"
-            cmd = [py_gen, str(report_script), "--run-dir", str(run_root)]
+            judge_providers = ["openai", "anthropic"] + (["gemini"] if use_gemini else [])
+            cmd = [
+                py_gen,
+                str(report_script),
+                "--run-dir",
+                str(run_root),
+                "--judges",
+                ",".join(judge_providers),
+            ]
             rc = _run_logged(cmd, log_path=log_path)
             if rc != 0 and not continue_on_error:
                 raise typer.Exit(code=rc)
