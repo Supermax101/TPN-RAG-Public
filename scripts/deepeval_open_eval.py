@@ -902,9 +902,20 @@ def main() -> int:
         d = dataset_by_id[sid]
 
         rag_context_used = bool((r.get("metrics") or {}).get("rag_context_used"))
+        actual = str(r.get("response_text") or "").strip()
+        if not actual:
+            # DeepEval raises MissingTestCaseParamsError if actual_output is empty.
+            # Preserve a stable, explicit sentinel so we can score/report failures
+            # deterministically even when the generator timed out or refused.
+            err = str(r.get("error") or "").strip()
+            if err:
+                actual = f"Final answer: [ERROR] {err}"
+            else:
+                actual = "Final answer: [EMPTY RESPONSE]"
+
         tc = LLMTestCase(
             input=str(d.get("question") or ""),
-            actual_output=str(r.get("response_text") or ""),
+            actual_output=actual,
             expected_output=str(d.get("reference_answer") or ""),
             additional_metadata={
                 "run_id": str(r.get("run_id") or ""),
@@ -913,6 +924,7 @@ def main() -> int:
                 "strategy": str(r.get("prompt_strategy") or ""),
                 "rag_enabled": bool(r.get("rag_enabled")),
                 "rag_context_used": rag_context_used,
+                "actual_output_was_empty": bool((r.get("response_text") or "").strip() == ""),
             },
         )
         # Keep stable for joins across judge runs.

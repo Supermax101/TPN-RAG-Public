@@ -75,8 +75,33 @@ class OpenAILLMProvider(LLMProvider):
 
             response = await self.client.chat.completions.create(**kwargs)
 
-            content = response.choices[0].message.content
-            return content.strip() if content else ""
+            msg = response.choices[0].message
+            content = getattr(msg, "content", None)
+
+            # Some safety refusals (and some model families) may return `content=None`
+            # while populating `message.refusal`. If we return an empty string, downstream
+            # evaluation (DeepEval) crashes; treat refusals as a real output instead.
+            if isinstance(content, list):
+                parts = []
+                for part in content:
+                    # Best-effort support for content-part objects/dicts.
+                    if isinstance(part, dict):
+                        if part.get("type") == "text":
+                            parts.append(str(part.get("text") or ""))
+                        else:
+                            parts.append(str(part.get("text") or part.get("content") or ""))
+                    else:
+                        parts.append(str(getattr(part, "text", None) or getattr(part, "content", None) or ""))
+                content = "\n".join([p for p in parts if p])
+
+            if not content:
+                refusal = getattr(msg, "refusal", None)
+                if refusal:
+                    return f"Final answer: [REFUSAL] {str(refusal).strip()}"
+                # Last resort: return a stable sentinel so evaluation/reporting can proceed.
+                return "Final answer: [EMPTY RESPONSE]"
+
+            return str(content).strip()
 
         except Exception as e:
             raise RuntimeError(f"Failed to generate text with OpenAI: {e}")
