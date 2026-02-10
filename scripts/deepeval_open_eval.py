@@ -42,7 +42,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, get_args, get_origin
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -188,7 +188,8 @@ def _parse_judge(spec: str) -> JudgeSpec:
 
 def _judge_llm(judge: JudgeSpec):
     # Late import for fast --dry-run.
-    from deepeval.models import AnthropicModel, GeminiModel, GPTModel
+    from deepeval.models import GeminiModel, GPTModel
+    from deepeval.models.base_model import DeepEvalBaseLLM
 
     if judge.provider == "openai":
         api_key = os.getenv("OPENAI_API_KEY")
@@ -200,7 +201,195 @@ def _judge_llm(judge: JudgeSpec):
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is required for anthropic judge.")
-        return AnthropicModel(model=judge.model, api_key=api_key, temperature=0.0)
+        # DeepEval's native AnthropicModel relies on the judge emitting valid JSON
+        # for schema-based metrics (Contextual Recall/Precision/Relevancy, etc.).
+        # In practice, Claude models occasionally emit malformed or truncated JSON,
+        # which hard-fails paper-grade tri-judge runs when --require-all-judges is set.
+        #
+        # This wrapper uses Anthropic tool-calling for any schema requests, so the
+        # structured output is delivered as parsed JSON via tool_use.input and then
+        # validated by Pydantic. This eliminates "invalid JSON" failures without
+        # changing the judge model itself.
+
+        class _AnthropicToolLLM(DeepEvalBaseLLM):
+            def __init__(
+                self,
+                model: str,
+                api_key: str,
+                temperature: float = 0.0,
+                max_tokens: int = 4096,
+            ):
+                self._api_key = api_key
+                self.temperature = float(temperature)
+                self._max_tokens = int(max_tokens)
+                self._async_client = None
+                super().__init__(model)
+
+            def load_model(self, async_mode: bool = False):
+                from anthropic import Anthropic, AsyncAnthropic
+
+                if async_mode:
+                    if self._async_client is None:
+                        self._async_client = AsyncAnthropic(api_key=self._api_key)
+                    return self._async_client
+                return Anthropic(api_key=self._api_key)
+
+            def get_model_name(self, *args, **kwargs) -> str:  # noqa: ANN001
+                return self.name
+
+            def _schema_to_input_schema(self, schema_cls) -> dict:  # noqa: ANN001
+                # Keep this intentionally minimal: DeepEval schemas are simple
+                # Pydantic models (nested objects, arrays, literals).
+                from pydantic import BaseModel
+                from typing import Any, Union, Literal
+
+                def _type_to_schema(tp: Any) -> dict:
+                    origin = get_origin(tp)
+                    if origin in {list, List}:
+                        args = get_args(tp)
+                        item_tp = args[0] if args else Any
+                        return {"type": "array", "items": _type_to_schema(item_tp)}
+                    if origin is Union:
+                        args = [a for a in get_args(tp) if a is not type(None)]  # noqa: E721
+                        if len(args) == 1:
+                            sch = _type_to_schema(args[0])
+                            t = sch.get("type")
+                            if isinstance(t, str):
+                                sch["type"] = [t, "null"]
+                            elif isinstance(t, list) and "null" not in t:
+                                sch["type"] = list(t) + ["null"]
+                            else:
+                                sch["type"] = ["null"]
+                            return sch
+                        return {"anyOf": [_type_to_schema(a) for a in args]}
+                    if origin is Literal:
+                        lits = list(get_args(tp))
+                        if all(isinstance(x, str) for x in lits):
+                            t = "string"
+                        elif all(isinstance(x, bool) for x in lits):
+                            t = "boolean"
+                        elif all(isinstance(x, int) for x in lits):
+                            t = "integer"
+                        elif all(isinstance(x, (int, float)) for x in lits):
+                            t = "number"
+                        else:
+                            t = "string"
+                        return {"type": t, "enum": lits}
+
+                    if isinstance(tp, type) and issubclass(tp, BaseModel):
+                        return _model_to_schema(tp)
+                    if tp is str:
+                        return {"type": "string"}
+                    if tp is bool:
+                        return {"type": "boolean"}
+                    if tp is int:
+                        return {"type": "integer"}
+                    if tp is float:
+                        return {"type": "number"}
+                    return {}
+
+                def _model_to_schema(model_cls: type[BaseModel]) -> dict:
+                    props: dict = {}
+                    required: list[str] = []
+                    for name, field in (model_cls.model_fields or {}).items():
+                        anno = getattr(field, "annotation", Any)
+                        props[name] = _type_to_schema(anno)
+                        if getattr(field, "is_required", lambda: False)():
+                            required.append(name)
+                    schema: dict = {"type": "object", "properties": props, "additionalProperties": False}
+                    if required:
+                        schema["required"] = required
+                    return schema
+
+                if not isinstance(schema_cls, type) or not issubclass(schema_cls, BaseModel):
+                    # Shouldn't happen, but keep tool schema permissive.
+                    return {"type": "object"}
+                return _model_to_schema(schema_cls)
+
+            def _extract_tool_input(self, message, tool_name: str) -> Optional[dict]:  # noqa: ANN001
+                blocks = getattr(message, "content", None) or []
+                for b in blocks:
+                    # SDK block objects
+                    if getattr(b, "type", None) == "tool_use" and getattr(b, "name", None) == tool_name:
+                        return getattr(b, "input", None)
+                    # Dict blocks (defensive)
+                    if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == tool_name:
+                        return b.get("input")
+                return None
+
+            def generate(self, prompt: str, schema=None):  # noqa: ANN001
+                client = self.load_model(async_mode=False)
+                if schema is None:
+                    msg = client.messages.create(
+                        model=self.name,
+                        max_tokens=self._max_tokens,
+                        temperature=self.temperature,
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                    blocks = getattr(msg, "content", None) or []
+                    for b in blocks:
+                        if getattr(b, "type", None) == "text":
+                            return getattr(b, "text", "") or ""
+                    return ""
+
+                from pydantic import BaseModel
+
+                tool_name = "structured_output"
+                tool = {
+                    "name": tool_name,
+                    "description": "Return ONLY structured JSON that matches the provided schema.",
+                    "input_schema": self._schema_to_input_schema(schema),
+                }
+                msg = client.messages.create(
+                    model=self.name,
+                    max_tokens=self._max_tokens,
+                    temperature=self.temperature,
+                    messages=[{"role": "user", "content": prompt}],
+                    tools=[tool],
+                    tool_choice={"type": "tool", "name": tool_name},
+                )
+                data = self._extract_tool_input(msg, tool_name) or {}
+                if isinstance(schema, type) and issubclass(schema, BaseModel):
+                    return schema.model_validate(data)
+                return data
+
+            async def a_generate(self, prompt: str, schema=None):  # noqa: ANN001
+                client = self.load_model(async_mode=True)
+                if schema is None:
+                    msg = await client.messages.create(
+                        model=self.name,
+                        max_tokens=self._max_tokens,
+                        temperature=self.temperature,
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                    blocks = getattr(msg, "content", None) or []
+                    for b in blocks:
+                        if getattr(b, "type", None) == "text":
+                            return getattr(b, "text", "") or ""
+                    return ""
+
+                from pydantic import BaseModel
+
+                tool_name = "structured_output"
+                tool = {
+                    "name": tool_name,
+                    "description": "Return ONLY structured JSON that matches the provided schema.",
+                    "input_schema": self._schema_to_input_schema(schema),
+                }
+                msg = await client.messages.create(
+                    model=self.name,
+                    max_tokens=self._max_tokens,
+                    temperature=self.temperature,
+                    messages=[{"role": "user", "content": prompt}],
+                    tools=[tool],
+                    tool_choice={"type": "tool", "name": tool_name},
+                )
+                data = self._extract_tool_input(msg, tool_name) or {}
+                if isinstance(schema, type) and issubclass(schema, BaseModel):
+                    return schema.model_validate(data)
+                return data
+
+        return _AnthropicToolLLM(model=judge.model, api_key=api_key, temperature=0.0, max_tokens=4096)
 
     if judge.provider == "gemini":
         # Some environments store Gemini keys as GOOGLE_API_KEY; accept either.
