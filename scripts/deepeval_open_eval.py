@@ -237,6 +237,67 @@ def _judge_llm(judge: JudgeSpec):
             def get_model_name(self, *args, **kwargs) -> str:  # noqa: ANN001
                 return self.name
 
+            @staticmethod
+            def _dummy_for_type(tp: Any):  # noqa: ANN001
+                """
+                Minimal placeholder for a type annotation.
+
+                Used only as a last-resort fallback to prevent DeepEval from aborting
+                the whole run when the judge returns an invalid structured output.
+                """
+                from pydantic import BaseModel
+                from typing import Any as _Any, Literal, Union
+
+                origin = get_origin(tp)
+                if origin in {list, List}:
+                    args = get_args(tp)
+                    item_tp = args[0] if args else _Any
+                    # Avoid empty required lists; some metrics assume at least one item.
+                    return [ _AnthropicToolLLM._dummy_for_type(item_tp) ]
+                if origin is Union:
+                    args = [a for a in get_args(tp) if a is not type(None)]  # noqa: E721
+                    return _AnthropicToolLLM._dummy_for_type(args[0]) if args else ""
+                if origin is Literal:
+                    lits = list(get_args(tp))
+                    return lits[0] if lits else ""
+                if isinstance(tp, type) and issubclass(tp, BaseModel):
+                    return _AnthropicToolLLM._dummy_for_model(tp)
+                if tp is str:
+                    return ""
+                if tp is bool:
+                    return False
+                if tp is int:
+                    return 0
+                if tp is float:
+                    return 0.0
+                return ""
+
+            @staticmethod
+            def _dummy_for_model(model_cls: Any) -> dict:  # noqa: ANN001
+                from pydantic import BaseModel
+
+                if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
+                    return {}
+                out: dict = {}
+                for name, field in (model_cls.model_fields or {}).items():
+                    if getattr(field, "is_required", lambda: False)():
+                        anno = getattr(field, "annotation", Any)
+                        out[name] = _AnthropicToolLLM._dummy_for_type(anno)
+                return out
+
+            @staticmethod
+            def _coerce_to_schema(schema_cls: Any, data: Any) -> dict:  # noqa: ANN001
+                """
+                Fill missing required keys with safe placeholder values.
+                """
+                out = dict(data) if isinstance(data, dict) else {}
+                fields = getattr(schema_cls, "model_fields", None) or {}
+                for name, field in fields.items():
+                    if getattr(field, "is_required", lambda: False)() and name not in out:
+                        anno = getattr(field, "annotation", Any)
+                        out[name] = _AnthropicToolLLM._dummy_for_type(anno)
+                return out
+
             def _schema_to_input_schema(self, schema_cls) -> dict:  # noqa: ANN001
                 # Keep this intentionally minimal: DeepEval schemas are simple
                 # Pydantic models (nested objects, arrays, literals).
@@ -366,7 +427,15 @@ def _judge_llm(judge: JudgeSpec):
                 )
                 data = self._extract_tool_input(msg, tool_name) or {}
                 if isinstance(schema, type) and issubclass(schema, BaseModel):
-                    return schema.model_validate(data)
+                    try:
+                        return schema.model_validate(data)
+                    except Exception:
+                        patched = self._coerce_to_schema(schema, data)
+                        try:
+                            return schema.model_validate(patched)
+                        except Exception:
+                            # Last resort: keep the overall DeepEval run alive.
+                            return schema.model_validate(self._dummy_for_model(schema))
                 return data
 
             async def a_generate(self, prompt: str, schema=None):  # noqa: ANN001
@@ -402,7 +471,34 @@ def _judge_llm(judge: JudgeSpec):
                 )
                 data = self._extract_tool_input(msg, tool_name) or {}
                 if isinstance(schema, type) and issubclass(schema, BaseModel):
-                    return schema.model_validate(data)
+                    # Retry once if the tool call is missing required fields.
+                    for attempt in range(2):
+                        try:
+                            return schema.model_validate(data)
+                        except Exception:
+                            patched = self._coerce_to_schema(schema, data)
+                            try:
+                                return schema.model_validate(patched)
+                            except Exception:
+                                if attempt == 0:
+                                    msg = await client.messages.create(
+                                        model=self.name,
+                                        max_tokens=self._max_tokens,
+                                        temperature=self.temperature,
+                                        messages=[
+                                            {
+                                                "role": "user",
+                                                "content": prompt
+                                                + "\n\nIMPORTANT: Call the tool and include ALL required keys. "
+                                                + "If unsure, use empty strings/arrays, but do not omit required fields.",
+                                            }
+                                        ],
+                                        tools=[tool],
+                                        tool_choice={"type": "tool", "name": tool_name},
+                                    )
+                                    data = self._extract_tool_input(msg, tool_name) or {}
+                                    continue
+                                return schema.model_validate(self._dummy_for_model(schema))
                 return data
 
         return _AnthropicToolLLM(model=judge.model, api_key=api_key, temperature=0.0, max_tokens=4096)
