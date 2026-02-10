@@ -4,7 +4,7 @@ This document freezes the *canonical* experimental definitions used for the pape
 Any benchmark/figure/table claimed as a paper result must reference this registry
 and the associated run manifests.
 
-Last updated: 2026-02-09
+Last updated: 2026-02-10
 
 ## 1) Datasets (Frozen)
 
@@ -90,6 +90,7 @@ Canonical gating thresholds (unless overridden in run manifest):
 ### Open-ended (QandA20 + Takeoff41-200)
 - Paper main: `ZS` only
 - The dataset question field includes the case context when available (converter embeds it).
+- Output contract (paper-grade runs): response must start with `Final answer:` and must not include citations or chain-of-thought.
 
 ## 6) Repeats / Randomness Policy
 
@@ -113,10 +114,12 @@ Temperature policy:
 
 ## 8) Judge Policy (Open-Ended)
 
-- Primary judge (full coverage): `gpt-5-mini-2025-08-07`
-- Secondary judges (agreement/sensitivity reporting):
-  - `claude-haiku-4-5-20251001`
-  - a Gemini judge model supported by the DeepEval Gemini wrapper (default: `gemini-3-pro-preview`)
+- Primary judge (full coverage): `openai:gpt-4.1-mini-2025-04-14`
+- Secondary judge (agreement/sensitivity reporting): `anthropic:claude-haiku-4-5-20251001`
+
+Notes:
+- We attempted a tri-judge setup including Gemini, but Gemini sometimes produced invalid JSON for schema-based metric prompts, causing hard failures mid-run. Gemini can be re-enabled once `deepeval_open_eval.py` is hardened for JSON repair or stricter response formatting.
+- `gpt-5-mini` was not used as a judge because it produced frequent safety/policy refusals on neonatal/TPN clinical content, which makes paper-grade scoring unstable.
 
 Judge prompts/rubrics must be versioned and included in supplemental materials.
 

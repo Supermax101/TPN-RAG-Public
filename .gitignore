@@ -85,7 +85,10 @@ data/embeddings/metadata/
 data/chroma/
 data/chromadb/
 data/bm25/
+# Default: ignore PNGs, but keep paper-ready figures tracked.
 *.png
+!paper/**/*.png
+!paper/**/*.html
 
 # Visualization outputs (regenerate from eval/results)
 data_viz/figures/

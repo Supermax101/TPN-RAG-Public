@@ -10,15 +10,23 @@ It merges:
 
 Outputs (under <run_dir>/reports/open/qanda20/):
 - per_sample.csv
+- per_sample_review.csv (human-friendly column order)
+- best_by_question.csv (best row per question)
 - summary_by_model_condition.csv
 - REPORT.md (boss-friendly narrative + rankings + examples)
 - figures/*.png (best-effort) + figures/*.html (always)
+
+Optional export:
+- When --paper-out is provided, mirrors key deliverables into a tracked folder
+  (e.g. paper/open_qanda20_v2/). This avoids losing artifacts because
+  eval/paper_runs/* is gitignored by default.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -194,6 +202,14 @@ def _select_rag_lift_examples(
         return []
 
     df = gen_df.copy()
+
+    # Avoid confusing examples where the reference answer is effectively "none".
+    # These are valid dataset items, but they do not illustrate RAG lift well.
+    if "reference_answer" in df.columns:
+        ref = df["reference_answer"].fillna("").astype(str).str.strip()
+        ref_l = ref.str.lower()
+        bad = ref_l.str.contains(r"\bnothing\b", regex=True) | ref_l.str.contains("none at this time", regex=False)
+        df = df[~bad].copy()
     df["model_id_str"] = df["model_id"].astype(str)
     df = df[df["condition"].isin(["no_rag", "rag_gated"])].copy()
 
@@ -236,59 +252,74 @@ def _select_rag_lift_examples(
 
     pivot["delta_correctness"] = pivot[cor_rag] - pivot[cor_no]
 
-    # Candidate: RAG PASS but no_rag FAIL (or much lower), and both formats ok.
-    cand = pivot.copy()
-    cand = cand[(cand[fmt_no].fillna(True).astype(bool)) & (cand[fmt_rag].fillna(True).astype(bool))]
-    if rag_used in cand.columns:
+    # Strict candidates: RAG PASS but no_rag FAIL (or much lower), and both formats ok.
+    strict = pivot.copy()
+    strict = strict[(strict[fmt_no].fillna(True).astype(bool)) & (strict[fmt_rag].fillna(True).astype(bool))]
+    if rag_used in strict.columns:
         # Only show "RAG lift" when RAG actually injected and was used.
-        cand = cand[cand[rag_used].fillna(False).astype(bool)]
-    cand = cand[cand[grade_rag] == "PASS"]
-    cand = cand[(cand[grade_no] == "FAIL") | (cand[cor_no] < 0.6)]
-    cand = cand[cand["delta_correctness"] >= 0.20]
-    cand = cand.sort_values("delta_correctness", ascending=False)
+        strict = strict[strict[rag_used].fillna(False).astype(bool)]
+    strict = strict[strict[grade_rag] == "PASS"]
+    strict = strict[(strict[grade_no] == "FAIL") | (strict[cor_no] < 0.6)]
+    strict = strict[strict["delta_correctness"] >= 0.20]
+    strict = strict.sort_values("delta_correctness", ascending=False)
 
-    # If no strict lift examples exist, fall back to the top positive deltas (still
-    # requiring that RAG context was used if that signal exists).
-    if cand.empty:
-        fallback = pivot.copy()
-        fallback = fallback[(fallback[fmt_no].fillna(True).astype(bool)) & (fallback[fmt_rag].fillna(True).astype(bool))]
-        if rag_used in fallback.columns:
-            fallback = fallback[fallback[rag_used].fillna(False).astype(bool)]
-        fallback = fallback[fallback["delta_correctness"] > 0].sort_values("delta_correctness", ascending=False)
-        cand = fallback
+    # Fallback: top positive deltas (still requiring that RAG context was used if that signal exists).
+    fallback = pivot.copy()
+    fallback = fallback[(fallback[fmt_no].fillna(True).astype(bool)) & (fallback[fmt_rag].fillna(True).astype(bool))]
+    if rag_used in fallback.columns:
+        fallback = fallback[fallback[rag_used].fillna(False).astype(bool)]
+    fallback = fallback[fallback["delta_correctness"] > 0].sort_values("delta_correctness", ascending=False)
 
-    # Avoid picking the same model repeatedly if possible.
     selected: List[dict] = []
     used_models: set[str] = set()
-    for _, row in cand.iterrows():
-        model_id = str(row.get("model_id_str") or "")
-        if model_id in used_models and len(selected) < n:
-            continue
-        sid = str(row.get("sample_id") or "")
+    used_pairs: set[tuple[str, str]] = set()
 
-        # Recover question/reference from original df.
-        base_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "no_rag")].head(1)
-        rag_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "rag_gated")].head(1)
-        if base_row.empty or rag_row.empty:
-            continue
+    def _try_add(rows, allow_repeats: bool) -> None:
+        nonlocal selected, used_models, used_pairs
+        for _, row in rows.iterrows():
+            if len(selected) >= n:
+                return
+            model_id = str(row.get("model_id_str") or "")
+            sid = str(row.get("sample_id") or "")
+            pair = (sid, model_id)
+            if pair in used_pairs:
+                continue
+            if (not allow_repeats) and model_id in used_models:
+                continue
 
-        selected.append(
-            {
-                "sample_id": sid,
-                "model_id": model_id,
-                "model_display": MODEL_DISPLAY.get(model_id, model_id),
-                "question": str(base_row.iloc[0].get("question") or ""),
-                "reference_answer": str(base_row.iloc[0].get("reference_answer") or ""),
-                "no_rag_answer": str(base_row.iloc[0].get("response_text") or ""),
-                "rag_gated_answer": str(rag_row.iloc[0].get("response_text") or ""),
-                "no_rag_correctness": row.get(cor_no),
-                "rag_gated_correctness": row.get(cor_rag),
-                "delta_correctness": row.get("delta_correctness"),
-            }
-        )
-        used_models.add(model_id)
-        if len(selected) >= n:
-            break
+            # Recover question/reference from original df.
+            base_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "no_rag")].head(1)
+            rag_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "rag_gated")].head(1)
+            if base_row.empty or rag_row.empty:
+                continue
+
+            selected.append(
+                {
+                    "sample_id": sid,
+                    "model_id": model_id,
+                    "model_display": MODEL_DISPLAY.get(model_id, model_id),
+                    "question": str(base_row.iloc[0].get("question") or ""),
+                    "reference_answer": str(base_row.iloc[0].get("reference_answer") or ""),
+                    "no_rag_answer": str(base_row.iloc[0].get("response_text") or ""),
+                    "rag_gated_answer": str(rag_row.iloc[0].get("response_text") or ""),
+                    "no_rag_correctness": row.get(cor_no),
+                    "rag_gated_correctness": row.get(cor_rag),
+                    "delta_correctness": row.get("delta_correctness"),
+                }
+            )
+            used_models.add(model_id)
+            used_pairs.add(pair)
+
+    # Prefer strict lifts first, then fill with fallback lifts.
+    _try_add(strict, allow_repeats=False)
+    if len(selected) < n:
+        _try_add(fallback, allow_repeats=False)
+
+    # If we still don't have enough, allow repeats to fill the remainder.
+    if len(selected) < n:
+        _try_add(strict, allow_repeats=True)
+    if len(selected) < n:
+        _try_add(fallback, allow_repeats=True)
 
     return selected
 
@@ -363,6 +394,15 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Comma-separated judge providers to include (e.g. openai,anthropic,gemini). Default: include all found.",
     )
+    p.add_argument(
+        "--paper-out",
+        type=str,
+        default=None,
+        help=(
+            "Optional export folder for tracked artifacts (e.g. paper/open_qanda20_v2). "
+            "When set, mirrors REPORT.md, CSVs, and figures into this folder."
+        ),
+    )
     return p.parse_args()
 
 
@@ -371,6 +411,7 @@ def main() -> int:
     run_dir = Path(args.run_dir).resolve()
     dataset_path = Path(args.dataset).resolve()
     judge_filter = {x.strip() for x in str(getattr(args, "judges", "") or "").split(",") if x.strip()}
+    paper_out = Path(args.paper_out).expanduser().resolve() if getattr(args, "paper_out", None) else None
 
     open_root = run_dir / "open" / "qanda20"
     deepeval_root = run_dir / "deepeval" / "open" / "qanda20"
@@ -562,6 +603,92 @@ def main() -> int:
 
     per_sample_path = report_root / "per_sample.csv"
     gen_df.sort_values(["model_id", "condition", "sample_id"]).to_csv(per_sample_path, index=False)
+
+    # A review-friendly subset with stable, boss-readable column ordering.
+    review_cols = [
+        "sample_id",
+        "model_display",
+        "model_id",
+        "condition",
+        "grade_primary",
+        "format_ok",
+        "format_retry_used",
+        "format_violation_reason",
+        "format_violation_reason_after_retry",
+        "error",
+        "question",
+        "reference_answer",
+        "response_text",
+        "rag_context_used",
+        "rag_gate_reason",
+        "rag_top_score",
+        "rag_context_chars",
+        "rag_returned_chunks",
+        "final_key_f1",
+        "final_quantity_f1",
+        "final_unit_mismatch_count",
+        # OpenAI judge (primary)
+        "openai_correctness_score",
+        "openai_relevancy_score",
+        "openai_faithfulness_score",
+        "openai_ctx_precision_score",
+        "openai_ctx_recall_score",
+        "openai_ctx_relevancy_score",
+        # Anthropic judge
+        "anthropic_correctness_score",
+        "anthropic_relevancy_score",
+    ]
+    review_cols = [c for c in review_cols if c in gen_df.columns]
+    per_sample_review_path = report_root / "per_sample_review.csv"
+    gen_df.sort_values(["sample_id", "condition", "model_id"])[review_cols].to_csv(per_sample_review_path, index=False)
+
+    # Best-by-question: pick the best row per question in a way that is useful
+    # for review decks (prefer PASS > PARTIAL > FAIL; avoid empty outputs).
+    best_by_q_path = report_root / "best_by_question.csv"
+    cor_col = f"{primary_provider}_correctness_score"
+    rel_col = f"{primary_provider}_relevancy_score"
+    if cor_col in gen_df.columns and rel_col in gen_df.columns:
+        cand = gen_df.copy()
+        if "error" in cand.columns:
+            cand = cand[cand["error"].fillna("").astype(str).str.len() == 0].copy()
+        cand = cand[cand[cor_col].notna() & cand[rel_col].notna()].copy()
+        if not cand.empty:
+            cond_rank = {"rag_gated": 0, "rag_always": 1, "no_rag": 2}
+            cand["_cond_rank"] = cand["condition"].astype(str).map(cond_rank).fillna(99).astype(int)
+            grade_rank = {"PASS": 0, "PARTIAL": 1, "FAIL": 2}
+            cand["_grade_rank"] = cand["grade_primary"].astype(str).map(grade_rank).fillna(99).astype(int)
+            cand["_relevancy_rank"] = (cand[rel_col] < 0.8).astype(int)
+            cand["_format_rank"] = (~cand["format_ok"].fillna(True).astype(bool)).astype(int)
+            cand["_empty_rank"] = (
+                cand["response_text"]
+                .fillna("")
+                .astype(str)
+                .str.contains(r"\[EMPTY RESPONSE\]", regex=True)
+                .astype(int)
+            )
+            cand = cand.sort_values(
+                ["sample_id", "_grade_rank", "_relevancy_rank", "_format_rank", "_empty_rank", cor_col, rel_col, "_cond_rank"],
+                ascending=[True, True, True, True, True, False, False, True],
+            )
+            best = cand.groupby("sample_id", as_index=False).head(1).copy()
+            best = best.drop(columns=["_cond_rank", "_grade_rank", "_relevancy_rank", "_format_rank", "_empty_rank"], errors="ignore")
+            best_cols = [
+                "sample_id",
+                "question",
+                "reference_answer",
+                "model_display",
+                "model_id",
+                "condition",
+                "grade_primary",
+                cor_col,
+                rel_col,
+                "openai_faithfulness_score",
+                "openai_ctx_recall_score",
+                "format_ok",
+                "response_text",
+            ]
+            best_cols = [c for c in best_cols if c in best.columns]
+            best[best_cols].to_csv(best_by_q_path, index=False)
 
     # --- Summary table ---
     agg_cols = {}
@@ -902,9 +1029,39 @@ def main() -> int:
 
     print("Wrote:")
     print(f"  {per_sample_path}")
+    print(f"  {per_sample_review_path}")
+    if best_by_q_path.exists():
+        print(f"  {best_by_q_path}")
     print(f"  {summary_path}")
     print(f"  {report_md_path}")
     print(f"  {figures_dir}/")
+
+    # Optional export to tracked paper folder.
+    if paper_out is not None:
+        paper_out.mkdir(parents=True, exist_ok=True)
+
+        shutil.copy2(report_md_path, paper_out / "REPORT.md")
+        shutil.copy2(per_sample_path, paper_out / "per_sample.csv")
+        shutil.copy2(per_sample_review_path, paper_out / "per_sample_review.csv")
+        shutil.copy2(summary_path, paper_out / "summary_by_model_condition.csv")
+        if best_by_q_path.exists():
+            shutil.copy2(best_by_q_path, paper_out / "best_by_question.csv")
+
+        fig_out = paper_out / "figures"
+        fig_out.mkdir(parents=True, exist_ok=True)
+        for p in sorted(figures_dir.glob("*.png")):
+            shutil.copy2(p, fig_out / p.name)
+
+        nature = report_root / "figures_nature"
+        if nature.exists():
+            nat_out = paper_out / "figures_nature"
+            nat_out.mkdir(parents=True, exist_ok=True)
+            for p in sorted(nature.glob("*.png")):
+                shutil.copy2(p, nat_out / p.name)
+            for p in sorted(nature.glob("*.html")):
+                shutil.copy2(p, nat_out / p.name)
+
+        print(f"  (mirrored to paper folder) {paper_out}")
     return 0
 
 
