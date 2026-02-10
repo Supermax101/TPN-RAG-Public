@@ -293,7 +293,23 @@ def _judge_llm(judge: JudgeSpec):
                     required: list[str] = []
                     for name, field in (model_cls.model_fields or {}).items():
                         anno = getattr(field, "annotation", Any)
-                        props[name] = _type_to_schema(anno)
+                        sch = _type_to_schema(anno)
+                        # Pydantic allows defaults of None even when the annotation
+                        # isn't Optional[...] (common in DeepEval schemas). Permit
+                        # nulls for non-required fields with default None so the
+                        # tool schema doesn't reject otherwise-valid outputs.
+                        try:
+                            default = getattr(field, "default", None)
+                            is_req = getattr(field, "is_required", lambda: False)()
+                            if (default is None) and (not is_req):
+                                t = sch.get("type")
+                                if isinstance(t, str):
+                                    sch["type"] = [t, "null"]
+                                elif isinstance(t, list) and "null" not in t:
+                                    sch["type"] = list(t) + ["null"]
+                        except Exception:
+                            pass
+                        props[name] = sch
                         if getattr(field, "is_required", lambda: False)():
                             required.append(name)
                     schema: dict = {"type": "object", "properties": props, "additionalProperties": False}
