@@ -412,7 +412,119 @@ def _judge_llm(judge: JudgeSpec):
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY (or GOOGLE_API_KEY) is required for gemini judge.")
-        return GeminiModel(model=judge.model, api_key=api_key, temperature=0.0)
+
+        # DeepEval's native GeminiModel returns `response.parsed` for structured
+        # outputs. In practice, `response.parsed` can be None even when
+        # `response.text` contains valid JSON. That causes DeepEval schema-based
+        # metrics (Faithfulness / Contextual*) to crash when it attempts to parse
+        # None as JSON.
+        #
+        # This subclass falls back to parsing `response.text` and validating it
+        # with Pydantic when `parsed` is missing.
+        class _GeminiRobustModel(GeminiModel):
+            @staticmethod
+            def _trim_json(text: str) -> dict:
+                import json
+                import re
+
+                raw = (text or "").strip()
+                start = raw.find("{")
+                end = raw.rfind("}") + 1
+                if start == -1 or end <= 0:
+                    raise ValueError("No JSON object found in Gemini response text.")
+                json_str = raw[start:end]
+                json_str = re.sub(r",\\s*([\\]}])", r"\\1", json_str)
+                return json.loads(json_str)
+
+            @classmethod
+            def _parsed_or_text(cls, response, schema):  # noqa: ANN001
+                parsed = getattr(response, "parsed", None)
+                if parsed is not None:
+                    return parsed
+                text = getattr(response, "text", None)
+                if not text:
+                    raise RuntimeError("Gemini returned no parsed output and no text for structured response.")
+                data = cls._trim_json(str(text))
+
+                from pydantic import BaseModel
+
+                if isinstance(schema, type) and issubclass(schema, BaseModel):
+                    return schema.model_validate(data)
+                if isinstance(schema, BaseModel):
+                    return schema.__class__.model_validate(data)
+                return data
+
+            def generate(self, prompt: str, schema=None):  # noqa: ANN001
+                # Defer to the parent implementation for the transport/config, but
+                # fix up the structured-output return value.
+                client = self.load_model()
+
+                from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+
+                if check_if_multimodal(prompt):
+                    prompt = convert_to_multi_modal_array(prompt)
+                    prompt = self.generate_content(prompt)
+
+                if schema is not None:
+                    response = client.models.generate_content(
+                        model=self.name,
+                        contents=prompt,
+                        config=self._module.types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=schema,
+                            safety_settings=self.model_safety_settings,
+                            temperature=self.temperature,
+                            **self.generation_kwargs,
+                        ),
+                    )
+                    return self._parsed_or_text(response, schema), 0
+
+                response = client.models.generate_content(
+                    model=self.name,
+                    contents=prompt,
+                    config=self._module.types.GenerateContentConfig(
+                        safety_settings=self.model_safety_settings,
+                        temperature=self.temperature,
+                        **self.generation_kwargs,
+                    ),
+                )
+                return getattr(response, "text", "") or "", 0
+
+            async def a_generate(self, prompt: str, schema=None):  # noqa: ANN001
+                client = self.load_model()
+
+                from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+
+                if check_if_multimodal(prompt):
+                    prompt = convert_to_multi_modal_array(prompt)
+                    prompt = self.generate_content(prompt)
+
+                if schema is not None:
+                    response = await client.aio.models.generate_content(
+                        model=self.name,
+                        contents=prompt,
+                        config=self._module.types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=schema,
+                            safety_settings=self.model_safety_settings,
+                            temperature=self.temperature,
+                            **self.generation_kwargs,
+                        ),
+                    )
+                    return self._parsed_or_text(response, schema), 0
+
+                response = await client.aio.models.generate_content(
+                    model=self.name,
+                    contents=prompt,
+                    config=self._module.types.GenerateContentConfig(
+                        safety_settings=self.model_safety_settings,
+                        temperature=self.temperature,
+                        **self.generation_kwargs,
+                    ),
+                )
+                return getattr(response, "text", "") or "", 0
+
+        return _GeminiRobustModel(model=judge.model, api_key=api_key, temperature=0.0)
 
     raise ValueError(f"Unsupported judge provider: {judge.provider}")
 
