@@ -689,6 +689,7 @@ def main() -> int:
             "**RAG‑only diagnostics (only when retrieval context is injected and used):**",
             "- **Faithfulness** (0–1): are the answer’s claims supported by retrieved context (hallucination check).",
             "- **Contextual Precision / Recall / Relevancy** (0–1): separates retrieval quality from generation quality.",
+            "- Note: for stability and cost control, these RAG diagnostics are computed using the **primary judge (OpenAI)**; secondary judges are used for correctness/relevancy agreement.",
             "",
             "**Deterministic diagnostics (non‑judge):**",
             "- `format_ok`: output contract compliance (plus one automatic retry).",
