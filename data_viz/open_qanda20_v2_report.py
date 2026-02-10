@@ -11,6 +11,7 @@ It merges:
 Outputs (under <run_dir>/reports/open/qanda20/):
 - per_sample.csv
 - summary_by_model_condition.csv
+- REPORT.md (boss-friendly narrative + rankings + examples)
 - figures/*.png (best-effort) + figures/*.html (always)
 """
 
@@ -59,6 +60,25 @@ MODEL_ORDER = [
 CONDITION_ORDER = ["no_rag", "rag_gated", "rag_always"]
 
 PRIMARY_JUDGE_DIR = "openai__gpt-4.1-mini-2025-04-14"
+
+# Reporting classification:
+# - "Open" = local HF open-weights + Kimi (API-served but open weights).
+# - "API" = proprietary closed models.
+OPEN_MODEL_KEYS = {
+    "phi-4",
+    "gpt-oss-20b",
+    "qwen3-30b-a3b",
+    "medgemma-27b",
+    "gemma3-27b",
+    "kimi-k2.5",
+}
+API_MODEL_KEYS = {
+    "gpt-5-mini",
+    "gpt-5.2",
+    "claude-sonnet",
+    "gemini-3-flash",
+    "grok-4.1-fast",
+}
 
 
 def _load_jsonl(path: Path) -> List[dict]:
@@ -116,6 +136,133 @@ def _safe_write_fig(fig, out_dir: Path, stem: str) -> None:
     except Exception:
         # kaleido may not be installed; HTML is still generated
         pass
+
+
+def _format_pct(x: float) -> str:
+    try:
+        return f"{float(x) * 100:.1f}%"
+    except Exception:
+        return ""
+
+
+def _format_float(x: Any, ndigits: int = 3) -> str:
+    try:
+        if x is None:
+            return ""
+        if pd.isna(x):
+            return ""
+        return f"{float(x):.{ndigits}f}"
+    except Exception:
+        return ""
+
+
+def _to_markdown_table(rows: List[dict], columns: List[str]) -> str:
+    if not rows:
+        return "_(no rows)_\n"
+    header = "| " + " | ".join(columns) + " |"
+    sep = "| " + " | ".join(["---"] * len(columns)) + " |"
+    lines = [header, sep]
+    for r in rows:
+        vals = [str(r.get(c, "")) for c in columns]
+        lines.append("| " + " | ".join(vals) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def _select_rag_lift_examples(
+    gen_df: pd.DataFrame,
+    primary_provider: str,
+    n: int = 4,
+) -> List[dict]:
+    """
+    Pick illustrative examples where RAG (rag_gated) meaningfully improves
+    correctness over no_rag, using the primary judge scores.
+    """
+    cor_col = f"{primary_provider}_correctness_score"
+    rel_col = f"{primary_provider}_relevancy_score"
+
+    needed_cols = {"sample_id", "model_id", "condition", "question", "reference_answer", "response_text", "format_ok", cor_col, rel_col, "grade_primary"}
+    missing = [c for c in needed_cols if c not in gen_df.columns]
+    if missing:
+        return []
+
+    df = gen_df.copy()
+    df["model_id_str"] = df["model_id"].astype(str)
+    df = df[df["condition"].isin(["no_rag", "rag_gated"])].copy()
+
+    # Pivot so each (sample_id, model) has both conditions.
+    pivot = (
+        df.pivot_table(
+            index=["sample_id", "model_id_str"],
+            columns="condition",
+            values=[cor_col, rel_col, "grade_primary", "format_ok", "response_text"],
+            aggfunc="first",
+        )
+        .reset_index()
+    )
+
+    def _get(col: str, cond: str) -> str:
+        return f"{col}|{cond}"
+
+    # Flatten multiindex columns from pivot_table.
+    pivot.columns = [
+        f"{a}|{b}" if isinstance(a, str) and isinstance(b, str) else str(a)
+        for (a, b) in getattr(pivot.columns, "to_list", lambda: list(pivot.columns))()
+    ]
+
+    cor_no = _get(cor_col, "no_rag")
+    cor_rag = _get(cor_col, "rag_gated")
+    grade_no = _get("grade_primary", "no_rag")
+    grade_rag = _get("grade_primary", "rag_gated")
+    fmt_no = _get("format_ok", "no_rag")
+    fmt_rag = _get("format_ok", "rag_gated")
+
+    if cor_no not in pivot.columns or cor_rag not in pivot.columns:
+        return []
+
+    pivot["delta_correctness"] = pivot[cor_rag] - pivot[cor_no]
+
+    # Candidate: RAG PASS but no_rag FAIL (or much lower), and both formats ok.
+    cand = pivot.copy()
+    cand = cand[(cand[fmt_no].fillna(True).astype(bool)) & (cand[fmt_rag].fillna(True).astype(bool))]
+    cand = cand[cand[grade_rag] == "PASS"]
+    cand = cand[(cand[grade_no] == "FAIL") | (cand[cor_no] < 0.6)]
+    cand = cand[cand["delta_correctness"] >= 0.20]
+    cand = cand.sort_values("delta_correctness", ascending=False)
+
+    # Avoid picking the same model repeatedly if possible.
+    selected: List[dict] = []
+    used_models: set[str] = set()
+    for _, row in cand.iterrows():
+        model_id = str(row.get("model_id_str") or "")
+        if model_id in used_models and len(selected) < n:
+            continue
+        sid = str(row.get("sample_id") or "")
+
+        # Recover question/reference from original df.
+        base_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "no_rag")].head(1)
+        rag_row = df[(df["sample_id"] == sid) & (df["model_id"].astype(str) == model_id) & (df["condition"] == "rag_gated")].head(1)
+        if base_row.empty or rag_row.empty:
+            continue
+
+        selected.append(
+            {
+                "sample_id": sid,
+                "model_id": model_id,
+                "model_display": MODEL_DISPLAY.get(model_id, model_id),
+                "question": str(base_row.iloc[0].get("question") or ""),
+                "reference_answer": str(base_row.iloc[0].get("reference_answer") or ""),
+                "no_rag_answer": str(base_row.iloc[0].get("response_text") or ""),
+                "rag_gated_answer": str(rag_row.iloc[0].get("response_text") or ""),
+                "no_rag_correctness": row.get(cor_no),
+                "rag_gated_correctness": row.get(cor_rag),
+                "delta_correctness": row.get("delta_correctness"),
+            }
+        )
+        used_models.add(model_id)
+        if len(selected) >= n:
+            break
+
+    return selected
 
 
 def parse_args() -> argparse.Namespace:
@@ -413,13 +560,186 @@ def main() -> int:
             fig.update_layout(xaxis_title="Contextual Recall", yaxis_title="Correctness")
             _safe_write_fig(fig, figures_dir, "04_ctx_recall_vs_correctness")
 
+    # --- Boss-friendly narrative report ---
+    report_md_path = report_root / "REPORT.md"
+    ranking_condition = "rag_gated"
+    primary_score_mean_col = f"{primary_provider}_correctness_mean"
+    primary_rel_mean_col = f"{primary_provider}_relevancy_mean"
+
+    # Ranking rows (use primary judge, rag_gated condition).
+    rank_df = summary.copy()
+    rank_df["model_id_str"] = rank_df["model_id"].astype(str)
+    rank_df = rank_df[rank_df["condition"] == ranking_condition].copy()
+    if primary_score_mean_col in rank_df.columns:
+        rank_df = rank_df[pd.notna(rank_df[primary_score_mean_col])].copy()
+        rank_df = rank_df.sort_values(primary_score_mean_col, ascending=False)
+
+    def _rank_table(df: pd.DataFrame, title: str) -> str:
+        if df.empty or primary_score_mean_col not in df.columns:
+            return f"### {title}\n_(not available yet; DeepEval scoring incomplete)_\n\n"
+        rows = []
+        for i, r in enumerate(df.itertuples(index=False), 1):
+            mid = str(getattr(r, "model_id_str", "") or "")
+            md = MODEL_DISPLAY.get(mid, mid)
+            rows.append(
+                {
+                    "rank": i,
+                    "model": md,
+                    "correctness_mean": _format_float(getattr(r, primary_score_mean_col)),
+                    "relevancy_mean": _format_float(getattr(r, primary_rel_mean_col, None)),
+                    "pass_rate": _format_pct(getattr(r, "pass_rate")),
+                }
+            )
+        return f"### {title}\n" + _to_markdown_table(rows, ["rank", "model", "correctness_mean", "relevancy_mean", "pass_rate"]) + "\n"
+
+    open_rank = rank_df[rank_df["model_id_str"].isin(sorted(OPEN_MODEL_KEYS))].copy()
+    api_rank = rank_df[rank_df["model_id_str"].isin(sorted(API_MODEL_KEYS))].copy()
+    overall_rank = rank_df.copy()
+
+    # RAG lift summary across all models (primary judge correctness mean).
+    rag_lift_summary = ""
+    if primary_score_mean_col in summary.columns:
+        pivot = summary.pivot(index="model_display", columns="condition", values=primary_score_mean_col)
+        if "no_rag" in pivot.columns and "rag_gated" in pivot.columns:
+            deltas = (pivot["rag_gated"] - pivot["no_rag"]).dropna()
+            if not deltas.empty:
+                rag_lift_summary = f"**Average RAG lift (rag_gated - no_rag)**: `{deltas.mean():.3f}` (primary judge)."
+
+    # Examples showing RAG improvement.
+    examples = _select_rag_lift_examples(gen_df=gen_df, primary_provider=primary_provider, n=4)
+    examples_md = ""
+    if examples:
+        blocks = []
+        for ex in examples:
+            blocks.append(
+                "\n".join(
+                    [
+                        f"#### Example: {ex['sample_id']} ({ex['model_display']})",
+                        "",
+                        "**Question**",
+                        "",
+                        f"> {ex['question']}",
+                        "",
+                        "**Reference answer (ground truth)**",
+                        "",
+                        "```text",
+                        ex["reference_answer"].strip(),
+                        "```",
+                        "",
+                        f"**No RAG** (correctness={_format_float(ex['no_rag_correctness'])})",
+                        "",
+                        "```text",
+                        ex["no_rag_answer"].strip(),
+                        "```",
+                        "",
+                        f"**RAG (gated)** (correctness={_format_float(ex['rag_gated_correctness'])}, delta={_format_float(ex['delta_correctness'])})",
+                        "",
+                        "```text",
+                        ex["rag_gated_answer"].strip(),
+                        "```",
+                        "",
+                    ]
+                )
+            )
+        examples_md = "### RAG vs No‑RAG Examples\n\n" + "\n".join(blocks) + "\n"
+    else:
+        examples_md = "### RAG vs No‑RAG Examples\n_(not available yet; requires DeepEval scores for both no_rag and rag_gated)_\n\n"
+
+    # Chart references (png preferred, html always).
+    figs = [
+        ("01_correctness_mean_primary", "Correctness by model/condition (primary judge)"),
+        ("02_pass_partial_fail", "PASS/PARTIAL/FAIL rates (primary judge)"),
+        ("03_rag_lift_primary", "RAG lift vs no_rag (primary judge)"),
+        ("04_ctx_recall_vs_correctness", "Retrieval bottleneck diagnostic (ctx recall vs correctness)"),
+    ]
+    fig_md_lines = ["### Key Figures\n"]
+    for stem, label in figs:
+        png = figures_dir / f"{stem}.png"
+        html = figures_dir / f"{stem}.html"
+        if png.exists():
+            rel = f"figures/{stem}.png"
+            fig_md_lines.append(f"- {label}: `{rel}`")
+        elif html.exists():
+            rel = f"figures/{stem}.html"
+            fig_md_lines.append(f"- {label}: `{rel}`")
+        else:
+            fig_md_lines.append(f"- {label}: _(not generated yet)_")
+    fig_md = "\n".join(fig_md_lines) + "\n\n"
+
+    # Narrative: concise, boss-friendly.
+    report_md = "\n".join(
+        [
+            "# QandA20 Open‑Ended Benchmark v2 (Paper‑Grade)",
+            "",
+            f"- Run folder: `{run_dir}`",
+            "- Dataset: QandA20 holdout (N=20) open‑ended TPN clinical questions",
+            "- Prompting: zero‑shot only (ZS), strict `Final answer:` output contract (no citations, no chain‑of‑thought)",
+            "- Conditions per model: `no_rag`, `rag_gated`, `rag_always`",
+            "- Determinism: RAG uses **precomputed retrieval snapshots** (no query‑embedding calls during benchmarks)",
+            "",
+            "## What We Score (and Why)",
+            "",
+            "**Primary outcome (open‑ended): GEval correctness** (`TPN_OpenCorrectness`, 0–1)",
+            "- Implemented via DeepEval’s `GEval` metric with a clinical rubric (paraphrase‑tolerant).",
+            "- Interprets: “Did the answer match the expected clinical content (including key numbers/units)?”",
+            "",
+            "**Guardrail: Answer relevancy** (0–1)",
+            "- Prevents rewarding answers that are generally correct but do not address the question asked.",
+            "",
+            "**RAG‑only diagnostics (only when retrieval context is injected and used):**",
+            "- **Faithfulness** (0–1): are the answer’s claims supported by retrieved context (hallucination check).",
+            "- **Contextual Precision / Recall / Relevancy** (0–1): separates retrieval quality from generation quality.",
+            "",
+            "**Deterministic diagnostics (non‑judge):**",
+            "- `format_ok`: output contract compliance (plus one automatic retry).",
+            "- `final_key_f1`, `final_quantity_f1`, `final_unit_mismatch_count`: lightweight checks for calculation‑like items.",
+            "",
+            "## Judges (Tri‑Judge)",
+            "",
+            "- OpenAI: `gpt-4.1-mini-2025-04-14`",
+            "- Anthropic: `claude-haiku-4-5-20251001`",
+            "- Gemini: `gemini-2.5-flash-lite`",
+            "",
+            "## Pass / Fail Policy (paper-facing)",
+            "",
+            "- **PASS**: correctness ≥ 0.80 AND relevancy ≥ 0.80 AND `format_ok=true`",
+            "- **PARTIAL**: 0.60 ≤ correctness < 0.80 AND relevancy ≥ 0.80 AND `format_ok=true`",
+            "- **FAIL**: otherwise",
+            "",
+            "## Top Models (Primary Judge, rag_gated)",
+            "",
+            "_Note: Kimi is API-served but treated as an **Open** model in reporting._",
+            "",
+            _rank_table(open_rank, "Best Open Models (HF + Kimi)"),
+            _rank_table(api_rank, "Best API Models (Closed)"),
+            _rank_table(overall_rank, "Overall Ranking (All Models)"),
+            "## RAG Lift (Primary Judge)",
+            "",
+            rag_lift_summary or "_(not available yet; DeepEval scoring incomplete)_",
+            "",
+            fig_md.strip(),
+            "",
+            examples_md.strip(),
+            "",
+            "## Where The Numbers Come From (files)",
+            "",
+            "- Generation per model/condition: `open/qanda20/<model>/<condition>/run_records_*.jsonl`",
+            "- DeepEval per model/condition/judge: `deepeval/open/qanda20/<model>/<condition>/<judge>/deepeval_records_*.jsonl`",
+            "- Canonical merged table: `per_sample.csv`",
+            "- Summary table: `summary_by_model_condition.csv`",
+            "",
+        ]
+    ).strip() + "\n"
+
+    report_md_path.write_text(report_md, encoding="utf-8")
+
     print("Wrote:")
     print(f"  {per_sample_path}")
     print(f"  {summary_path}")
+    print(f"  {report_md_path}")
     print(f"  {figures_dir}/")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

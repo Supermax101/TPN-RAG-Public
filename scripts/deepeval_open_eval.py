@@ -423,18 +423,41 @@ def _judge_llm(judge: JudgeSpec):
         # with Pydantic when `parsed` is missing.
         class _GeminiRobustModel(GeminiModel):
             @staticmethod
-            def _trim_json(text: str) -> dict:
+            def _trim_json(text: str):  # noqa: ANN001
+                """
+                Extract and parse the first JSON value (object or array) from an LLM response.
+
+                DeepEval's schema-based metrics rely on the evaluation LLM returning valid JSON.
+                In practice Gemini can return:
+                - a JSON object (ideal)
+                - a JSON array (some schemas)
+                - valid JSON wrapped in prose/code fences
+                - non-JSON refusals/errors
+                """
                 import json
                 import re
 
                 raw = (text or "").strip()
-                start = raw.find("{")
-                end = raw.rfind("}") + 1
-                if start == -1 or end <= 0:
-                    raise ValueError("No JSON object found in Gemini response text.")
-                json_str = raw[start:end]
-                json_str = re.sub(r",\\s*([\\]}])", r"\\1", json_str)
-                return json.loads(json_str)
+
+                # Find the first plausible JSON start token.
+                i_obj = raw.find("{")
+                i_arr = raw.find("[")
+                starts = [i for i in (i_obj, i_arr) if i != -1]
+                if not starts:
+                    raise ValueError(f"No JSON found in Gemini response text (prefix={raw[:200]!r}).")
+
+                start = min(starts)
+                sub = raw[start:]
+
+                dec = json.JSONDecoder()
+                try:
+                    val, _end = dec.raw_decode(sub)
+                    return val
+                except json.JSONDecodeError:
+                    # Tolerate the common trailing-comma mistake.
+                    cleaned = re.sub(r",\\s*([\\]}])", r"\\1", sub)
+                    val, _end = dec.raw_decode(cleaned)
+                    return val
 
             @classmethod
             def _parsed_or_text(cls, response, schema):  # noqa: ANN001
@@ -605,7 +628,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--require-all-judges",
         action="store_true",
-        help="Fail fast if any judge cannot be initialized or errors during scoring.",
+        help=(
+            "Fail fast if any judge cannot be initialized or errors during base scoring. "
+            "RAG grounding metrics for secondary judges are best-effort unless --secondary-rag-metrics is set."
+        ),
+    )
+    p.add_argument(
+        "--secondary-rag-metrics",
+        action="store_true",
+        help="If set, compute RAG grounding metrics (Faithfulness/Contextual*) for secondary judges too (slower + more brittle).",
     )
     p.add_argument(
         "--rag-only-when-context-used",
@@ -900,7 +931,8 @@ def main() -> int:
             continue
 
         result_rag = None
-        if judge_rag_cases:
+        run_rag = bool(judge_rag_cases) and (judge == primary or bool(args.secondary_rag_metrics))
+        if run_rag:
             try:
                 result_rag = evaluate(
                     test_cases=judge_rag_cases,
@@ -909,16 +941,13 @@ def main() -> int:
                     display_config=display_cfg,
                 )
             except Exception as e:
-                if args.require_all_judges or judge == primary:
+                # Paper default: RAG grounding metrics are diagnostics. We require them
+                # for the primary judge, but keep secondary judges best-effort even
+                # when --require-all-judges is set (unless the caller opts in).
+                if judge == primary or bool(args.secondary_rag_metrics):
                     raise
-                print(
-                    f"[WARN] RAG grounding metrics failed for secondary judge {judge_id}: {e}",
-                    file=sys.stderr,
-                )
-                print(
-                    f"[INFO] Continuing with base metrics only for {judge_id}.",
-                    file=sys.stderr,
-                )
+                print(f"[WARN] RAG grounding metrics failed for secondary judge {judge_id}: {e}", file=sys.stderr)
+                print(f"[INFO] Continuing with base metrics only for {judge_id}.", file=sys.stderr)
 
         base_rows = _test_results(result_base)
         rag_rows = _test_results(result_rag)
