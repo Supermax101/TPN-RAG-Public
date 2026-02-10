@@ -854,7 +854,9 @@ def main() -> int:
     open_records = [
         r
         for r in records_raw
-        if str(r.get("track")) == "open_ended" and str(r.get("sample_id")) in dataset_by_id and not r.get("error")
+        # Include error rows so timeouts/refusals count as failures (paper-grade).
+        # We convert empty outputs to deterministic sentinels downstream.
+        if str(r.get("track")) == "open_ended" and str(r.get("sample_id")) in dataset_by_id
     ]
     if not open_records:
         raise SystemExit(f"No open-ended records found for dataset {dataset_path.name} in {records_path.name}")

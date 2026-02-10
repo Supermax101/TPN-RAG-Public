@@ -194,7 +194,7 @@ def _select_rag_lift_examples(
         df.pivot_table(
             index=["sample_id", "model_id_str"],
             columns="condition",
-            values=[cor_col, rel_col, "grade_primary", "format_ok", "response_text"],
+            values=[cor_col, rel_col, "grade_primary", "format_ok", "response_text", "rag_context_used"],
             aggfunc="first",
         )
         .reset_index()
@@ -215,6 +215,7 @@ def _select_rag_lift_examples(
     grade_rag = _get("grade_primary", "rag_gated")
     fmt_no = _get("format_ok", "no_rag")
     fmt_rag = _get("format_ok", "rag_gated")
+    rag_used = _get("rag_context_used", "rag_gated")
 
     if cor_no not in pivot.columns or cor_rag not in pivot.columns:
         return []
@@ -224,10 +225,23 @@ def _select_rag_lift_examples(
     # Candidate: RAG PASS but no_rag FAIL (or much lower), and both formats ok.
     cand = pivot.copy()
     cand = cand[(cand[fmt_no].fillna(True).astype(bool)) & (cand[fmt_rag].fillna(True).astype(bool))]
+    if rag_used in cand.columns:
+        # Only show "RAG lift" when RAG actually injected and was used.
+        cand = cand[cand[rag_used].fillna(False).astype(bool)]
     cand = cand[cand[grade_rag] == "PASS"]
     cand = cand[(cand[grade_no] == "FAIL") | (cand[cor_no] < 0.6)]
     cand = cand[cand["delta_correctness"] >= 0.20]
     cand = cand.sort_values("delta_correctness", ascending=False)
+
+    # If no strict lift examples exist, fall back to the top positive deltas (still
+    # requiring that RAG context was used if that signal exists).
+    if cand.empty:
+        fallback = pivot.copy()
+        fallback = fallback[(fallback[fmt_no].fillna(True).astype(bool)) & (fallback[fmt_rag].fillna(True).astype(bool))]
+        if rag_used in fallback.columns:
+            fallback = fallback[fallback[rag_used].fillna(False).astype(bool)]
+        fallback = fallback[fallback["delta_correctness"] > 0].sort_values("delta_correctness", ascending=False)
+        cand = fallback
 
     # Avoid picking the same model repeatedly if possible.
     selected: List[dict] = []
@@ -263,6 +277,61 @@ def _select_rag_lift_examples(
             break
 
     return selected
+
+
+def _select_best_exemplar(
+    gen_df: pd.DataFrame,
+    primary_provider: str,
+    preferred_condition: str = "rag_gated",
+) -> Optional[dict]:
+    """
+    Pick one "did well" example for the boss deck: highest correctness under the
+    preferred condition, with format_ok and (when applicable) good faithfulness.
+    """
+    cor_col = f"{primary_provider}_correctness_score"
+    rel_col = f"{primary_provider}_relevancy_score"
+    faith_col = f"{primary_provider}_faithfulness_score"
+
+    needed = {"sample_id", "model_display", "condition", "question", "reference_answer", "response_text", "format_ok", cor_col, rel_col}
+    if any(c not in gen_df.columns for c in needed):
+        return None
+
+    df = gen_df.copy()
+    if preferred_condition in set(df["condition"].astype(str)):
+        df = df[df["condition"].astype(str) == preferred_condition].copy()
+
+    # Exclude hard failures: errors, missing scores, or bad format contract.
+    if "error" in df.columns:
+        df = df[df["error"].fillna("").astype(str).str.len() == 0].copy()
+    df = df[df["format_ok"].fillna(True).astype(bool)].copy()
+    df = df[pd.notna(df[cor_col]) & pd.notna(df[rel_col])].copy()
+
+    # If RAG context was used and faithfulness is available, require it to be decent.
+    if faith_col in df.columns:
+        mask = df["rag_context_used"].fillna(False).astype(bool) & pd.notna(df[faith_col])
+        df2 = df[(~mask) | (df[faith_col] >= 0.8)].copy()
+        if not df2.empty:
+            df = df2
+
+    if df.empty:
+        return None
+
+    df = df.sort_values([cor_col, rel_col], ascending=False)
+    r = df.iloc[0]
+    out = {
+        "sample_id": str(r.get("sample_id") or ""),
+        "model_display": str(r.get("model_display") or ""),
+        "condition": str(r.get("condition") or ""),
+        "question": str(r.get("question") or ""),
+        "reference_answer": str(r.get("reference_answer") or ""),
+        "answer": str(r.get("response_text") or ""),
+        "correctness": r.get(cor_col),
+        "relevancy": r.get(rel_col),
+        "rag_context_used": bool(r.get("rag_context_used")),
+    }
+    if faith_col in df.columns:
+        out["faithfulness"] = r.get(faith_col)
+    return out
 
 
 def parse_args() -> argparse.Namespace:
@@ -312,11 +381,18 @@ def main() -> int:
                 for r in _load_jsonl(records_path):
                     if str(r.get("track")) != "open_ended":
                         continue
-                    if r.get("error"):
-                        continue
+                    err = str(r.get("error") or "").strip()
                     sid = str(r.get("sample_id") or "")
                     ds = ds_by_id.get(sid, {})
                     metrics = r.get("metrics") or {}
+                    response_text = str(r.get("response_text") or "")
+                    if not response_text.strip():
+                        response_text = f"Final answer: [ERROR] {err}" if err else "Final answer: [EMPTY RESPONSE]"
+
+                    # Back-compat: older artifacts might not have format metrics; treat as OK unless error.
+                    fmt_ok = metrics.get("format_ok")
+                    if fmt_ok is None:
+                        fmt_ok = False if err else True
                     gen_rows.append(
                         {
                             "name": f"{sid}:{r.get('run_id')}",
@@ -329,7 +405,8 @@ def main() -> int:
                             "prompt_strategy": str(getattr(r.get("prompt_strategy"), "value", r.get("prompt_strategy"))),
                             "question": str(ds.get("question") or r.get("question") or ""),
                             "reference_answer": str(ds.get("reference_answer") or ""),
-                            "response_text": str(r.get("response_text") or ""),
+                            "response_text": response_text,
+                            "error": err,
                             "rag_enabled": bool(r.get("rag_enabled")),
                             "rag_context_used": bool(metrics.get("rag_context_used")),
                             "rag_gate_reason": metrics.get("rag_gate_reason"),
@@ -341,7 +418,7 @@ def main() -> int:
                             "final_quantity_f1": metrics.get("final_quantity_f1"),
                             "final_unit_mismatch_count": metrics.get("final_unit_mismatch_count"),
                             # Format contract metrics
-                            "format_ok": metrics.get("format_ok"),
+                            "format_ok": fmt_ok,
                             "format_retry_used": metrics.get("format_retry_used"),
                             "format_violation_reason": metrics.get("format_violation_reason"),
                             "format_violation_reason_after_retry": metrics.get("format_violation_reason_after_retry"),
@@ -414,6 +491,16 @@ def main() -> int:
             lambda n: _get(n, "Contextual Relevancy.score")
             or _get(n, "ContextualRelevancyMetric.score")
         )
+
+    # Treat generation errors as score=0 (fail) for correctness/relevancy if the
+    # DeepEval record is missing (e.g., legacy runs that filtered errors).
+    if "error" in gen_df.columns:
+        err_mask = gen_df["error"].fillna("").astype(str).str.len() > 0
+        for provider in ["openai", "anthropic", "gemini"]:
+            for metric in ["correctness", "relevancy"]:
+                col = f"{provider}_{metric}_score"
+                if col in gen_df.columns:
+                    gen_df.loc[err_mask & gen_df[col].isna(), col] = 0.0
 
     # --- Derived PASS/PARTIAL/FAIL using primary judge (OpenAI) ---
     primary_provider = "openai"
@@ -653,7 +740,42 @@ def main() -> int:
             )
         examples_md = "### RAG vs No‑RAG Examples\n\n" + "\n".join(blocks) + "\n"
     else:
-        examples_md = "### RAG vs No‑RAG Examples\n_(not available yet; requires DeepEval scores for both no_rag and rag_gated)_\n\n"
+        examples_md = "### RAG vs No‑RAG Examples\n_(No clear RAG-lift examples found under the selection criteria for this run.)_\n\n"
+
+    # One exemplar (boss request): show a single high-scoring answer.
+    exemplar = _select_best_exemplar(gen_df=gen_df, primary_provider=primary_provider, preferred_condition=ranking_condition)
+    exemplar_md = ""
+    if exemplar:
+        exemplar_md = "\n".join(
+            [
+                "## One Example The Model Did Well (Boss Exemplar)",
+                "",
+                f"- Model/condition: **{exemplar['model_display']}** / `{exemplar['condition']}`",
+                f"- Correctness: `{_format_float(exemplar.get('correctness'))}`",
+                f"- Relevancy: `{_format_float(exemplar.get('relevancy'))}`",
+                f"- RAG context used: `{bool(exemplar.get('rag_context_used'))}`",
+                f"- Faithfulness: `{_format_float(exemplar.get('faithfulness'))}`" if "faithfulness" in exemplar else "",
+                "",
+                "**Question**",
+                "",
+                f"> {exemplar['question']}",
+                "",
+                "**Reference answer (ground truth)**",
+                "",
+                "```text",
+                str(exemplar["reference_answer"]).strip(),
+                "```",
+                "",
+                "**Model answer**",
+                "",
+                "```text",
+                str(exemplar["answer"]).strip(),
+                "```",
+                "",
+            ]
+        ).strip() + "\n\n"
+    else:
+        exemplar_md = "## One Example The Model Did Well (Boss Exemplar)\n_(not available yet; scoring incomplete)_\n\n"
 
     # Chart references (png preferred, html always).
     figs = [
@@ -743,6 +865,8 @@ def main() -> int:
             fig_md.strip(),
             "",
             examples_md.strip(),
+            "",
+            exemplar_md.strip(),
             "",
             "## Where The Numbers Come From (files)",
             "",
