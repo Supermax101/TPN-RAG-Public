@@ -126,6 +126,14 @@ def _metrics_map(test_result: dict) -> Dict[str, dict]:
     return out
 
 
+def _coalesce(*vals: Any) -> Any:
+    """Return the first non-None value (treat 0.0 as valid)."""
+    for v in vals:
+        if v is not None:
+            return v
+    return None
+
+
 def _safe_write_fig(fig, out_dir: Path, stem: str) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     html_path = out_dir / f"{stem}.html"
@@ -480,22 +488,28 @@ def main() -> int:
             lambda n: _get(n, "TPN_OpenCorrectness.score")
         )
         gen_df[f"{prefix}_relevancy_score"] = gen_df["name"].apply(
-            lambda n: _get(n, "Answer Relevancy.score") or _get(n, "AnswerRelevancyMetric.score")
+            lambda n: _coalesce(_get(n, "Answer Relevancy.score"), _get(n, "AnswerRelevancyMetric.score"))
         )
         gen_df[f"{prefix}_faithfulness_score"] = gen_df["name"].apply(
             lambda n: _get(n, "Faithfulness.score")
         )
         gen_df[f"{prefix}_ctx_precision_score"] = gen_df["name"].apply(
-            lambda n: _get(n, "Contextual Precision.score")
-            or _get(n, "ContextualPrecisionMetric.score")
+            lambda n: _coalesce(
+                _get(n, "Contextual Precision.score"),
+                _get(n, "ContextualPrecisionMetric.score"),
+            )
         )
         gen_df[f"{prefix}_ctx_recall_score"] = gen_df["name"].apply(
-            lambda n: _get(n, "Contextual Recall.score")
-            or _get(n, "ContextualRecallMetric.score")
+            lambda n: _coalesce(
+                _get(n, "Contextual Recall.score"),
+                _get(n, "ContextualRecallMetric.score"),
+            )
         )
         gen_df[f"{prefix}_ctx_relevancy_score"] = gen_df["name"].apply(
-            lambda n: _get(n, "Contextual Relevancy.score")
-            or _get(n, "ContextualRelevancyMetric.score")
+            lambda n: _coalesce(
+                _get(n, "Contextual Relevancy.score"),
+                _get(n, "ContextualRelevancyMetric.score"),
+            )
         )
 
     # Treat generation errors as score=0 (fail) for correctness/relevancy if the
