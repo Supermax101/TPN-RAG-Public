@@ -204,10 +204,16 @@ def _select_rag_lift_examples(
         return f"{col}|{cond}"
 
     # Flatten multiindex columns from pivot_table.
-    pivot.columns = [
-        f"{a}|{b}" if isinstance(a, str) and isinstance(b, str) else str(a)
-        for (a, b) in getattr(pivot.columns, "to_list", lambda: list(pivot.columns))()
-    ]
+    # Pandas reset_index() keeps a 2-level MultiIndex where the index columns
+    # become ("sample_id", "") etc. Preserve those as "sample_id" rather than
+    # "sample_id|" so downstream lookups work.
+    flat_cols = []
+    for a, b in getattr(pivot.columns, "to_list", lambda: list(pivot.columns))():
+        if isinstance(a, str) and isinstance(b, str) and b:
+            flat_cols.append(f"{a}|{b}")
+        else:
+            flat_cols.append(str(a))
+    pivot.columns = flat_cols
 
     cor_no = _get(cor_col, "no_rag")
     cor_rag = _get(cor_col, "rag_gated")
